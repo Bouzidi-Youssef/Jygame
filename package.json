@@ -1,0 +1,41 @@
+{
+  "name": "jygame",
+  "version": "0.1.0",
+  "description": "A lightweight 2D game framework for the browser",
+  "type": "module",
+  "main": "./jygame.js",
+  "exports": {
+    ".": "./jygame.js"
+  },
+  "files": [
+    "jygame.js",
+    "math/",
+    "geometry/",
+    "time/",
+    "state/",
+    "storage/",
+    "collision/",
+    "display/",
+    "input/",
+    "assets/",
+    "core/"
+  ],
+  "keywords": [
+    "game",
+    "game-development",
+    "2d",
+    "canvas",
+    "framework"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bouzidi-Youssef/Jygame.git"
+  },
+  "homepage": "https://github.com/Bouzidi-Youssef/Jygame#readme",
+  "bugs": {
+    "url": "https://github.com/Bouzidi-Youssef/Jygame/issues"
+  },
+  "license": "GPL-3.0-only",
+  "author": "Bouzidi Youssef",
+  "sideEffects": false
+}
