@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jygame — Colors</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0d0d0d;
+      color: #ccc;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    #app {
+      position: relative;
+      width: 1000px;
+      margin: 0 auto;
+    }
+    #app canvas { display: none; }
+    #app .jygame-ui { position: static !important; }
+    .color-browser { padding: 32px 24px; }
+    .color-browser h1 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #eee;
+      margin-bottom: 4px;
+      letter-spacing: -0.3px;
+    }
+    .color-browser .sub {
+      color: #666;
+      font-size: 13px;
+      margin-bottom: 28px;
+    }
+    .family {
+      margin-bottom: 28px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 20px;
+    }
+    .family:last-child { border-bottom: none; }
+    .family-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .family-header h2 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #ddd;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .family-header .count {
+      font-size: 11px;
+      color: #555;
+      background: #1a1a1a;
+      padding: 1px 8px;
+      border-radius: 99px;
+    }
+    .family-header .swatch {
+      width: 24px; height: 24px;
+      border-radius: 4px;
+      border: 1px solid #333;
+      flex-shrink: 0;
+    }
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .card {
+      width: 80px;
+      cursor: pointer;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #141414;
+      border: 1px solid #222;
+      transition: border-color .15s;
+    }
+    .card:hover { border-color: #444; }
+    .card .swatch {
+      height: 52px;
+      position: relative;
+    }
+    .card .info {
+      padding: 5px 6px 6px;
+    }
+    .card .name {
+      font-size: 11px;
+      font-weight: 500;
+      color: #bbb;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card .hex {
+      font-size: 9px;
+      color: #555;
+      font-family: "SF Mono", "Cascadia Code", monospace;
+      margin-top: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="./ColorTestScene.js"></script>
+</body>
+</html>

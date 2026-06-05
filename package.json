@@ -15,6 +15,7 @@
     "state/",
     "storage/",
     "collision/",
+    "color/",
     "display/",
     "input/",
     "assets/",
