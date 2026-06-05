@@ -2,7 +2,7 @@ const _pressed = {};
 const _justPressed = {};
 const _justReleased = {};
 
-const KEY_MAP = {
+const DEFAULT_KEY_MAP = Object.freeze({
   ArrowUp: "UP",
   ArrowDown: "DOWN",
   ArrowLeft: "LEFT",
@@ -18,7 +18,9 @@ const KEY_MAP = {
   " ": "SPACE",
   Escape: "ESCAPE",
   Enter: "ENTER",
-};
+});
+
+let _keyMap = { ...DEFAULT_KEY_MAP };
 
 let _swipeListeners = [];
 let _tapListeners = [];
@@ -30,21 +32,30 @@ const MIN_SWIPE = 30;
 const TAP_TIMEOUT = 300;
 
 function handleKeyDown(e) {
-  const mapped = KEY_MAP[e.key];
-  if (mapped) {
-    if (!_pressed[mapped]) _justPressed[mapped] = true;
-    _pressed[mapped] = true;
-    if (["UP", "DOWN", "LEFT", "RIGHT", "SPACE"].includes(mapped)) {
-      e.preventDefault();
-    }
+  const raw = e.key;
+  if (!_pressed[raw]) _justPressed[raw] = true;
+  _pressed[raw] = true;
+
+  const alias = _keyMap[raw];
+  if (alias) {
+    if (!_pressed[alias]) _justPressed[alias] = true;
+    _pressed[alias] = true;
+  }
+
+  if (raw.startsWith("Arrow") || raw === " ") {
+    e.preventDefault();
   }
 }
 
 function handleKeyUp(e) {
-  const mapped = KEY_MAP[e.key];
-  if (mapped) {
-    if (_pressed[mapped]) _justReleased[mapped] = true;
-    _pressed[mapped] = false;
+  const raw = e.key;
+  if (_pressed[raw]) _justReleased[raw] = true;
+  _pressed[raw] = false;
+
+  const alias = _keyMap[raw];
+  if (alias) {
+    if (_pressed[alias]) _justReleased[alias] = true;
+    _pressed[alias] = false;
   }
 }
 
@@ -125,6 +136,26 @@ export const Input = {
 
   clearJustPressed() {
     for (const key in _justPressed) delete _justPressed[key];
+  },
+
+  mapKey(rawKey, alias) {
+    _keyMap[rawKey] = alias;
+  },
+
+  unmapKey(rawKey) {
+    delete _keyMap[rawKey];
+  },
+
+  setKeyMap(map) {
+    _keyMap = { ...map };
+  },
+
+  resetKeyMap() {
+    _keyMap = { ...DEFAULT_KEY_MAP };
+  },
+
+  getKeyMap() {
+    return { ..._keyMap };
   },
 
   isDown(key) {
