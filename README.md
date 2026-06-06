@@ -37,6 +37,10 @@ game.run(new MyScene());
 npm install jygame
 ```
 
+## Documentation
+
+Full API reference, guides, and examples: [jygame-documentation.vercel.app](https://jygame-documentation.vercel.app/)
+
 ## API
 
 | Import | Description |
