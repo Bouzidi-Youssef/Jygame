@@ -99,6 +99,8 @@ export class Game {
   resume() {
     if (!this._paused) return;
     this._paused = false;
+    this.clock.reset();
+    this._lastTime = performance.now();
     this.scene?.resume?.();
   }
 
@@ -158,6 +160,11 @@ export class Game {
   _loop(time) {
     if (!this._running) return;
 
+    if (this._paused) {
+      this._rafId = requestAnimationFrame((t) => this._loop(t));
+      return;
+    }
+
     const realDt = (time - this._lastTime) / 1000;
     this._lastTime = time;
 
@@ -167,7 +174,6 @@ export class Game {
       this.scene.update(this.clock.fixedDt);
       Input.clearJustPressed();
       for (let i = 1; i < ticks; i++) {
-        if (this._paused) break;
         this.scene.update(this.clock.fixedDt);
       }
     }
