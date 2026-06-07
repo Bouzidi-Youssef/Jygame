@@ -2,7 +2,7 @@ import { Clock } from "../time/Clock.js";
 import { Input } from "../input/Input.js";
 
 export class Game {
-  constructor({ parent, width, height, fps = 60, maxTicks = 5, scaleToFit = null }) {
+  constructor({ parent, width, height, fps = 60, maxTicks = 5, autoPause = true, scaleToFit = null }) {
     const container = typeof parent === "string"
       ? document.querySelector(parent)
       : parent;
@@ -35,9 +35,28 @@ export class Game {
     this._paused = false;
     this._lastTime = 0;
     this._rafId = null;
+    this._pausedByVisibility = false;
     this.fps = 60;
 
     Input.init();
+
+    this._visibilityHandler = null;
+    if (autoPause) {
+      this._visibilityHandler = () => {
+        if (document.hidden) {
+          if (!this._paused) {
+            this._pausedByVisibility = true;
+            this.pause();
+          }
+        } else {
+          if (this._paused && this._pausedByVisibility) {
+            this._pausedByVisibility = false;
+            this.resume();
+          }
+        }
+      };
+      document.addEventListener("visibilitychange", this._visibilityHandler);
+    }
 
     if (scaleToFit) {
       const vp = scaleToFit === true
@@ -99,6 +118,7 @@ export class Game {
   resume() {
     if (!this._paused) return;
     this._paused = false;
+    this._pausedByVisibility = false;
     this.clock.reset();
     this._lastTime = performance.now();
     this.scene?.resume?.();
@@ -123,6 +143,7 @@ export class Game {
 
   switchScene(scene) {
     this._paused = false;
+    this._pausedByVisibility = false;
     this.scene.exit();
     this.scene.root.remove();
     Input.updateFrame();
@@ -131,6 +152,7 @@ export class Game {
     scene.game = this;
     this.scene = scene;
     this.clock.reset();
+    this._lastTime = performance.now();
     scene.enter();
     this._applyUI(scene);
   }
@@ -193,6 +215,10 @@ export class Game {
   destroy() {
     this._running = false;
     if (this._rafId) cancelAnimationFrame(this._rafId);
+    if (this._visibilityHandler) {
+      document.removeEventListener("visibilitychange", this._visibilityHandler);
+      this._visibilityHandler = null;
+    }
     if (this._resizeHandler) window.removeEventListener("resize", this._resizeHandler);
     if (this._resizeObserver) this._resizeObserver.disconnect();
     this.scene.exit();
