@@ -25,27 +25,11 @@ export const Collision = {
     return dx * dx + dy * dy <= r * r;
   },
 
-  groupRect(group, rect) {
-    const hits = [];
-    for (const sprite of group._sprites) {
-      if (sprite.visible && Collision.rectRect(sprite.rect, rect)) {
-        hits.push(sprite);
-      }
-    }
-    return hits;
+  groupRect(group, rect, out) {
+    return group.collideRect(rect, out);
   },
 
-  groupGroup(a, b) {
-    const pairs = [];
-    for (const sa of a._sprites) {
-      if (!sa.visible) continue;
-      for (const sb of b._sprites) {
-        if (!sb.visible) continue;
-        if (Collision.rectRect(sa.rect, sb.rect)) {
-          pairs.push([sa, sb]);
-        }
-      }
-    }
-    return pairs;
+  groupGroup(a, b, out) {
+    return a.collideGroup(b, out);
   },
 };

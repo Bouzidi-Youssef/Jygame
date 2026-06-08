@@ -72,8 +72,8 @@ export class Group {
     }
   }
 
-  collideRect(rect) {
-    const hits = [];
+  collideRect(rect, out) {
+    const hits = out || [];
     for (const sprite of this._sprites) {
       if (!sprite.visible) continue;
       if (sprite.rect.collides(rect)) {
@@ -83,8 +83,8 @@ export class Group {
     return hits;
   }
 
-  collidePoint(point) {
-    const hits = [];
+  collidePoint(point, out) {
+    const hits = out || [];
     for (const sprite of this._sprites) {
       if (!sprite.visible) continue;
       if (sprite.rect.contains(point)) {
@@ -94,8 +94,8 @@ export class Group {
     return hits;
   }
 
-  collideGroup(other) {
-    const pairs = [];
+  collideGroup(other, out) {
+    const pairs = out || [];
     for (const sa of this._sprites) {
       if (!sa.visible) continue;
       for (const sb of other._sprites) {
@@ -108,8 +108,8 @@ export class Group {
     return pairs;
   }
 
-  collideSprite(sprite) {
-    const hits = [];
+  collideSprite(sprite, out) {
+    const hits = out || [];
     if (!sprite.visible) return hits;
     for (const s of this._sprites) {
       if (!s.visible) continue;
