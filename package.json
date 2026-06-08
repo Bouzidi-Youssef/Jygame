@@ -1,6 +1,6 @@
 {
   "name": "jygame",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A lightweight 2D game framework for the browser",
   "type": "module",
   "main": "./jygame.js",
@@ -16,10 +16,13 @@
     "storage/",
     "collision/",
     "color/",
+    "components/",
     "display/",
     "input/",
     "assets/",
-    "core/"
+    "core/",
+    "memory/",
+    "systems/"
   ],
   "keywords": [
     "game",
