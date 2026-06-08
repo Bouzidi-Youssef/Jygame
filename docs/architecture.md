@@ -220,12 +220,98 @@ SpatialHash (strategy)
   allocation), cleared each call.
 - `collideGroup` supports callback mode (zero pair allocation).
 
-## Per-Frame Lifecycle
+## Scene Stack
+
+### Overview
+
+`Game` replaces the single `scene` property with `_sceneStack[]`. The top
+scene is the active scene. Underlying scenes remain alive — nothing is
+destroyed when a new scene is pushed on top.
+
+```
+Game
+├── _sceneStack: Scene[]     (index 0 = bottom, top = active)
+├── run(scene)               initial scene (clears stack)
+├── pushScene(scene)         stack an overlay
+├── popScene()               remove the top overlay
+├── peekScene() → Scene      top without side effects
+├── switchScene(scene)       full replacement (clears stack)
+└── get scene                → peekScene() (backward compat)
+```
+
+### Lifecycle Order
+
+```
+pushScene(newScene)
+├── top.pause()
+├── top.covered()
+└── newScene.enter()
+
+popScene()
+├── top.exit()
+├── top.root.remove()
+├── below.uncovered()
+├── below.resume()
+└── refresh UI
+
+switchScene(newScene)
+├── for each s in stack:
+│   ├── s.exit()
+│   └── s.root.remove()
+├── stack = [newScene]
+├── newScene.enter()
+└── refresh UI
+```
+
+### Blocking Rules
+
+Each scene can control whether scenes below it receive updates and renders.
+
+| Hook | Default | Purpose |
+|---|---|---|
+| `blocksUpdateBelow()` | `true` | Stop game logic when paused |
+| `blocksRenderBelow()` | `false` | Show game dimmed behind menu |
+
+Traversal walks downward from top until a blocker is found, then executes
+the visible set bottom-to-top. Zero allocation — uses index iteration.
+
+```
+Stack: [GameScene, PauseScene, InventoryScene]
+
+_updateScenes:
+  Inventory allows updates below  → continue
+  Pause   blocks updates below   → start = 1
+  Execute: Pause.update(), Inventory.update()
+
+_renderScenes:
+  Inventory allows render below  → continue
+  Pause   allows render below    → continue
+  Game    reaches bottom         → start = 0
+  Execute: Game.render(), Pause.render(), Inventory.render()
+```
+
+### Scene Lifecycle Hooks
+
+| Hook | When Called |
+|---|---|
+| `enter()` | Scene becomes active (first-time or after switch) |
+| `exit()` | Scene is removed (pop or switch) |
+| `pause()` | Scene is no longer the top of stack |
+| `resume()` | Scene becomes the top of stack again |
+| `covered()` | Another scene was pushed above this one |
+| `uncovered()` | The scene above was removed |
+| `update(dt)` | Each frame if not blocked from below |
+| `interpolate(alpha)` | Each frame, follows same rules as update |
+| `render(ctx)` | Each frame if not blocked from below |
+| `renderUI()` | Called after push/pop/switch to populate DOM |
+
+### Per-Frame Lifecycle
 
 ```
 Game._loop(time)
 │
-├── scene.update(fixedDt)
+├── _updateScenes(fixedDt)
+│   │  only scenes not blocked from below
 │   ├── user input handling
 │   ├── animationSystem.update(group, dt)
 │   ├── movementSystem.update(group, dt)
@@ -233,9 +319,11 @@ Game._loop(time)
 │   ├── collisionSystem.collideXxx(...)
 │   └── scene-specific logic
 │
-├── scene.interpolate(alpha)
+├── _interpolateScenes(alpha)
+│   same visibility as update
 │
-└── scene.render(ctx)
+└── _renderScenes(ctx)
+    │  only scenes not blocked from below
     ├── renderSystem.render(ctx, group, camera?)
     └── scene-specific rendering
 ```

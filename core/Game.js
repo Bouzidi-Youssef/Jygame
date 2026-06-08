@@ -30,7 +30,7 @@ export class Game {
     this.width = width;
     this.height = height;
     this.clock = new Clock(fps, maxTicks);
-    this.scene = null;
+    this._sceneStack = [];
     this._running = false;
     this._paused = false;
     this._lastTime = 0;
@@ -111,6 +111,10 @@ export class Game {
     return this._paused;
   }
 
+  get scene() {
+    return this._sceneStack[this._sceneStack.length - 1] || null;
+  }
+
   pause() {
     if (this._paused) return;
     this._paused = true;
@@ -131,10 +135,10 @@ export class Game {
   }
 
   run(scene) {
-    this.domLayer.append(scene.root);
-    scene.dom = scene.root;
+    this._sceneStack = [scene];
     scene.game = this;
-    this.scene = scene;
+    scene.dom = scene.root;
+    this.domLayer.append(scene.root);
     this.clock.reset();
     scene.enter();
     this._applyUI(scene);
@@ -143,16 +147,49 @@ export class Game {
     this._rafId = requestAnimationFrame((t) => this._loop(t));
   }
 
+  pushScene(scene) {
+    const top = this.peekScene();
+    if (top) {
+      top.pause();
+      top.covered();
+    }
+    this._sceneStack.push(scene);
+    scene.game = this;
+    scene.dom = scene.root;
+    this.domLayer.append(scene.root);
+    scene.enter();
+    this._applyUI(scene);
+  }
+
+  popScene() {
+    if (this._sceneStack.length <= 1) {
+      throw new Error("Cannot pop the last scene");
+    }
+    const top = this._sceneStack.pop();
+    top.exit();
+    top.root.remove();
+    const below = this.peekScene();
+    below.uncovered();
+    below.resume();
+    this._applyUI(below);
+  }
+
+  peekScene() {
+    return this._sceneStack[this._sceneStack.length - 1] || null;
+  }
+
   switchScene(scene) {
     this._paused = false;
     this._pausedByVisibility = false;
-    this.scene.exit();
-    this.scene.root.remove();
+    for (const s of this._sceneStack) {
+      s.exit();
+      s.root.remove();
+    }
+    this._sceneStack = [scene];
     this.input.updateFrame();
-    this.domLayer.append(scene.root);
-    scene.dom = scene.root;
     scene.game = this;
-    this.scene = scene;
+    scene.dom = scene.root;
+    this.domLayer.append(scene.root);
     this.clock.reset();
     this._lastTime = performance.now();
     scene.enter();
@@ -160,7 +197,8 @@ export class Game {
   }
 
   refreshUI() {
-    this._applyUI(this.scene);
+    const top = this.peekScene();
+    if (top) this._applyUI(top);
   }
 
   patchUI(updates) {
@@ -181,6 +219,39 @@ export class Game {
     }
   }
 
+  _updateScenes(dt) {
+    const stack = this._sceneStack;
+    let start = 0;
+    for (let i = stack.length - 1; i >= 0; i--) {
+      if (stack[i].blocksUpdateBelow()) { start = i; break; }
+    }
+    for (let i = start; i < stack.length; i++) {
+      stack[i].update(dt);
+    }
+  }
+
+  _interpolateScenes(alpha) {
+    const stack = this._sceneStack;
+    let start = 0;
+    for (let i = stack.length - 1; i >= 0; i--) {
+      if (stack[i].blocksUpdateBelow()) { start = i; break; }
+    }
+    for (let i = start; i < stack.length; i++) {
+      stack[i].interpolate?.(alpha);
+    }
+  }
+
+  _renderScenes(ctx) {
+    const stack = this._sceneStack;
+    let start = 0;
+    for (let i = stack.length - 1; i >= 0; i--) {
+      if (stack[i].blocksRenderBelow()) { start = i; break; }
+    }
+    for (let i = start; i < stack.length; i++) {
+      stack[i].render(ctx);
+    }
+  }
+
   _loop(time) {
     if (!this._running) return;
 
@@ -195,21 +266,21 @@ export class Game {
     const ticks = this.clock.tick(realDt);
 
     if (ticks > 0) {
-      this.scene.update(this.clock.fixedDt);
+      this._updateScenes(this.clock.fixedDt);
       this.input.clearJustPressed();
       for (let i = 1; i < ticks; i++) {
-        this.scene.update(this.clock.fixedDt);
+        this._updateScenes(this.clock.fixedDt);
       }
     }
 
     this.input.updateFrame();
 
-    this.scene.interpolate?.(this.clock.alpha);
+    this._interpolateScenes(this.clock.alpha);
 
     this.fps += ((1 / Math.max(realDt, 0.001)) - this.fps) * 0.05;
 
     this.ctx.clearRect(0, 0, this.width, this.height);
-    this.scene.render(this.ctx);
+    this._renderScenes(this.ctx);
 
     this._rafId = requestAnimationFrame((t) => this._loop(t));
   }
@@ -223,7 +294,11 @@ export class Game {
     }
     if (this._resizeHandler) window.removeEventListener("resize", this._resizeHandler);
     if (this._resizeObserver) this._resizeObserver.disconnect();
-    this.scene.exit();
+    for (const s of this._sceneStack) {
+      s.exit();
+      s.root.remove();
+    }
+    this._sceneStack = [];
     this.input.destroy();
   }
 }

@@ -33,10 +33,20 @@ export class Scene {
 
   pause() {}
   resume() {}
+  covered() {}
+  uncovered() {}
   update(dt) {}
   interpolate(alpha) {}
   render(ctx) {}
   renderUI() {}
+
+  blocksUpdateBelow() {
+    return true;
+  }
+
+  blocksRenderBelow() {
+    return false;
+  }
 
   transitionTo(scene) {
     if (this.game) this.game.switchScene(scene);

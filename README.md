@@ -47,8 +47,8 @@ Note: `getPointers()` now returns an iterator (not an array). Use `for...of` or 
 
 | Import | Description |
 |---|---|
-| `Game` | Main game loop with fixed timestep, canvas setup, UI layer, and scene management |
-| `Scene` | Lifecycle hooks (`enter`, `exit`, `pause`, `resume`, `update`, `interpolate`, `render`, `renderUI`) plus auto-cleaned event helpers (`on`, `onSwipe`, `onTap`, `cleanup`) |
+| `Game` | Main game loop with fixed timestep, canvas setup, UI layer, scene stack (`pushScene`, `popScene`, `peekScene`, `switchScene`), and lifecycle management |
+| `Scene` | Lifecycle hooks (`enter`, `exit`, `pause`, `resume`, `covered`, `uncovered`, `update`, `interpolate`, `render`, `renderUI`), blocking rules (`blocksUpdateBelow`, `blocksRenderBelow`), and auto-cleaned event helpers (`on`, `onSwipe`, `onTap`, `cleanup`) |
 | `Sprite` | Entity with `Transform`, `Collider`, `Velocity`, `Renderable`, and `Visibility` components. Exposes `x`, `y`, `width`, `height`, `angle`, `scale`, `velocity`, `image`, `style` shorthands. |
 | `Group` | Entity container. Iterable (`for...of`). Collision queries delegate to `CollisionSystem`. Optional `SpatialHash` acceleration. `dispose()` for cleanup. |
 | `Transform` | Position (`x`, `y`), rotation, and scale — the single source of truth for world position |
