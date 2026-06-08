@@ -15,6 +15,7 @@ export class Sprite {
       fill: "#ffffff",
       shape: "rect",
     };
+    this._pathCache = null;
   }
 
   get x() { return this.rect.x; }
@@ -65,16 +66,23 @@ export class Sprite {
     const s = this.style;
     if (!s.fill) return;
 
-    ctx.fillStyle = s.fill;
+    if (ctx.fillStyle !== s.fill) ctx.fillStyle = s.fill;
 
     if (s.shape === "circle") {
-      ctx.beginPath();
-      ctx.arc(0, 0, Math.min(hw, hh), 0, Math.PI * 2);
-      ctx.fill();
+      const r = Math.min(hw, hh);
+      if (!this._pathCache || this._pathCache.shape !== "circle" || this._pathCache.r !== r) {
+        const path = new Path2D();
+        path.arc(0, 0, r, 0, Math.PI * 2);
+        this._pathCache = { shape: "circle", r, path };
+      }
+      ctx.fill(this._pathCache.path);
     } else if (s.shape === "ellipse") {
-      ctx.beginPath();
-      ctx.ellipse(0, 0, hw, hh, 0, 0, Math.PI * 2);
-      ctx.fill();
+      if (!this._pathCache || this._pathCache.shape !== "ellipse" || this._pathCache.hw !== hw || this._pathCache.hh !== hh) {
+        const path = new Path2D();
+        path.ellipse(0, 0, hw, hh, 0, 0, Math.PI * 2);
+        this._pathCache = { shape: "ellipse", hw, hh, path };
+      }
+      ctx.fill(this._pathCache.path);
     } else {
       ctx.fillRect(-hw, -hh, this.rect.w, this.rect.h);
     }
