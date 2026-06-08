@@ -1,3 +1,5 @@
+import { Collider } from "../components/Collider.js";
+
 export class SpatialHash {
   constructor(cellSize = 64) {
     this.cellSize = cellSize;
@@ -15,11 +17,14 @@ export class SpatialHash {
   }
 
   _insert(sprite) {
-    const r = sprite.rect;
-    const left = Math.floor(r.left / this.cellSize);
-    const right = Math.floor(r.right / this.cellSize);
-    const top = Math.floor(r.top / this.cellSize);
-    const bottom = Math.floor(r.bottom / this.cellSize);
+    const cx = sprite.transform.x;
+    const cy = sprite.transform.y;
+    const hw = sprite.collider.width / 2;
+    const hh = sprite.collider.height / 2;
+    const left = Math.floor((cx - hw) / this.cellSize);
+    const right = Math.floor((cx + hw) / this.cellSize);
+    const top = Math.floor((cy - hh) / this.cellSize);
+    const bottom = Math.floor((cy + hh) / this.cellSize);
 
     for (let x = left; x <= right; x++) {
       for (let y = top; y <= bottom; y++) {
@@ -49,7 +54,7 @@ export class SpatialHash {
           const seenKey = ka < kb ? (ka << 16) | kb : (kb << 16) | ka;
           if (seen.has(seenKey)) continue;
           seen.add(seenKey);
-          if (sa.rect.collides(sb.rect)) {
+          if (Collider.checkAABB(sa.transform, sa.collider, sb.transform, sb.collider)) {
             pairs.push([sa, sb]);
           }
         }
@@ -74,7 +79,7 @@ export class SpatialHash {
         for (const sprite of cell) {
           if (seen.has(sprite.__shId)) continue;
           seen.add(sprite.__shId);
-          if (sprite.rect.collides(rect)) {
+          if (Collider.checkRect(sprite.transform, sprite.collider, rect)) {
             hits.push(sprite);
           }
         }
@@ -89,7 +94,7 @@ export class SpatialHash {
     const cell = this.cells.get(key);
     if (!cell) return hits;
     for (const sprite of cell) {
-      if (sprite.rect.contains(point)) {
+      if (Collider.containsPoint(sprite.transform, sprite.collider, point)) {
         hits.push(sprite);
       }
     }
@@ -97,6 +102,33 @@ export class SpatialHash {
   }
 
   collideSprite(sprite, out) {
-    return this.collideRect(sprite.rect, out);
+    const hits = out || [];
+    const sx = sprite.transform.x;
+    const sy = sprite.transform.y;
+    const shw = sprite.collider.width / 2;
+    const shh = sprite.collider.height / 2;
+
+    const left = Math.floor((sx - shw) / this.cellSize);
+    const right = Math.floor((sx + shw) / this.cellSize);
+    const top = Math.floor((sy - shh) / this.cellSize);
+    const bottom = Math.floor((sy + shh) / this.cellSize);
+
+    const seen = new Set();
+
+    for (let x = left; x <= right; x++) {
+      for (let y = top; y <= bottom; y++) {
+        const cell = this.cells.get(`${x}:${y}`);
+        if (!cell) continue;
+        for (const s of cell) {
+          if (s.__shId === sprite.__shId) continue;
+          if (seen.has(s.__shId)) continue;
+          seen.add(s.__shId);
+          if (Collider.checkAABB(s.transform, s.collider, sprite.transform, sprite.collider)) {
+            hits.push(s);
+          }
+        }
+      }
+    }
+    return hits;
   }
 }

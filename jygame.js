@@ -1,5 +1,7 @@
 export { Vec2 } from "./math/Vec2.js";
+export { Transform } from "./components/Transform.js";
 export { Renderable } from "./components/Renderable.js";
+export { Collider } from "./components/Collider.js";
 export { Rect } from "./geometry/Rect.js";
 export { Clock } from "./time/Clock.js";
 export { Timer } from "./time/Timer.js";
@@ -17,3 +19,5 @@ export { Scene } from "./core/Scene.js";
 export { Game } from "./core/Game.js";
 export { Color, Colors } from "./color/Colors.js";
 export { Pool } from "./memory/Pool.js";
+export { MovementSystem, movementSystem } from "./systems/MovementSystem.js";
+export { RenderSystem, renderSystem } from "./systems/RenderSystem.js";
