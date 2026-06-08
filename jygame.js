@@ -8,7 +8,7 @@ export { Collision } from "./collision/Collision.js";
 export { SpatialHash } from "./collision/SpatialHash.js";
 export { Sprite } from "./display/Sprite.js";
 export { Group } from "./display/Group.js";
-export { Input } from "./input/Input.js";
+export { Input, InputContext } from "./input/Input.js";
 export { ImageLoader } from "./assets/ImageLoader.js";
 export { FontLoader } from "./assets/FontLoader.js";
 export { Scene } from "./core/Scene.js";

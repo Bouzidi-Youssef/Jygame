@@ -1,5 +1,5 @@
 import { Clock } from "../time/Clock.js";
-import { Input } from "../input/Input.js";
+import { Input, InputContext } from "../input/Input.js";
 
 export class Game {
   constructor({ parent, width, height, fps = 60, maxTicks = 5, autoPause = true, scaleToFit = null }) {
@@ -38,7 +38,9 @@ export class Game {
     this._pausedByVisibility = false;
     this.fps = 60;
 
-    Input.init();
+    this.input = new InputContext();
+    this.input.init(container);
+    Input.setDefault(this.input);
 
     this._visibilityHandler = null;
     if (autoPause) {
@@ -146,7 +148,7 @@ export class Game {
     this._pausedByVisibility = false;
     this.scene.exit();
     this.scene.root.remove();
-    Input.updateFrame();
+    this.input.updateFrame();
     this.domLayer.append(scene.root);
     scene.dom = scene.root;
     scene.game = this;
@@ -194,13 +196,13 @@ export class Game {
 
     if (ticks > 0) {
       this.scene.update(this.clock.fixedDt);
-      Input.clearJustPressed();
+      this.input.clearJustPressed();
       for (let i = 1; i < ticks; i++) {
         this.scene.update(this.clock.fixedDt);
       }
     }
 
-    Input.updateFrame();
+    this.input.updateFrame();
 
     this.scene.interpolate?.(this.clock.alpha);
 
@@ -222,6 +224,6 @@ export class Game {
     if (this._resizeHandler) window.removeEventListener("resize", this._resizeHandler);
     if (this._resizeObserver) this._resizeObserver.disconnect();
     this.scene.exit();
-    Input.destroy();
+    this.input.destroy();
   }
 }
