@@ -39,9 +39,36 @@ export class Group {
     }
   }
 
-  render(ctx) {
-    for (const sprite of this._sprites) {
-      sprite.render(ctx);
+  render(ctx, viewport) {
+    if (viewport) {
+      const vLeft = viewport.x;
+      const vRight = viewport.x + viewport.w;
+      const vTop = viewport.y;
+      const vBottom = viewport.y + viewport.h;
+
+      for (const sprite of this._sprites) {
+        if (!sprite.visible) continue;
+        if (sprite.angle !== 0 || sprite.scale.x !== 1 || sprite.scale.y !== 1) {
+          const cx = sprite.rect.centerx;
+          const cy = sprite.rect.centery;
+          const hw = sprite.rect.w / 2 * sprite.scale.x;
+          const hh = sprite.rect.h / 2 * sprite.scale.y;
+          const r = Math.sqrt(hw * hw + hh * hh);
+          if ((cx - r) >= vRight || (cx + r) <= vLeft ||
+              (cy - r) >= vBottom || (cy + r) <= vTop) continue;
+        } else {
+          if (sprite.rect.x >= vRight ||
+              sprite.rect.x + sprite.rect.w <= vLeft ||
+              sprite.rect.y >= vBottom ||
+              sprite.rect.y + sprite.rect.h <= vTop) continue;
+        }
+        sprite.render(ctx);
+      }
+    } else {
+      for (const sprite of this._sprites) {
+        if (!sprite.visible) continue;
+        sprite.render(ctx);
+      }
     }
   }
 

@@ -36,12 +36,21 @@ export class Sprite {
   render(ctx) {
     if (!this.visible) return;
 
-    ctx.save();
-    ctx.translate(this.rect.centerx, this.rect.centery);
-    ctx.rotate(this.angle);
-    ctx.scale(this.scale.x, this.scale.y);
-    this.draw(ctx);
-    ctx.restore();
+    const cx = this.rect.centerx;
+    const cy = this.rect.centery;
+
+    if (this.angle !== 0 || this.scale.x !== 1 || this.scale.y !== 1) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(this.angle);
+      ctx.scale(this.scale.x, this.scale.y);
+      this.draw(ctx);
+      ctx.restore();
+    } else {
+      ctx.translate(cx, cy);
+      this.draw(ctx);
+      ctx.translate(-cx, -cy);
+    }
   }
 
   draw(ctx) {
