@@ -24,12 +24,4 @@ export const Collision = {
     const dy = cy - nearY;
     return dx * dx + dy * dy <= r * r;
   },
-
-  groupRect(group, rect, out) {
-    return group.collideRect(rect, out);
-  },
-
-  groupGroup(a, b, out) {
-    return a.collideGroup(b, out);
-  },
 };
