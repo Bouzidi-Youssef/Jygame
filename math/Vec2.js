@@ -10,6 +10,12 @@ export class Vec2 {
     return this;
   }
 
+  setFrom(v) {
+    this.x = v.x;
+    this.y = v.y;
+    return this;
+  }
+
   add(v) {
     this.x += v.x;
     this.y += v.y;
@@ -86,5 +92,11 @@ export class Vec2 {
 
   static lerp(a, b, t) {
     return new Vec2(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+  }
+
+  static lerpInto(out, a, b, t) {
+    out.x = a.x + (b.x - a.x) * t;
+    out.y = a.y + (b.y - a.y) * t;
+    return out;
   }
 }
