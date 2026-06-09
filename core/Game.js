@@ -1,5 +1,6 @@
 import { Clock } from "../time/Clock.js";
 import { Input, InputContext } from "../input/Input.js";
+import { Scene } from "./Scene.js";
 
 export class Game {
   constructor({ parent, width, height, fps = 60, maxTicks = 5, autoPause = true, scaleToFit = null }) {
@@ -31,6 +32,8 @@ export class Game {
     this.height = height;
     this.clock = new Clock(fps, maxTicks);
     this._sceneStack = [];
+    this._sceneOps = [];
+    this._updating = false;
     this._running = false;
     this._paused = false;
     this._lastTime = 0;
@@ -115,6 +118,27 @@ export class Game {
     return this._sceneStack[this._sceneStack.length - 1] || null;
   }
 
+  get sceneCount() {
+    return this._sceneStack.length;
+  }
+
+  getScene(index) {
+    if (index < 0 || index >= this._sceneStack.length) return null;
+    return this._sceneStack[index];
+  }
+
+  getScenes() {
+    return this._sceneStack.slice();
+  }
+
+  containsScene(scene) {
+    return this._sceneStack.includes(scene);
+  }
+
+  isTopScene(scene) {
+    return this.scene === scene;
+  }
+
   pause() {
     if (this._paused) return;
     this._paused = true;
@@ -134,43 +158,149 @@ export class Game {
     this._paused ? this.resume() : this.pause();
   }
 
-  run(scene) {
-    this._sceneStack = [scene];
+  _validateScene(scene, methodName) {
+    if (scene == null || !(scene instanceof Scene)) {
+      throw new Error(`Game.${methodName}(): argument must be a Scene instance, got ${scene === null ? "null" : typeof scene}`);
+    }
+  }
+
+  _mountScene(scene) {
+    if (scene._exited) {
+      throw new Error("Scene instance already exited. Create a new scene.");
+    }
+    if (scene._entered) {
+      throw new Error("Scene instance already mounted. Create a new scene.");
+    }
+    if (scene._game && scene._game !== this) {
+      throw new Error("Scene belongs to another Game instance.");
+    }
+    scene._game = this;
     scene.game = this;
     scene.dom = scene.root;
     this.domLayer.append(scene.root);
-    this.clock.reset();
     scene.enter();
     this._applyUI(scene);
+  }
+
+  _unmountScene(scene) {
+    scene.exit();
+    scene.root.remove();
+  }
+
+  _resetSceneStack() {
+    for (const s of this._sceneStack) {
+      this._unmountScene(s);
+    }
+    this._sceneStack = [];
+  }
+
+  _applyUI(scene) {
+    const html = scene.renderUI();
+    if (html !== undefined && html !== null) {
+      scene.root.innerHTML = html;
+    }
+  }
+
+  _findBlockingIndex(prop) {
+    const stack = this._sceneStack;
+    for (let i = stack.length - 1; i >= 0; i--) {
+      if (stack[i][prop]) return i;
+    }
+    return 0;
+  }
+
+  _queueSceneOp(type, ...args) {
+    this._sceneOps.push({ type, args });
+  }
+
+  _flushSceneOps() {
+    while (this._sceneOps.length > 0) {
+      const op = this._sceneOps.shift();
+      switch (op.type) {
+        case "push":    this._execPushScene(...op.args); break;
+        case "pop":     this._execPopScene(); break;
+        case "replace": this._execReplaceScene(...op.args); break;
+        case "switch":  this._execSwitchScene(...op.args); break;
+      }
+    }
+  }
+
+  run(scene) {
+    if (this._running) {
+      throw new Error("Game.run() called while game is already running. Call destroy() first.");
+    }
+    this._validateScene(scene, "run");
+    if (scene._entered) {
+      throw new Error("Game.run(): scene instance already mounted. Create a new scene.");
+    }
+    this._sceneStack = [scene];
+    this._mountScene(scene);
+    this.clock.reset();
     this._running = true;
     this._lastTime = performance.now();
     this._rafId = requestAnimationFrame((t) => this._loop(t));
   }
 
   pushScene(scene) {
+    this._validateScene(scene, "pushScene");
+    if (this._updating) {
+      this._queueSceneOp("push", scene);
+      return;
+    }
+    this._execPushScene(scene);
+  }
+
+  _execPushScene(scene) {
+    if (scene._entered) {
+      throw new Error("Game.pushScene(): scene instance already mounted. Create a new scene.");
+    }
     const top = this.peekScene();
-    if (top) {
+    if (top && scene.blocksUpdateBelow) {
       top.pause();
-      top.covered();
     }
     this._sceneStack.push(scene);
-    scene.game = this;
-    scene.dom = scene.root;
-    this.domLayer.append(scene.root);
-    scene.enter();
-    this._applyUI(scene);
+    this._mountScene(scene);
+  }
+
+  replaceScene(scene) {
+    this._validateScene(scene, "replaceScene");
+    if (this._updating) {
+      this._queueSceneOp("replace", scene);
+      return;
+    }
+    this._execReplaceScene(scene);
+  }
+
+  _execReplaceScene(scene) {
+    if (scene._entered) {
+      throw new Error("Game.replaceScene(): scene instance already mounted. Create a new scene.");
+    }
+    const old = this._sceneStack.pop();
+    if (old) {
+      this._unmountScene(old);
+    }
+    this._sceneStack.push(scene);
+    this._mountScene(scene);
   }
 
   popScene() {
     if (this._sceneStack.length <= 1) {
       throw new Error("Cannot pop the last scene");
     }
+    if (this._updating) {
+      this._queueSceneOp("pop");
+      return;
+    }
+    this._execPopScene();
+  }
+
+  _execPopScene() {
     const top = this._sceneStack.pop();
-    top.exit();
-    top.root.remove();
+    this._unmountScene(top);
     const below = this.peekScene();
-    below.uncovered();
-    below.resume();
+    if (top.blocksUpdateBelow) {
+      below.resume();
+    }
     this._applyUI(below);
   }
 
@@ -179,21 +309,26 @@ export class Game {
   }
 
   switchScene(scene) {
+    this._validateScene(scene, "switchScene");
+    if (this._updating) {
+      this._queueSceneOp("switch", scene);
+      return;
+    }
+    this._execSwitchScene(scene);
+  }
+
+  _execSwitchScene(scene) {
+    if (scene._entered) {
+      throw new Error("Game.switchScene(): scene instance already mounted. Create a new scene.");
+    }
     this._paused = false;
     this._pausedByVisibility = false;
-    for (const s of this._sceneStack) {
-      s.exit();
-      s.root.remove();
-    }
+    this._resetSceneStack();
     this._sceneStack = [scene];
     this.input.updateFrame();
-    scene.game = this;
-    scene.dom = scene.root;
-    this.domLayer.append(scene.root);
     this.clock.reset();
     this._lastTime = performance.now();
-    scene.enter();
-    this._applyUI(scene);
+    this._mountScene(scene);
   }
 
   refreshUI() {
@@ -212,43 +347,21 @@ export class Game {
     }
   }
 
-  _applyUI(scene) {
-    const html = scene.renderUI();
-    if (html !== undefined && html !== null) {
-      scene.root.innerHTML = html;
+  _updateScenes(dt, start) {
+    for (let i = start; i < this._sceneStack.length; i++) {
+      this._sceneStack[i].update(dt);
     }
   }
 
-  _updateScenes(dt) {
-    const stack = this._sceneStack;
-    let start = 0;
-    for (let i = stack.length - 1; i >= 0; i--) {
-      if (stack[i].blocksUpdateBelow()) { start = i; break; }
-    }
-    for (let i = start; i < stack.length; i++) {
-      stack[i].update(dt);
+  _interpolateScenes(alpha, start) {
+    for (let i = start; i < this._sceneStack.length; i++) {
+      this._sceneStack[i].interpolate?.(alpha);
     }
   }
 
-  _interpolateScenes(alpha) {
-    const stack = this._sceneStack;
-    let start = 0;
-    for (let i = stack.length - 1; i >= 0; i--) {
-      if (stack[i].blocksUpdateBelow()) { start = i; break; }
-    }
-    for (let i = start; i < stack.length; i++) {
-      stack[i].interpolate?.(alpha);
-    }
-  }
-
-  _renderScenes(ctx) {
-    const stack = this._sceneStack;
-    let start = 0;
-    for (let i = stack.length - 1; i >= 0; i--) {
-      if (stack[i].blocksRenderBelow()) { start = i; break; }
-    }
-    for (let i = start; i < stack.length; i++) {
-      stack[i].render(ctx);
+  _renderScenes(ctx, start) {
+    for (let i = start; i < this._sceneStack.length; i++) {
+      this._sceneStack[i].render(ctx);
     }
   }
 
@@ -264,23 +377,30 @@ export class Game {
     this._lastTime = time;
 
     const ticks = this.clock.tick(realDt);
+    const updateStart = this._findBlockingIndex("blocksUpdateBelow");
+    const renderStart = this._findBlockingIndex("blocksRenderBelow");
+
+    this._updating = true;
 
     if (ticks > 0) {
-      this._updateScenes(this.clock.fixedDt);
+      this._updateScenes(this.clock.fixedDt, updateStart);
       this.input.clearJustPressed();
       for (let i = 1; i < ticks; i++) {
-        this._updateScenes(this.clock.fixedDt);
+        this._updateScenes(this.clock.fixedDt, updateStart);
       }
     }
 
     this.input.updateFrame();
+    this._interpolateScenes(this.clock.alpha, updateStart);
 
-    this._interpolateScenes(this.clock.alpha);
+    this._updating = false;
+
+    this._flushSceneOps();
 
     this.fps += ((1 / Math.max(realDt, 0.001)) - this.fps) * 0.05;
 
     this.ctx.clearRect(0, 0, this.width, this.height);
-    this._renderScenes(this.ctx);
+    this._renderScenes(this.ctx, renderStart);
 
     this._rafId = requestAnimationFrame((t) => this._loop(t));
   }
@@ -294,11 +414,7 @@ export class Game {
     }
     if (this._resizeHandler) window.removeEventListener("resize", this._resizeHandler);
     if (this._resizeObserver) this._resizeObserver.disconnect();
-    for (const s of this._sceneStack) {
-      s.exit();
-      s.root.remove();
-    }
-    this._sceneStack = [];
+    this._resetSceneStack();
     this.input.destroy();
   }
 }

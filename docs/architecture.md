@@ -234,24 +234,37 @@ Game
 ├── run(scene)               initial scene (clears stack)
 ├── pushScene(scene)         stack an overlay
 ├── popScene()               remove the top overlay
+├── replaceScene(scene)      pop current + push new (correct lifecycle)
 ├── peekScene() → Scene      top without side effects
 ├── switchScene(scene)       full replacement (clears stack)
-└── get scene                → peekScene() (backward compat)
+├── get scene                → peekScene() (backward compat)
+├── get sceneCount           → _sceneStack.length
+├── getScenes() → Scene[]    → shallow copy of stack (safe)
+├── getScene(index) → Scene  → bounds-checked access
+├── containsScene(scene)     → _sceneStack.includes(scene)
+├── isTopScene(scene)        → this.scene === scene
+└── Scene delegates          pushScene/popScene/replaceScene/switchScene
 ```
 
 ### Lifecycle Order
 
 ```
 pushScene(newScene)
-├── top.pause()
-├── top.covered()
+├── if newScene.blocksUpdateBelow:
+│   └── top.pause()
 └── newScene.enter()
 
 popScene()
 ├── top.exit()
-├── top.root.remove()
-├── below.uncovered()
-├── below.resume()
+├── if top.blocksUpdateBelow:
+│   └── below.resume()
+└── refresh UI
+
+replaceScene(scene)
+├── old = stack.pop()
+├── old.exit()
+├── stack.push(scene)
+├── scene.enter()
 └── refresh UI
 
 switchScene(newScene)
@@ -267,13 +280,20 @@ switchScene(newScene)
 
 Each scene can control whether scenes below it receive updates and renders.
 
-| Hook | Default | Purpose |
+| Property | Default | Purpose |
 |---|---|---|
-| `blocksUpdateBelow()` | `true` | Stop game logic when paused |
-| `blocksRenderBelow()` | `false` | Show game dimmed behind menu |
+| `blocksUpdateBelow` | `true` | Stop game logic when paused |
+| `blocksRenderBelow` | `false` | Show game dimmed behind menu |
+
+Pause/resume lifecycle is aligned with update blocking. A scene pushed with
+`blocksUpdateBelow = false` (e.g. FPS overlay, chat) does NOT pause the scene
+below it. On pop, the scene below is resumed only if the popped scene had been
+blocking updates.
 
 Traversal walks downward from top until a blocker is found, then executes
-the visible set bottom-to-top. Zero allocation — uses index iteration.
+the visible set bottom-to-top. Blocking indices are computed once per frame
+inside `_loop()` and shared across `_updateScenes`, `_interpolateScenes`, and
+`_renderScenes` — zero redundant scans.
 
 ```
 Stack: [GameScene, PauseScene, InventoryScene]
@@ -293,37 +313,100 @@ _renderScenes:
 ### Scene Lifecycle Hooks
 
 | Hook | When Called |
-|---|---|
-| `enter()` | Scene becomes active (first-time or after switch) |
-| `exit()` | Scene is removed (pop or switch) |
-| `pause()` | Scene is no longer the top of stack |
-| `resume()` | Scene becomes the top of stack again |
-| `covered()` | Another scene was pushed above this one |
-| `uncovered()` | The scene above was removed |
+|---|---|---|
+| `enter()` | Scene is mounted (after push, replace, switch, or run) |
+| `exit()` | Scene is unmounted (pop, replace, switch, or destroy) |
+| `pause()` | Another scene is pushed above AND `blocksUpdateBelow` is true |
+| `resume()` | Scene becomes top again AND the popped scene had been blocking |
 | `update(dt)` | Each frame if not blocked from below |
 | `interpolate(alpha)` | Each frame, follows same rules as update |
 | `render(ctx)` | Each frame if not blocked from below |
-| `renderUI()` | Called after push/pop/switch to populate DOM |
+| `renderUI()` | Called after push/pop/switch to refresh DOM |
+| `pushScene` / `popScene` / `replaceScene` / `switchScene` | Stack management delegated to `this.game` |
+
+### Lifecycle Safety
+
+#### Single-Use Scenes
+
+Scenes are single-use objects. Once `exit()` is called, the same scene instance
+must not be mounted again. Both `enter()` and `exit()` guard against double
+calls and throw descriptive errors.
+
+```js
+const pause = new PauseScene();
+game.pushScene(pause);
+game.popScene();
+game.pushScene(pause); // throws: scene has already exited
+```
+
+#### Scene Ownership
+
+Each scene belongs to exactly one `Game` instance. Attempting to mount a scene
+on a second game throws:
+
+```js
+gameA.pushScene(scene);
+gameB.pushScene(scene); // throws: belongs to another Game
+```
+
+#### Mutation Safety During Update
+
+Scene operations (`pushScene`, `popScene`, `replaceScene`, `switchScene`) that
+occur during `update()` or `interpolate()` are queued and deferred. They are
+flushed in FIFO order after the update phase finishes and before rendering.
+
+This prevents subtle iteration bugs when scene code mutates the stack:
+
+```js
+update(dt) {
+  this.pushScene(new PauseScene()); // queued, not executed now
+  this.popScene();                   // queued
+}
+// flushed after update, before render
+```
+
+#### Input Validation
+
+All scene-accepting methods validate their argument:
+
+| Method | Rejects |
+|---|---|
+| `run(scene)` | null, non-Scene, already-running game |
+| `pushScene(scene)` | null, non-Scene |
+| `replaceScene(scene)` | null, non-Scene |
+| `switchScene(scene)` | null, non-Scene |
+| `popScene()` | empty stack or last remaining scene |
 
 ### Per-Frame Lifecycle
 
 ```
 Game._loop(time)
 │
-├── _updateScenes(fixedDt)
-│   │  only scenes not blocked from below
-│   ├── user input handling
-│   ├── animationSystem.update(group, dt)
-│   ├── movementSystem.update(group, dt)
-│   ├── collisionSystem.beginFrame()
-│   ├── collisionSystem.collideXxx(...)
-│   └── scene-specific logic
+├── compute updateStart = _findBlockingIndex("blocksUpdateBelow")
+├── compute renderStart = _findBlockingIndex("blocksRenderBelow")
 │
-├── _interpolateScenes(alpha)
-│   same visibility as update
+├── _updating = true
+│   │  scene operations are queued, not executed immediately
+│   │
+│   ├── _updateScenes(fixedDt, updateStart)
+│   │   │  only scenes at or above updateStart
+│   │   ├── user input handling
+│   │   ├── animationSystem.update(group, dt)
+│   │   ├── movementSystem.update(group, dt)
+│   │   ├── collisionSystem.beginFrame()
+│   │   ├── collisionSystem.collideXxx(...)
+│   │   └── scene-specific logic
+│   │
+│   ├── _interpolateScenes(alpha, updateStart)
+│   │   same visibility as update
+│   │
+│   └── _updating = false
 │
-└── _renderScenes(ctx)
-    │  only scenes not blocked from below
+├── _flushSceneOps()
+│   executes all queued push/pop/replace/switch in FIFO order
+│
+└── _renderScenes(ctx, renderStart)
+    │  only scenes at or above renderStart
     ├── renderSystem.render(ctx, group, camera?)
     └── scene-specific rendering
 ```

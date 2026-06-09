@@ -1,10 +1,21 @@
 import { Input } from "../input/Input.js";
 
+// Scenes are single-use objects.
+// Once exited, they must not be re-entered or re-mounted.
+// Create a new scene instance instead.
+
 export class Scene {
   constructor() {
     this.dom = null;
     this.root = document.createElement("div");
+    this.root.style.position = "absolute";
+    this.root.style.inset = "0";
     this._cleanups = [];
+    this._entered = false;
+    this._exited = false;
+    this._game = null;
+    this.blocksUpdateBelow = true;
+    this.blocksRenderBelow = false;
   }
 
   on(target, event, handler) {
@@ -24,31 +35,48 @@ export class Scene {
     this._cleanups.push(fn);
   }
 
-  enter() {}
+  enter() {
+    if (this._entered) {
+      throw new Error("Scene.enter() called more than once");
+    }
+    this._entered = true;
+  }
 
   exit() {
-    for (const fn of this._cleanups) fn();
+    if (this._exited) {
+      throw new Error("Scene.exit() called more than once");
+    }
+    this._exited = true;
+    for (const fn of this._cleanups) {
+      try { fn(); } catch (err) { console.error(err); }
+    }
     this._cleanups = [];
   }
 
   pause() {}
   resume() {}
-  covered() {}
-  uncovered() {}
   update(dt) {}
   interpolate(alpha) {}
   render(ctx) {}
   renderUI() {}
 
-  blocksUpdateBelow() {
-    return true;
+  pushScene(scene) {
+    if (this.game) this.game.pushScene(scene);
   }
 
-  blocksRenderBelow() {
-    return false;
+  popScene() {
+    if (this.game) this.game.popScene();
+  }
+
+  replaceScene(scene) {
+    if (this.game) this.game.replaceScene(scene);
+  }
+
+  switchScene(scene) {
+    if (this.game) this.game.switchScene(scene);
   }
 
   transitionTo(scene) {
-    if (this.game) this.game.switchScene(scene);
+    this.switchScene(scene);
   }
 }
