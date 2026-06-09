@@ -68,7 +68,8 @@ Note: `getPointers()` now returns an iterator (not an array). Use `for...of` or 
 | `ImageLoader` | Image preloading with in-memory cache |
 | `FontLoader` | FontFace loading for custom web fonts |
 | `LoadingTask` | Async loading tracker for preload progress |
-| `Pool` | Object pool for allocation-free reuse |
+| `Pool` | Low-level object pool for allocation-free reuse. Tracks free objects and capacity. |
+| `ActivePool` | Lifecycle-aware object pool built on `Pool`. Tracks active/inactive objects, O(1) acquire/release via index-tagged objects, batch operations (`acquireMany`, `releaseMany`, `releaseInactive`, `clearActive`, `warmup`), and full statistics (`activeCount`, `freeCount`, `capacity`, `peakActive`, `peakFree`, `peakCapacity`, `totalCreated`). |
 | `MovementSystem` | Batch movement logic. Accepts any iterable of entities with `velocity` + `transform`. |
 | `AnimationSystem` | Batch frame advancement with per-clip FPS, `while` catch-up, looping, and completion callbacks. Zero allocations. |
 | `RenderSystem` | Batch rendering with camera culling, rotation, and scale. Camera is optional — no camera needed for simple games. |

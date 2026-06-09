@@ -1,6 +1,6 @@
 {
   "name": "jygame",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "A lightweight 2D game framework for the browser",
   "type": "module",
   "main": "./jygame.js",
@@ -35,7 +35,7 @@
     "type": "git",
     "url": "git+https://github.com/Bouzidi-Youssef/Jygame.git"
   },
-  "homepage": "https://github.com/Bouzidi-Youssef/Jygame#readme",
+  "homepage": "https://jygame-documentation.vercel.app/",
   "bugs": {
     "url": "https://github.com/Bouzidi-Youssef/Jygame/issues"
   },
