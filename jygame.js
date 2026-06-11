@@ -27,4 +27,8 @@ export { Camera } from "./camera/Camera.js";
 export { CollisionSystem, collisionSystem } from "./systems/CollisionSystem.js";
 export { Particle } from "./display/Particle.js";
 export { ParticleSystem } from "./systems/ParticleSystem.js";
+export { FadeModifier } from "./modifiers/FadeModifier.js";
+export { ScaleModifier } from "./modifiers/ScaleModifier.js";
+export { VelocityModifier } from "./modifiers/VelocityModifier.js";
+export { ColorModifier } from "./modifiers/ColorModifier.js";
 export { ParticleEmitter } from "./systems/ParticleEmitter.js";

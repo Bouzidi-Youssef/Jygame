@@ -14,7 +14,12 @@ const _resetParticle = p => {
   p.rotation = 0;
   p.rotationSpeed = 0;
   p.alpha = 1;
+  p.r = 255;
+  p.g = 255;
+  p.b = 255;
   p.color = "#ffffff";
+  p.ageRatio = 0;
+  p.__jygameColorSegment = 0;
 };
 
 export class ParticleSystem {
@@ -24,24 +29,55 @@ export class ParticleSystem {
       create: () => new Particle(),
       reset: _resetParticle,
     });
+    this._modifiers = [];
+  }
+
+  addModifier(modifier) {
+    this._modifiers.push(modifier);
+  }
+
+  removeModifier(modifier) {
+    const idx = this._modifiers.indexOf(modifier);
+    if (idx !== -1) {
+      const last = this._modifiers.pop();
+      if (idx < this._modifiers.length) {
+        this._modifiers[idx] = last;
+      }
+    }
+  }
+
+  clearModifiers() {
+    this._modifiers.length = 0;
   }
 
   emit(count, initializer, emitter) {
+    const modifiers = this._modifiers;
+    const modCount = modifiers.length;
     for (let i = 0; i < count; i++) {
       const p = this._pool.acquire();
       if (initializer) initializer(p, i, emitter);
+      for (let m = 0; m < modCount; m++) {
+        modifiers[m].onEmit?.(p);
+      }
     }
   }
 
   emitOne(initializer) {
     const p = this._pool.acquire();
     if (initializer) initializer(p, 0);
+    const modifiers = this._modifiers;
+    for (let m = 0; m < modifiers.length; m++) {
+      modifiers[m].onEmit?.(p);
+    }
     return p;
   }
 
   update(dt) {
     const active = this._pool.activeObjects;
     const pool = this._pool;
+    const modifiers = this._modifiers;
+    const modCount = modifiers.length;
+    const hasModifiers = modCount > 0;
     for (let i = active.length - 1; i >= 0; i--) {
       const p = active[i];
 
@@ -51,8 +87,22 @@ export class ParticleSystem {
       p.y += p.vy * dt;
       p.rotation += p.rotationSpeed * dt;
       p.life -= dt;
+      p.ageRatio = p.maxLife > 0
+        ? Math.max(0, Math.min(1, 1 - p.life / p.maxLife))
+        : 0;
+
+      if (hasModifiers) {
+        for (let m = 0; m < modCount; m++) {
+          modifiers[m].update?.(p, dt);
+        }
+      }
 
       if (p.life <= 0) {
+        if (hasModifiers) {
+          for (let m = 0; m < modCount; m++) {
+            modifiers[m].onDeath?.(p);
+          }
+        }
         pool.release(p);
       }
     }
@@ -67,7 +117,7 @@ export class ParticleSystem {
       if (this._renderParticle) {
         this._renderParticle(ctx, p);
       } else {
-        ctx.fillStyle = p.color;
+        ctx.fillStyle = `rgb(${p.r | 0},${p.g | 0},${p.b | 0})`;
         ctx.fillRect(p.x - p.size * 0.5, p.y - p.size * 0.5, p.size, p.size);
       }
     }
@@ -78,61 +128,46 @@ export class ParticleSystem {
     this._pool.clearActive();
   }
 
-  /**
-   * Direct read-only reference to the active particles array.
-   * Do NOT push, pop, splice, or mutate this array directly.
-   * Use emit() / clear() / the pool API instead.
-   */
   get particles() {
     return this._pool.activeObjects;
   }
 
-  /** Pre-allocate particle objects so runtime bursts never allocate. */
   warmup(count) {
     this._pool.warmup(count);
   }
 
-  /** Currently active particles. */
   get activeCount() {
     return this._pool.activeCount;
   }
 
-  /** Particles sitting in the pool ready for reuse. */
   get freeCount() {
     return this._pool.freeCount;
   }
 
-  /** Total managed particles (active + free). */
   get capacity() {
     return this._pool.capacity;
   }
 
-  /** Highest activeCount ever reached. */
   get peakActive() {
     return this._pool.peakActive;
   }
 
-  /** Highest capacity (active + free) ever reached. */
   get peakCapacity() {
     return this._pool.peakCapacity;
   }
 
-  /** Highest freeCount ever reached. Useful for tuning warmup sizes. */
   get peakFree() {
     return this._pool.peakFree;
   }
 
-  /** Total particle objects ever allocated over the system's lifetime. */
   get totalCreated() {
     return this._pool.totalCreated;
   }
 
-  /** True when no particles are active. */
   get isEmpty() {
     return this.activeCount === 0;
   }
 
-  /** True when one or more particles are active. */
   get hasParticles() {
     return this.activeCount > 0;
   }

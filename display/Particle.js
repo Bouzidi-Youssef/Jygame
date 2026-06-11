@@ -19,7 +19,14 @@ export class Particle {
 
     this.alpha = 1;
 
+    this.r = 255;
+    this.g = 255;
+    this.b = 255;
+
     this.color = "#ffffff";
+
+    this.ageRatio = 0;
+    this.__jygameColorSegment = 0;
   }
 
   get lifeRatio() {
