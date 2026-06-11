@@ -78,6 +78,13 @@ export class ParticleSystem {
     const modifiers = this._modifiers;
     const modCount = modifiers.length;
     const hasModifiers = modCount > 0;
+
+    if (hasModifiers) {
+      for (let m = 0; m < modCount; m++) {
+        modifiers[m].prepare?.(dt);
+      }
+    }
+
     for (let i = active.length - 1; i >= 0; i--) {
       const p = active[i];
 

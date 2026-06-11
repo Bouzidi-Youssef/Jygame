@@ -1,11 +1,17 @@
 export class VelocityModifier {
-  constructor({ drag = 0 } = {}) {
+  constructor({ drag = 0, affectX = true, affectY = true } = {}) {
     this._drag = Math.max(0, drag);
+    this._affectX = affectX;
+    this._affectY = affectY;
+    this._factor = 1;
+  }
+
+  prepare(dt) {
+    this._factor = Math.exp(-this._drag * dt);
   }
 
   update(particle, dt) {
-    const factor = Math.max(0, 1 - this._drag * dt);
-    particle.vx *= factor;
-    particle.vy *= factor;
+    if (this._affectX) particle.vx *= this._factor;
+    if (this._affectY) particle.vy *= this._factor;
   }
 }

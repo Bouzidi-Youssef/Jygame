@@ -29,7 +29,7 @@ export class ColorModifier {
   update(particle, dt) {
     const stops = this._stops;
     let seg = particle.__jygameColorSegment;
-    while (seg < this._count - 1 && stops[seg + 1].pos < particle.ageRatio) {
+    while (seg < this._count - 2 && particle.ageRatio >= stops[seg + 1].pos) {
       seg++;
     }
     particle.__jygameColorSegment = seg;
