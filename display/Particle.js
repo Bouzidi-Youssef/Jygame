@@ -25,8 +25,42 @@ export class Particle {
 
     this.color = "#ffffff";
 
+    this.texture = null;
+
+    this.originX = 0.5;
+    this.originY = 0.5;
+
+    this.width = 0;
+    this.height = 0;
+
+    this.frameX = 0;
+    this.frameY = 0;
+    this.frameWidth = 0;
+    this.frameHeight = 0;
+
+    this.userData = null;
+
     this.ageRatio = 0;
+    this.__jygameAnimOffset = 0;
+    this.__jygameAnimPrevFrame = -1;
+    this.__jygameAnimLoopCount = 0;
     this.__jygameColorSegment = 0;
+  }
+
+  setFrame(x, y, width, height) {
+    this.frameX = x;
+    this.frameY = y;
+    this.frameWidth = width;
+    this.frameHeight = height;
+    return this;
+  }
+
+  clearFrame() {
+    this.frameX = 0;
+    this.frameY = 0;
+    this.frameWidth = 0;
+    this.frameHeight = 0;
+    return this;
   }
 
   get lifeRatio() {

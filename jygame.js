@@ -32,3 +32,4 @@ export { ScaleModifier } from "./modifiers/ScaleModifier.js";
 export { VelocityModifier } from "./modifiers/VelocityModifier.js";
 export { ColorModifier } from "./modifiers/ColorModifier.js";
 export { ParticleEmitter } from "./systems/ParticleEmitter.js";
+export { AnimatedSpriteModifier } from "./modifiers/AnimatedSpriteModifier.js";
