@@ -68,6 +68,9 @@ Note: `getPointers()` now returns an iterator (not an array). Use `for...of` or 
 | `ImageLoader` | Image preloading with in-memory cache |
 | `FontLoader` | FontFace loading for custom web fonts |
 | `LoadingTask` | Async loading tracker for preload progress |
+| `AudioLoader` | Audio asset loader with in-memory cache. Loads HTMLAudioElement assets via `load(path)`, batch loading via `loadAll(map)`. Uses `canplaythrough` for readiness detection. |
+| `AudioManager` | Sound registry with `add(key, asset)` / `get(key)` / `remove(key)`. Manages Sound lifecycle; destroys owned sounds on `clear()` / `destroy()`. |
+| `Sound` | HTMLAudioElement wrapper. Constructor takes an audio asset directly. Volume/loop/muted controls, play/pause/stop/restart, and `destroy()` with safety guards. Internal `_playInternal` / `_pauseInternal` / `_stopInternal` abstraction for future backend migration. |
 | `Pool` | Low-level object pool for allocation-free reuse. Tracks free objects and capacity. |
 | `ActivePool` | Lifecycle-aware object pool built on `Pool`. Tracks active/inactive objects, O(1) acquire/release via index-tagged objects, batch operations (`acquireMany`, `releaseMany`, `releaseInactive`, `clearActive`, `warmup`), and full statistics (`activeCount`, `freeCount`, `capacity`, `peakActive`, `peakFree`, `peakCapacity`, `totalCreated`). |
 | `Particle` | Lightweight data container for particle effects. Fields: `x`, `y`, `vx`, `vy`, `ax`, `ay`, `life`, `maxLife`, `size`, `rotation`, `rotationSpeed`, `alpha`, `color`. |
@@ -77,6 +80,7 @@ Note: `getPointers()` now returns an iterator (not an array). Use `for...of` or 
 | `ScaleModifier` | Particle modifier that interpolates `size` from `from` to `to` over lifetime. Constructor: `{ from: number, to: number }`. Default: `{ from: 1, to: 0 }`. |
 | `VelocityModifier` | Particle modifier that applies velocity damping. Constructor: `{ drag: number, affectX: boolean, affectY: boolean }`. Exponential damping via `beginFrame` (1 `exp()` per frame regardless of particle count). `affectX`/`affectY` for per-axis control (default both `true`). Frame-rate independent. Zero allocations. |
 | `ColorModifier` | Particle modifier that transitions color over lifetime. Constructor: `{ from: "#hex", to: "#hex" }` (two-stop) or `{ stops: [[pos, "#hex"], ...] }` (multi-stop gradient). Pre-parses all hex in constructor; writes `r/g/b` channels directly (no string). Render builds `rgb(r,g,b)` at draw time. |
+| `AnimatedSpriteModifier` | Particle modifier for sprite-sheet animation. Modes: `once`, `loop`, `pingpong`, `random`. Configurable frame durations, per-particle animation state, and frame-change event callbacks. |
 | `MovementSystem` | Batch movement logic. Accepts any iterable of entities with `velocity` + `transform`. |
 | `AnimationSystem` | Batch frame advancement with per-clip FPS, `while` catch-up, looping, and completion callbacks. Zero allocations. |
 | `RenderSystem` | Batch rendering with camera culling, rotation, and scale. Camera is optional — no camera needed for simple games. |

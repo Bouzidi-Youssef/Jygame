@@ -1,4 +1,4 @@
-import { LoadingTask } from "./LoadingTask.js";
+import { LoadingTask } from "../core/LoadingTask.js";
 
 const _loaded = new Set();
 
