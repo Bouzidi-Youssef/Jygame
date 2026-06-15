@@ -19,10 +19,13 @@
     "components/",
     "display/",
     "input/",
-    "assets/",
     "core/",
     "memory/",
-    "systems/"
+    "systems/",
+    "loaders/",
+    "audio/",
+    "modifiers/",
+    "camera/"
   ],
   "keywords": [
     "game",
@@ -41,5 +44,8 @@
   },
   "license": "GPL-3.0-only",
   "author": "Bouzidi Youssef",
-  "sideEffects": false
+  "sideEffects": false,
+  "scripts": {
+    "test": "echo \"No tests yet\" && exit 0"
+  }
 }
