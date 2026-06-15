@@ -1,11 +1,40 @@
 import { Sound } from "./Sound.js";
+import { Music } from "./Music.js";
 import { AudioGroup } from "./AudioGroup.js";
 import { AudioDefinition } from "./AudioDefinition.js";
 import { AudioListener } from "./AudioListener.js";
 import { AudioLoader } from "../loaders/AudioLoader.js";
+import { HtmlAudioBackend } from "./backends/HtmlAudioBackend.js";
+
+export const ATTENUATION_LINEAR = "linear";
+export const ATTENUATION_QUADRATIC = "quadratic";
+export const ATTENUATION_INVERSE = "inverse";
+
+export function computeAttenuation(distance, minDistance, maxDistance, model, inverseRolloff) {
+  const normalized = distance / maxDistance;
+  let factor;
+  switch (model) {
+    case ATTENUATION_LINEAR:
+      factor = 1 - normalized;
+      break;
+    case ATTENUATION_QUADRATIC:
+      factor = 1 - normalized * normalized;
+      break;
+    case ATTENUATION_INVERSE:
+      factor = 1 / (1 + inverseRolloff * normalized);
+      break;
+    default:
+      factor = 1 - normalized;
+      break;
+  }
+  return factor < 0 ? 0 : factor > 1 ? 1 : factor;
+}
+
+const VALID_ATTENUATIONS = new Set([ATTENUATION_LINEAR, ATTENUATION_QUADRATIC, ATTENUATION_INVERSE]);
 
 export class AudioManager {
-  constructor() {
+  constructor(options = {}) {
+    this._backend = options.backend || new HtmlAudioBackend();
     this._sounds = new Map();
     this._definitions = new Map();
     this._soundsByDefinition = new Map();
@@ -14,6 +43,9 @@ export class AudioManager {
     this._masterMuted = false;
     this._currentMusic = null;
     this._listener = new AudioListener();
+    this._attenuation = ATTENUATION_LINEAR;
+    this._inverseRolloff = 4;
+    this._musicCache = new Map();
 
     this._createGroup("master");
     this._createGroup("music");
@@ -23,6 +55,19 @@ export class AudioManager {
   }
 
   get listener() { return this._listener; }
+
+  get attenuation() { return this._attenuation; }
+  set attenuation(value) {
+    if (!VALID_ATTENUATIONS.has(value)) {
+      throw new Error("Invalid attenuation model: '" + value + "'. Must be 'linear', 'quadratic', or 'inverse'.");
+    }
+    this._attenuation = value;
+  }
+
+  get inverseRolloff() { return this._inverseRolloff; }
+  set inverseRolloff(value) {
+    this._inverseRolloff = Math.max(0, value);
+  }
 
   get _effectiveMasterVolume() {
     return this._masterMuted ? 0 : this._masterVolume;
@@ -41,12 +86,15 @@ export class AudioManager {
     return this._groups.get(name);
   }
 
-  _onGroupVolumeChange(name) {
+  _onGroupVolumeChange() {
     for (const sound of this._sounds.values()) {
-      if (sound._groupName === name) sound._updateAllVolumes();
+      sound._updateAllVolumes();
     }
     for (const sound of this._soundsByDefinition.values()) {
-      if (sound._groupName === name) sound._updateAllVolumes();
+      sound._updateAllVolumes();
+    }
+    for (const music of this._musicCache.values()) {
+      if (music._instance) music._updateVolume();
     }
   }
 
@@ -69,7 +117,7 @@ export class AudioManager {
     if (!asset) throw new Error("AudioManager.add() requires an audio asset");
     if (this._sounds.has(key)) throw new Error("Sound '" + key + "' already exists");
 
-    const sound = new Sound(asset, this);
+    const sound = new Sound(asset, this, { backend: this._backend });
     this._sounds.set(key, sound);
     return sound;
   }
@@ -124,7 +172,7 @@ export class AudioManager {
       const asset = AudioLoader.get(def.source);
       if (!asset) throw new Error("Asset '" + def.source + "' not loaded. Use AudioLoader to load it first.");
 
-      sound = new Sound(asset, this, { maxInstances: def.maxInstances === Infinity ? undefined : def.maxInstances });
+      sound = new Sound(asset, this, { maxInstances: def.maxInstances === Infinity ? undefined : def.maxInstances, backend: this._backend });
       sound.volume = def.volume;
       sound.group = def.group;
       this._soundsByDefinition.set(name, sound);
@@ -138,7 +186,6 @@ export class AudioManager {
       spatialOpts.y = options.y;
       spatialOpts.minDistance = options.minDistance !== undefined ? options.minDistance : def.minDistance;
       spatialOpts.maxDistance = options.maxDistance !== undefined ? options.maxDistance : def.maxDistance;
-      spatialOpts.rolloff = options.rolloff !== undefined ? options.rolloff : def.rolloff;
     }
 
     const instance = sound.play(spatialOpts);
@@ -158,7 +205,34 @@ export class AudioManager {
     return instance;
   }
 
+  music(key) {
+    if (this._musicCache.has(key)) return this._musicCache.get(key);
+
+    let sound = this._sounds.get(key);
+    if (!sound) {
+      sound = this._soundsByDefinition.get(key);
+    }
+    if (!sound) {
+      const def = this._definitions.get(key);
+      if (def) {
+        const asset = AudioLoader.get(def.source);
+        if (!asset) throw new Error("Asset '" + def.source + "' not loaded. Use AudioLoader to load it first.");
+        sound = new Sound(asset, this, { maxInstances: 1, backend: this._backend });
+        sound.volume = def.volume;
+        sound.group = def.group;
+        this._soundsByDefinition.set(key, sound);
+      }
+    }
+    if (!sound) throw new Error("Sound '" + key + "' not found. Use audio.add() or audio.define() first.");
+
+    const music = new Music(sound);
+    this._musicCache.set(key, music);
+    return music;
+  }
+
   clear() {
+    for (const music of this._musicCache.values()) music.destroy();
+    this._musicCache.clear();
     if (this._currentMusic) {
       this._currentMusic._stopAll();
       this._currentMusic = null;
@@ -175,9 +249,20 @@ export class AudioManager {
     for (const group of this._groups.values()) group._manager = null;
     this._groups.clear();
     this._listener = null;
+    this._musicCache.clear();
+    this._backend.destroy();
+    this._backend = null;
   }
 
-  update() {
+  suspend() {
+    this._backend.suspend();
+  }
+
+  resume() {
+    this._backend.resume();
+  }
+
+  update(dt) {
     for (const sound of this._sounds.values()) {
       const instances = sound._activeInstances;
       for (let i = 0; i < instances.length; i++) {
@@ -190,6 +275,11 @@ export class AudioManager {
       for (let i = 0; i < instances.length; i++) {
         const inst = instances[i];
         if (inst._spatial) inst._applyVolume();
+      }
+    }
+    if (dt > 0) {
+      for (const music of this._musicCache.values()) {
+        music.update(dt);
       }
     }
   }

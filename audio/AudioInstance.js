@@ -1,6 +1,8 @@
+import { computeAttenuation, ATTENUATION_LINEAR, ATTENUATION_QUADRATIC, ATTENUATION_INVERSE } from "./AudioManager.js";
+
 export class AudioInstance {
-  constructor(audio, sound) {
-    this._audio = audio;
+  constructor(playback, sound) {
+    this._playback = playback;
     this._sound = sound;
     this._volume = 1;
     this._destroyed = false;
@@ -13,14 +15,13 @@ export class AudioInstance {
     this._spatial = false;
     this._minDistance = 32;
     this._maxDistance = 512;
-    this._rolloff = "linear";
 
     this._onEnded = () => {
       if (this._destroyed) return;
       this._sound._returnInstance(this);
     };
 
-    audio.addEventListener("ended", this._onEnded);
+    this._playback.onEnded(this._onEnded);
   }
 
   get volume() { return this._destroyed ? 0 : this._volume; }
@@ -30,18 +31,18 @@ export class AudioInstance {
     this._applyVolume();
   }
 
-  get loop() { return this._destroyed ? false : this._audio.loop; }
-  set loop(value) { if (!this._destroyed) this._audio.loop = value; }
+  get loop() { return this._destroyed ? false : this._playback.loop; }
+  set loop(value) { if (!this._destroyed) this._playback.loop = value; }
 
-  get muted() { return this._destroyed ? true : this._audio.muted; }
-  set muted(value) { if (!this._destroyed) this._audio.muted = value; }
+  get muted() { return this._destroyed ? true : this._playback.muted; }
+  set muted(value) { if (!this._destroyed) this._playback.muted = value; }
 
-  get currentTime() { return this._destroyed ? 0 : this._audio.currentTime; }
-  set currentTime(value) { if (!this._destroyed) this._audio.currentTime = Math.max(0, value); }
+  get currentTime() { return this._destroyed ? 0 : this._playback.currentTime; }
+  set currentTime(value) { if (!this._destroyed) this._playback.currentTime = Math.max(0, value); }
 
-  get duration() { return this._destroyed ? 0 : this._audio.duration; }
-  get paused() { return this._destroyed ? true : this._audio.paused; }
-  get ended() { return this._destroyed ? false : this._audio.ended; }
+  get duration() { return this._destroyed ? 0 : this._playback.duration; }
+  get paused() { return this._destroyed ? true : this._playback.paused; }
+  get ended() { return this._destroyed ? false : this._playback.ended; }
 
   get isPlaying() { return !this.paused && !this.ended; }
 
@@ -79,13 +80,6 @@ export class AudioInstance {
     }
   }
 
-  get rolloff() { return this._rolloff; }
-  set rolloff(value) {
-    if (!this._destroyed) {
-      this._rolloff = value || "linear";
-    }
-  }
-
   _checkNotDestroyed() {
     if (this._destroyed) throw new Error("Cannot use destroyed AudioInstance");
   }
@@ -93,26 +87,24 @@ export class AudioInstance {
   play() {
     this._checkNotDestroyed();
     this._applyVolume();
-    return this._audio.play().catch(() => {});
+    return this._playback.play();
   }
 
   pause() {
     this._checkNotDestroyed();
-    this._audio.pause();
+    this._playback.pause();
   }
 
   stop() {
     this._checkNotDestroyed();
-    this._audio.pause();
-    this._audio.currentTime = 0;
+    this._playback.stop();
   }
 
   restart() {
     this._checkNotDestroyed();
-    this._audio.pause();
-    this._audio.currentTime = 0;
+    this._playback.stop();
     this._applyVolume();
-    return this._audio.play().catch(() => {});
+    return this._playback.play();
   }
 
   _computeSpatialVolume() {
@@ -123,21 +115,13 @@ export class AudioInstance {
     const dx = this._x - listener.x;
     const dy = this._y - listener.y;
     const distSq = dx * dx + dy * dy;
-    const maxSq = this._maxDistance * this._maxDistance;
 
-    if (distSq >= maxSq) return 0;
-
-    const minSq = this._minDistance * this._minDistance;
-    if (distSq <= minSq) return 1;
+    if (distSq >= this._maxDistance * this._maxDistance) return 0;
+    if (distSq <= this._minDistance * this._minDistance) return 1;
 
     const dist = Math.sqrt(distSq);
-
-    if (this._rolloff === "linear") {
-      const t = (dist - this._minDistance) / (this._maxDistance - this._minDistance);
-      return 1 - t;
-    }
-
-    return 1;
+    const model = this._sound._attenuation || this._sound._manager._attenuation || ATTENUATION_LINEAR;
+    return computeAttenuation(dist, this._minDistance, this._maxDistance, model, this._sound._manager._inverseRolloff);
   }
 
   _applyVolume() {
@@ -146,14 +130,14 @@ export class AudioInstance {
     const groupVol = this._overrideGroup !== null
       ? this._sound._getVolumeForGroup(this._overrideGroup)
       : this._sound._getGroupVolume();
-    this._audio.volume = this._volume * spatialVol * soundVol * groupVol * this._sound._getMasterVolume();
+    this._playback.volume = this._volume * spatialVol * soundVol * groupVol * this._sound._getMasterVolume();
   }
 
   _reset() {
-    this._audio.pause();
-    this._audio.currentTime = 0;
-    this._audio.loop = false;
-    this._audio.muted = false;
+    this._playback.pause();
+    this._playback.currentTime = 0;
+    this._playback.loop = false;
+    this._playback.muted = false;
     this._volume = 1;
     this._pausedByManager = false;
     this._overrideSoundVolume = null;
@@ -163,15 +147,14 @@ export class AudioInstance {
     this._spatial = false;
     this._minDistance = 32;
     this._maxDistance = 512;
-    this._rolloff = "linear";
   }
 
   destroy() {
     if (this._destroyed) return;
     this._destroyed = true;
-    this._audio.removeEventListener("ended", this._onEnded);
-    this._audio.pause();
-    this._audio = null;
+    this._playback.onEnded(null);
+    this._playback.destroy();
+    this._playback = null;
     this._sound = null;
   }
 }

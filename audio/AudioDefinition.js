@@ -12,7 +12,7 @@ export class AudioDefinition {
     this.spatial = config.spatial ?? false;
     this.minDistance = config.minDistance ?? 32;
     this.maxDistance = config.maxDistance ?? 512;
-    this.rolloff = config.rolloff ?? "linear";
+    this.attenuation = config.attenuation ?? "linear";
 
     if (this.volume < 0 || this.volume > 1) {
       throw new Error("AudioDefinition volume must be between 0 and 1");

@@ -1,14 +1,14 @@
 import { AudioInstance } from "./AudioInstance.js";
+import { ATTENUATION_LINEAR, ATTENUATION_QUADRATIC, ATTENUATION_INVERSE } from "./AudioManager.js";
+import { HtmlAudioBackend } from "./backends/HtmlAudioBackend.js";
 
 export class Sound {
   constructor(asset, manager, options = {}) {
     if (!asset) throw new Error("Sound requires an audio asset");
-    if (typeof asset.play !== "function" || typeof asset.pause !== "function") {
-      throw new Error("Sound asset must have play() and pause() methods");
-    }
 
     this._asset = asset;
     this._manager = manager;
+    this._backend = options.backend || (manager && manager._backend) || new HtmlAudioBackend();
     this._freeInstances = [];
     this._activeInstances = [];
     this._volume = 1;
@@ -16,6 +16,7 @@ export class Sound {
     this._destroyed = false;
     this._maxInstances = options.maxInstances ?? Infinity;
     this._overflowPolicy = options.overflowPolicy || "drop-new";
+    this._attenuation = null;
   }
 
   get volume() { return this._destroyed ? 0 : this._volume; }
@@ -33,6 +34,14 @@ export class Sound {
 
   get isPlaying() { return this._activeInstances.length > 0; }
 
+  get attenuation() { return this._attenuation; }
+  set attenuation(value) {
+    if (value !== null && value !== ATTENUATION_LINEAR && value !== ATTENUATION_QUADRATIC && value !== ATTENUATION_INVERSE) {
+      throw new Error("Invalid attenuation model: '" + value + "'. Must be 'linear', 'quadratic', 'inverse', or null.");
+    }
+    this._attenuation = value;
+  }
+
   play(options = {}) {
     this._checkNotDestroyed();
 
@@ -48,7 +57,6 @@ export class Sound {
     if (options.y !== undefined) instance._y = options.y;
     if (options.minDistance !== undefined) instance._minDistance = options.minDistance;
     if (options.maxDistance !== undefined) instance._maxDistance = options.maxDistance;
-    if (options.rolloff !== undefined) instance._rolloff = options.rolloff;
     if (options.spatial !== undefined) instance._spatial = options.spatial;
     if (options.x !== undefined || options.y !== undefined) instance._spatial = true;
 
@@ -60,8 +68,8 @@ export class Sound {
     if (this._freeInstances.length > 0) {
       return this._freeInstances.pop();
     }
-    const clone = this._asset.cloneNode(true);
-    return new AudioInstance(clone, this);
+    const playback = this._backend.createPlayback(this._asset);
+    return new AudioInstance(playback, this);
   }
 
   _returnInstance(instance) {
@@ -119,7 +127,7 @@ export class Sound {
       if (inst._pausedByManager) {
         inst._pausedByManager = false;
         inst._applyVolume();
-        inst._audio.play().catch(() => {});
+        inst._playback.play();
       }
     }
   }
