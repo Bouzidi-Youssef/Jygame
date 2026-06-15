@@ -37,5 +37,6 @@ export { AudioLoader } from "./loaders/AudioLoader.js";
 export { AudioDefinition } from "./audio/AudioDefinition.js";
 export { AudioInstance } from "./audio/AudioInstance.js";
 export { AudioGroup } from "./audio/AudioGroup.js";
+export { AudioListener } from "./audio/AudioListener.js";
 export { AudioManager } from "./audio/AudioManager.js";
 export { Sound } from "./audio/Sound.js";

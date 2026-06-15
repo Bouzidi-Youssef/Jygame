@@ -1,6 +1,7 @@
 import { Sound } from "./Sound.js";
 import { AudioGroup } from "./AudioGroup.js";
 import { AudioDefinition } from "./AudioDefinition.js";
+import { AudioListener } from "./AudioListener.js";
 import { AudioLoader } from "../loaders/AudioLoader.js";
 
 export class AudioManager {
@@ -12,6 +13,7 @@ export class AudioManager {
     this._masterVolume = 1;
     this._masterMuted = false;
     this._currentMusic = null;
+    this._listener = new AudioListener();
 
     this._createGroup("master");
     this._createGroup("music");
@@ -19,6 +21,8 @@ export class AudioManager {
     this._createGroup("ui");
     this._createGroup("ambient");
   }
+
+  get listener() { return this._listener; }
 
   get _effectiveMasterVolume() {
     return this._masterMuted ? 0 : this._masterVolume;
@@ -126,7 +130,18 @@ export class AudioManager {
       this._soundsByDefinition.set(name, sound);
     }
 
-    const instance = sound.play();
+    const hasPosition = options.x !== undefined || options.y !== undefined;
+    const spatialOpts = {};
+    if (hasPosition) {
+      spatialOpts.spatial = true;
+      spatialOpts.x = options.x;
+      spatialOpts.y = options.y;
+      spatialOpts.minDistance = options.minDistance !== undefined ? options.minDistance : def.minDistance;
+      spatialOpts.maxDistance = options.maxDistance !== undefined ? options.maxDistance : def.maxDistance;
+      spatialOpts.rolloff = options.rolloff !== undefined ? options.rolloff : def.rolloff;
+    }
+
+    const instance = sound.play(spatialOpts);
     if (!instance) return null;
 
     if (options.volume !== undefined) {
@@ -136,7 +151,7 @@ export class AudioManager {
     if (options.group !== undefined) {
       instance._overrideGroup = options.group;
     }
-    if (options.volume !== undefined || options.group !== undefined) {
+    if (options.volume !== undefined || options.group !== undefined || hasPosition) {
       instance._applyVolume();
     }
 
@@ -159,6 +174,24 @@ export class AudioManager {
     this._definitions.clear();
     for (const group of this._groups.values()) group._manager = null;
     this._groups.clear();
+    this._listener = null;
+  }
+
+  update() {
+    for (const sound of this._sounds.values()) {
+      const instances = sound._activeInstances;
+      for (let i = 0; i < instances.length; i++) {
+        const inst = instances[i];
+        if (inst._spatial) inst._applyVolume();
+      }
+    }
+    for (const sound of this._soundsByDefinition.values()) {
+      const instances = sound._activeInstances;
+      for (let i = 0; i < instances.length; i++) {
+        const inst = instances[i];
+        if (inst._spatial) inst._applyVolume();
+      }
+    }
   }
 
   pauseAll() {

@@ -33,7 +33,7 @@ export class Sound {
 
   get isPlaying() { return this._activeInstances.length > 0; }
 
-  play() {
+  play(options = {}) {
     this._checkNotDestroyed();
 
     if (this._activeInstances.length >= this._maxInstances) {
@@ -43,6 +43,15 @@ export class Sound {
     const instance = this._getInstance();
     instance._returned = false;
     this._activeInstances.push(instance);
+
+    if (options.x !== undefined) instance._x = options.x;
+    if (options.y !== undefined) instance._y = options.y;
+    if (options.minDistance !== undefined) instance._minDistance = options.minDistance;
+    if (options.maxDistance !== undefined) instance._maxDistance = options.maxDistance;
+    if (options.rolloff !== undefined) instance._rolloff = options.rolloff;
+    if (options.spatial !== undefined) instance._spatial = options.spatial;
+    if (options.x !== undefined || options.y !== undefined) instance._spatial = true;
+
     instance.restart();
     return instance;
   }
