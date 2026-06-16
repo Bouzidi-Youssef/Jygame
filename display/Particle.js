@@ -45,6 +45,7 @@ export class Particle {
     this.__jygameAnimPrevFrame = -1;
     this.__jygameAnimLoopCount = 0;
     this.__jygameColorSegment = 0;
+    this.__jygameAnimSegments = null;
   }
 
   setFrame(x, y, width, height) {

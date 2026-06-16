@@ -33,6 +33,7 @@ const _resetParticle = p => {
   p.__jygameAnimPrevFrame = -1;
   p.__jygameAnimLoopCount = 0;
   p.__jygameColorSegment = 0;
+  p.__jygameAnimSegments = null;
 };
 
 const _hasLifecycleMethods = mod =>
