@@ -2,10 +2,11 @@ const MAX_EMIT_PER_FRAME = 1000;
 const DEFAULT_FOLLOW_GETTER = t => t.transform;
 
 export class ParticleEmitter {
-  constructor({ system, rate = 0, initializer } = {}) {
+  constructor({ system, rate = 0, shape, initializer } = {}) {
     if (!system) throw new Error("ParticleEmitter requires a `system` (ParticleSystem)");
     this._system = system;
     this._rate = rate;
+    this._shape = shape || null;
     this._initializer = initializer;
     this._accumulator = 0;
     this._emittedCount = 0;
@@ -24,8 +25,12 @@ export class ParticleEmitter {
     this.velocityInheritance = 1;
 
     this._emitWrapper = (p, i, emitter) => {
-      p.x = this.x + this.offsetX;
-      p.y = this.y + this.offsetY;
+      if (this._shape) {
+        this._shape.sample(p);
+      } else {
+        p.x = this.x + this.offsetX;
+        p.y = this.y + this.offsetY;
+      }
       p.vx = this.vx * this.velocityInheritance;
       p.vy = this.vy * this.velocityInheritance;
       if (this._initializer) this._initializer(p, i, emitter);
@@ -62,6 +67,14 @@ export class ParticleEmitter {
 
   set rate(value) {
     this._rate = Math.max(0, value);
+  }
+
+  get shape() {
+    return this._shape;
+  }
+
+  set shape(value) {
+    this._shape = value || null;
   }
 
   get initializer() {
