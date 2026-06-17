@@ -1,4 +1,6 @@
 export class TrailModifier {
+  static _nextId = 0;
+
   constructor({
     mode = "distance",
     every,
@@ -8,6 +10,8 @@ export class TrailModifier {
     maxDistance = Infinity,
     priority
   } = {}) {
+    this._id = TrailModifier._nextId++;
+
     if (mode !== "distance" && mode !== "interval") {
       throw new Error('TrailModifier mode must be "distance" or "interval"');
     }
@@ -41,32 +45,44 @@ export class TrailModifier {
     this.priority = priority;
   }
 
+  _ensureState(particle) {
+    if (!particle.__trailStates) particle.__trailStates = {};
+    let state = particle.__trailStates[this._id];
+    if (!state) {
+      state = { x: 0, y: 0, timer: 0 };
+      particle.__trailStates[this._id] = state;
+    }
+    return state;
+  }
+
   beginFrame() {
     this._spawnedThisFrame = 0;
   }
 
   onEmit(particle) {
-    particle.__jygameTrailX = particle.x;
-    particle.__jygameTrailY = particle.y;
-    particle.__jygameTrailTimer = 0;
+    const state = this._ensureState(particle);
+    state.x = particle.x;
+    state.y = particle.y;
+    state.timer = 0;
   }
 
   update(particle, dt, ctx) {
+    const state = this._ensureState(particle);
     const system = ctx.system;
-    const prevX = particle.__jygameTrailX;
-    const prevY = particle.__jygameTrailY;
+    const prevX = state.x;
+    const prevY = state.y;
     const curX = particle.x;
     const curY = particle.y;
     const dx = curX - prevX;
     const dy = curY - prevY;
 
-    particle.__jygameTrailX = curX;
-    particle.__jygameTrailY = curY;
+    state.x = curX;
+    state.y = curY;
 
     if (this._mode === "interval") {
-      particle.__jygameTrailTimer += dt;
-      while (particle.__jygameTrailTimer >= this._every && this._spawnedThisFrame < this._maxPerFrame) {
-        particle.__jygameTrailTimer -= this._every;
+      state.timer += dt;
+      while (state.timer >= this._every && this._spawnedThisFrame < this._maxPerFrame) {
+        state.timer -= this._every;
         this._spawn(particle, curX, curY, system);
       }
     } else {
@@ -74,15 +90,15 @@ export class TrailModifier {
       if (dist === 0) return;
 
       if (dist > this._maxDistance) {
-        particle.__jygameTrailTimer = 0;
+        state.timer = 0;
         return;
       }
 
-      particle.__jygameTrailTimer += dist;
+      state.timer += dist;
 
-      while (particle.__jygameTrailTimer >= this._every && this._spawnedThisFrame < this._maxPerFrame) {
-        particle.__jygameTrailTimer -= this._every;
-        const t = (dist - particle.__jygameTrailTimer) / dist;
+      while (state.timer >= this._every && this._spawnedThisFrame < this._maxPerFrame) {
+        state.timer -= this._every;
+        const t = (dist - state.timer) / dist;
         const sx = prevX + dx * t;
         const sy = prevY + dy * t;
         this._spawn(particle, sx, sy, system);
@@ -101,5 +117,9 @@ export class TrailModifier {
     this._initializer(child, source);
     this._spawnedThisFrame++;
     this.spawnedCount++;
+  }
+
+  destroy() {
+    this._initializer = null;
   }
 }

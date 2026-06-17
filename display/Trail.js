@@ -1,6 +1,8 @@
-const DEGENERATE = 0;
+const _ZERO = Object.freeze({ x: 0, y: 0 });
 
 export class Trail {
+  static _globalLayerVersion = 0;
+
   constructor({
     maxPoints = 64,
     spacing = 4,
@@ -10,10 +12,8 @@ export class Trail {
     width = 4,
     color = "#ffffff",
     alpha = 1,
-    startColor,
-    endColor,
     widthCurve,
-    alphaCurve
+    layer = 0
   } = {}) {
     if (!Number.isFinite(maxPoints) || maxPoints < 2) {
       throw new Error("Trail maxPoints must be >= 2");
@@ -40,24 +40,29 @@ export class Trail {
     }
     this._mode = mode;
 
-    this.width = width;
-    this.color = color;
-    this.alpha = alpha;
-
-    this._startRGB = null;
-    this._endRGB = null;
-    if (startColor && endColor) {
-      this._startRGB = this._parseHex(startColor);
-      this._endRGB = this._parseHex(endColor);
+    if (!Number.isFinite(width) || width < 0) {
+      throw new Error("Trail width must be a finite number >= 0");
     }
+    this._width = width;
 
+    if (!Number.isFinite(alpha) || alpha < 0 || alpha > 1) {
+      throw new Error("Trail alpha must be between 0 and 1");
+    }
+    this._alpha = alpha;
+
+    this._color = color;
     this._widthCurve = widthCurve || (() => 1);
-    this._alphaCurve = alphaCurve || (() => 1);
+
+    if (!Number.isFinite(layer) || layer < 0 || (layer | 0) !== layer) {
+      throw new Error("Trail layer must be a non-negative integer");
+    }
+    this._layer = layer;
 
     this._points = new Float64Array(maxPoints * 2);
     this._timestamps = this._lifetime ? new Float64Array(maxPoints) : null;
     this._count = 0;
     this._writePos = 0;
+    this._time = 0;
 
     this._followTarget = null;
     this._lastX = 0;
@@ -65,11 +70,33 @@ export class Trail {
     this._accumulated = 0;
   }
 
+  get width() { return this._width; }
+  set width(v) {
+    if (!Number.isFinite(v) || v < 0) throw new Error("Trail width must be a finite number >= 0");
+    this._width = v;
+  }
+
+  get alpha() { return this._alpha; }
+  set alpha(v) {
+    if (!Number.isFinite(v) || v < 0 || v > 1) throw new Error("Trail alpha must be between 0 and 1");
+    this._alpha = v;
+  }
+
+  get color() { return this._color; }
+  set color(v) { this._color = v; }
+
+  get layer() { return this._layer; }
+  set layer(v) {
+    if (!Number.isFinite(v) || v < 0 || (v | 0) !== v) throw new Error("Trail layer must be a non-negative integer");
+    Trail._globalLayerVersion++;
+    this._layer = v;
+  }
+
   follow(target) {
     this._followTarget = target;
     const pos = this._resolvePosition(target);
-    this._lastX = pos[0];
-    this._lastY = pos[1];
+    this._lastX = pos.x;
+    this._lastY = pos.y;
     this._accumulated = 0;
     this.addPoint(this._lastX, this._lastY);
     return this;
@@ -80,18 +107,20 @@ export class Trail {
     this._points[pos * 2] = x;
     this._points[pos * 2 + 1] = y;
     if (this._timestamps) {
-      this._timestamps[pos] = performance.now() / 1000;
+      this._timestamps[pos] = this._time;
     }
     this._writePos = (pos + 1) % this._maxPoints;
     if (this._count < this._maxPoints) this._count++;
   }
 
   update(dt) {
+    this._time += dt;
+
     if (this._timestamps) {
-      const now = performance.now() / 1000;
+      const cutoff = this._time - this._lifetime;
       while (this._count > 0) {
         const oldestIdx = this._getIndex(0);
-        if (now - this._timestamps[oldestIdx] > this._lifetime) {
+        if (this._timestamps[oldestIdx] < cutoff) {
           this._count--;
         } else {
           break;
@@ -102,8 +131,8 @@ export class Trail {
     if (!this._followTarget) return;
 
     const pos = this._resolvePosition(this._followTarget);
-    const tx = pos[0];
-    const ty = pos[1];
+    const tx = pos.x;
+    const ty = pos.y;
     const dx = tx - this._lastX;
     const dy = ty - this._lastY;
     const dist = Math.sqrt(dx * dx + dy * dy);
@@ -134,19 +163,23 @@ export class Trail {
   render(ctx) {
     if (this._count < 2) return;
 
+    ctx.save();
+    ctx.globalAlpha = this._alpha;
+
     if (this._mode === "ribbon") {
       this._renderRibbon(ctx);
     } else {
       this._renderLine(ctx);
     }
+
+    ctx.restore();
   }
 
   _renderLine(ctx) {
     const count = this._count;
-    const alpha = this.alpha;
 
-    ctx.strokeStyle = this.color;
-    ctx.lineWidth = this.width;
+    ctx.strokeStyle = this._color;
+    ctx.lineWidth = this._width;
     ctx.beginPath();
 
     for (let i = 0; i < count; i++) {
@@ -160,7 +193,6 @@ export class Trail {
       }
     }
 
-    ctx.globalAlpha = alpha;
     ctx.stroke();
   }
 
@@ -168,7 +200,7 @@ export class Trail {
     const count = this._count;
     if (count < 2) return;
 
-    ctx.fillStyle = this.color;
+    ctx.fillStyle = this._color;
     ctx.beginPath();
 
     for (let i = 0; i < count - 1; i++) {
@@ -182,7 +214,7 @@ export class Trail {
       const segDx = x1 - x0;
       const segDy = y1 - y0;
       const len = Math.sqrt(segDx * segDx + segDy * segDy);
-      if (len < DEGENERATE) continue;
+      if (len < 1e-10) continue;
 
       const nx = -segDy / len;
       const ny = segDx / len;
@@ -208,27 +240,28 @@ export class Trail {
       ctx.lineTo(l0x, l0y);
     }
 
-    ctx.globalAlpha = this.alpha;
     ctx.fill();
   }
 
-  _calcWidth(t) {
-    return this.width * this._widthCurve(t);
+  destroy() {
+    this._followTarget = null;
+    this._points = null;
+    this._timestamps = null;
+    this._widthCurve = null;
+    this._count = 0;
+    this._writePos = 0;
+    this._time = 0;
+    this._accumulated = 0;
   }
 
-  _parseHex(hex) {
-    const val = parseInt(hex.replace("#", ""), 16);
-    return {
-      r: (val >> 16) & 255,
-      g: (val >> 8) & 255,
-      b: val & 255
-    };
+  _calcWidth(t) {
+    return this._width * this._widthCurve(t);
   }
 
   _resolvePosition(target) {
     if (target.x != null) return target;
     if (target.transform) return target.transform;
-    return { x: 0, y: 0 };
+    return _ZERO;
   }
 
   _getIndex(i) {

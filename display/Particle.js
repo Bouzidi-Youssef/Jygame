@@ -46,11 +46,9 @@ export class Particle {
     this.__jygameAnimLoopCount = 0;
     this.__jygameColorSegment = 0;
     this.__jygameAnimSegments = null;
-    this.__jygameTurbulenceSeed = 0;
-    this.__jygameSpawnTimer = 0;
-    this.__jygameTrailX = 0;
-    this.__jygameTrailY = 0;
-    this.__jygameTrailTimer = 0;
+    this.__turbulenceStates = null;
+    this.__spawnStates = null;
+    this.__trailStates = null;
   }
 
   setFrame(x, y, width, height) {
