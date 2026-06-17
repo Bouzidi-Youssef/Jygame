@@ -13,7 +13,8 @@ export class Trail {
     color = "#ffffff",
     alpha = 1,
     widthCurve,
-    layer = 0
+    layer = 0,
+    maxPerFrame
   } = {}) {
     if (!Number.isFinite(maxPoints) || maxPoints < 2) {
       throw new Error("Trail maxPoints must be >= 2");
@@ -58,6 +59,11 @@ export class Trail {
     }
     this._layer = layer;
 
+    this._maxPerFrame = maxPerFrame !== undefined ? maxPerFrame : maxPoints;
+    if (!Number.isFinite(this._maxPerFrame) || this._maxPerFrame < 0) {
+      throw new Error("Trail maxPerFrame must be >= 0");
+    }
+
     this._points = new Float64Array(maxPoints * 2);
     this._timestamps = this._lifetime ? new Float64Array(maxPoints) : null;
     this._count = 0;
@@ -68,6 +74,7 @@ export class Trail {
     this._lastX = 0;
     this._lastY = 0;
     this._accumulated = 0;
+    this._spawnedThisFrame = 0;
   }
 
   get width() { return this._width; }
@@ -114,6 +121,9 @@ export class Trail {
   }
 
   update(dt) {
+    if (!Number.isFinite(dt) || dt < 0) return;
+    this._spawnedThisFrame = 0;
+
     this._time += dt;
 
     if (this._timestamps) {
@@ -148,12 +158,13 @@ export class Trail {
 
     this._accumulated += dist;
 
-    while (this._accumulated >= this._spacing) {
+    while (this._accumulated >= this._spacing && this._spawnedThisFrame < this._maxPerFrame) {
       this._accumulated -= this._spacing;
       const t = (dist - this._accumulated) / dist;
       const px = this._lastX + dx * t;
       const py = this._lastY + dy * t;
       this.addPoint(px, py);
+      this._spawnedThisFrame++;
     }
 
     this._lastX = tx;

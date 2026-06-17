@@ -156,6 +156,7 @@ export class ParticleSystem {
   }
 
   update(dt) {
+    if (!Number.isFinite(dt) || dt < 0) return;
     const active = this._pool.activeObjects;
     const pool = this._pool;
     const ctx = this._modifierContext;
