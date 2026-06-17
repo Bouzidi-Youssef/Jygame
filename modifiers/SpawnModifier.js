@@ -1,0 +1,99 @@
+export class SpawnModifier {
+  constructor({
+    mode,
+    every,
+    count = 1,
+    initializer,
+    offsetX = 0,
+    offsetY = 0,
+    maxPerFrame = Infinity,
+    priority
+  } = {}) {
+    if (mode !== "interval" && mode !== "death") {
+      throw new Error('SpawnModifier mode must be "interval" or "death"');
+    }
+    this._mode = mode;
+
+    if (mode === "interval") {
+      if (!Number.isFinite(every) || every <= 0) {
+        throw new Error("SpawnModifier every must be a finite number > 0 for interval mode");
+      }
+      this._every = every;
+    }
+
+    if (!Number.isFinite(count) || count < 1) {
+      throw new Error("SpawnModifier count must be >= 1");
+    }
+    this._count = count;
+
+    if (typeof initializer !== "function") {
+      throw new Error("SpawnModifier requires an initializer function");
+    }
+    this._initializer = initializer;
+
+    if (!Number.isFinite(offsetX)) throw new Error("SpawnModifier offsetX must be a finite number");
+    if (!Number.isFinite(offsetY)) throw new Error("SpawnModifier offsetY must be a finite number");
+    this._offsetX = offsetX;
+    this._offsetY = offsetY;
+
+    if (!Number.isFinite(maxPerFrame) || maxPerFrame < 0) {
+      throw new Error("SpawnModifier maxPerFrame must be >= 0");
+    }
+    this._maxPerFrame = maxPerFrame;
+
+    this._spawnedThisFrame = 0;
+    this.spawnedCount = 0;
+    this.enabled = true;
+    this.priority = priority;
+  }
+
+  beginFrame() {
+    this._spawnedThisFrame = 0;
+  }
+
+  onEmit(particle) {
+    if (this._mode === "interval") {
+      particle.__jygameSpawnTimer = 0;
+    }
+  }
+
+  update(particle, dt, ctx) {
+    if (this._mode !== "interval") return;
+
+    const timer = (particle.__jygameSpawnTimer += dt);
+
+    if (timer < this._every) return;
+
+    const system = ctx.system;
+    let remaining = Math.floor(timer / this._every);
+    particle.__jygameSpawnTimer = timer - remaining * this._every;
+
+    const limit = this._maxPerFrame;
+    while (remaining > 0 && this._spawnedThisFrame < limit) {
+      this._spawn(particle, system);
+      remaining--;
+    }
+  }
+
+  onDeath(particle, ctx) {
+    if (this._mode !== "death") return;
+
+    const system = ctx.system;
+    const limit = this._maxPerFrame;
+    let spawned = 0;
+
+    while (spawned < this._count && this._spawnedThisFrame < limit) {
+      this._spawn(particle, system);
+      spawned++;
+    }
+  }
+
+  _spawn(source, system) {
+    const child = system.emitOne(null);
+    child.x = source.x + this._offsetX;
+    child.y = source.y + this._offsetY;
+    this._initializer(child, source);
+    this._spawnedThisFrame++;
+    this.spawnedCount++;
+  }
+}

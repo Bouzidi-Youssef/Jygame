@@ -34,6 +34,11 @@ const _resetParticle = p => {
   p.__jygameAnimLoopCount = 0;
   p.__jygameColorSegment = 0;
   p.__jygameAnimSegments = null;
+  p.__jygameTurbulenceSeed = 0;
+  p.__jygameSpawnTimer = 0;
+  p.__jygameTrailX = 0;
+  p.__jygameTrailY = 0;
+  p.__jygameTrailTimer = 0;
 };
 
 const _hasLifecycleMethods = mod =>
