@@ -1,11 +1,5 @@
 import { ModifierRegistry } from "./ModifierRegistry.js";
-
-const _hasLifecycleMethods = mod =>
-  typeof mod.beginFrame === 'function' ||
-  typeof mod.update === 'function' ||
-  typeof mod.onEmit === 'function' ||
-  typeof mod.onDeath === 'function' ||
-  typeof mod.endFrame === 'function';
+import { hasLifecycleMethods } from "./ModifierUtils.js";
 
 export class ModifierStack {
   constructor(modifiers = []) {
@@ -24,7 +18,7 @@ export class ModifierStack {
     if (!mod || typeof mod !== 'object') {
       throw new Error("ModifierStack: each modifier must be a non-null object");
     }
-    if (!_hasLifecycleMethods(mod)) {
+    if (!hasLifecycleMethods(mod)) {
       throw new Error("ModifierStack: modifier must implement at least one lifecycle method (beginFrame, update, onEmit, onDeath, or endFrame)");
     }
   }
@@ -50,11 +44,16 @@ export class ModifierStack {
   remove(modifier) {
     const idx = this._modifiers.indexOf(modifier);
     if (idx >= 0) {
+      if (typeof modifier.destroy === 'function') modifier.destroy();
       this._modifiers.splice(idx, 1);
     }
   }
 
   clear() {
+    const mods = this._modifiers;
+    for (let i = 0; i < mods.length; i++) {
+      if (typeof mods[i].destroy === 'function') mods[i].destroy();
+    }
     this._modifiers.length = 0;
   }
 
@@ -167,6 +166,7 @@ export class ModifierStack {
     }
     const obj = { type: "ModifierStack", modifiers: children };
     if (this.priority !== undefined) obj.priority = this.priority;
+    if (this.enabled !== true) obj.enabled = false;
     return obj;
   }
 
@@ -175,6 +175,11 @@ export class ModifierStack {
       throw new Error("ModifierStack.fromJSON(): data.modifiers must be an array");
     }
     const children = data.modifiers.map(child => ModifierRegistry.create(child));
-    return new ModifierStack(children);
+    const stack = new ModifierStack(children);
+    if (data.priority !== undefined) stack.priority = data.priority;
+    if (data.enabled === false) stack.enabled = false;
+    return stack;
   }
 }
+
+ModifierRegistry.register("ModifierStack", ModifierStack);

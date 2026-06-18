@@ -1,5 +1,6 @@
 import { ActivePool } from "../memory/ActivePool.js";
 import { Particle } from "../display/Particle.js";
+import { hasLifecycleMethods } from "../modifiers/ModifierUtils.js";
 
 const _resetParticle = p => {
   p.x = 0;
@@ -38,13 +39,6 @@ const _resetParticle = p => {
   p.__spawnStates = null;
   p.__trailStates = null;
 };
-
-const _hasLifecycleMethods = mod =>
-  typeof mod.beginFrame === 'function' ||
-  typeof mod.update === 'function' ||
-  typeof mod.onEmit === 'function' ||
-  typeof mod.onDeath === 'function' ||
-  typeof mod.endFrame === 'function';
 
 const _createEntry = (modifier, priority) => ({ modifier, priority });
 
@@ -93,7 +87,7 @@ export class ParticleSystem {
   }
 
   addModifier(modifier, priority) {
-    if (!_hasLifecycleMethods(modifier)) {
+    if (!hasLifecycleMethods(modifier)) {
       throw new Error('Modifier must implement at least one lifecycle method (beginFrame, update, onEmit, onDeath, or endFrame)');
     }
     if (priority === undefined) priority = modifier.priority ?? 0;

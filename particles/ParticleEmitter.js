@@ -91,6 +91,7 @@ export class ParticleEmitter {
   }
 
   stop() {
+    if (this._destroyed) return;
     this._active = false;
   }
 

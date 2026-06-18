@@ -53,4 +53,20 @@ export class LineShape extends EmitterShape {
       this._writeVelocity(particle, velAngle);
     }
   }
+
+  toJSON() {
+    const x2 = this._x1 + this._dx;
+    const y2 = this._y1 + this._dy;
+    const obj = { type: "LineShape", x1: this._x1, y1: this._y1, x2, y2 };
+    if (this._direction) {
+      obj.direction = this._direction;
+      obj.speed = this._speedMin === this._speedMax ? this._speedMin : [this._speedMin, this._speedMax];
+      if (this._spread) obj.spread = this._spread;
+    }
+    return obj;
+  }
+
+  static fromJSON(data) {
+    return new LineShape(data.x1, data.y1, data.x2, data.y2, data);
+  }
 }

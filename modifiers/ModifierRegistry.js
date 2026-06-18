@@ -12,9 +12,9 @@ import { AnimationModifier } from "./AnimationModifier.js";
 import { SpawnModifier } from "./SpawnModifier.js";
 import { TrailModifier } from "./TrailModifier.js";
 import { AnimatedSpriteModifier } from "./AnimatedSpriteModifier.js";
-import { ModifierStack } from "./ModifierStack.js";
 
 const _registry = new Map();
+const _builtinNames = new Set();
 
 const _builtins = [
   ["FadeModifier", FadeModifier],
@@ -31,11 +31,11 @@ const _builtins = [
   ["SpawnModifier", SpawnModifier],
   ["TrailModifier", TrailModifier],
   ["AnimatedSpriteModifier", AnimatedSpriteModifier],
-  ["ModifierStack", ModifierStack],
 ];
 
 for (const [name, ctor] of _builtins) {
   _registry.set(name, ctor);
+  _builtinNames.add(name);
 }
 
 export class ModifierRegistry {
@@ -45,6 +45,9 @@ export class ModifierRegistry {
     }
     if (typeof ctor !== "function") {
       throw new Error("ModifierRegistry.register(): constructor must be a function");
+    }
+    if (_registry.has(name)) {
+      throw new Error(`ModifierRegistry.register(): "${name}" is already registered`);
     }
     _registry.set(name, ctor);
   }
@@ -79,6 +82,8 @@ export class ModifierRegistry {
   }
 
   static clear() {
-    _registry.clear();
+    for (const name of _registry.keys()) {
+      if (!_builtinNames.has(name)) _registry.delete(name);
+    }
   }
 }

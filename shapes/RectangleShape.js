@@ -59,4 +59,18 @@ export class RectangleShape extends EmitterShape {
       this._writeVelocity(particle, RECT_ANGLES[this._direction]);
     }
   }
+
+  toJSON() {
+    const obj = { type: "RectangleShape", width: this._width, height: this._height };
+    if (this._direction) {
+      obj.direction = this._direction;
+      obj.speed = this._speedMin === this._speedMax ? this._speedMin : [this._speedMin, this._speedMax];
+      if (this._spread) obj.spread = this._spread;
+    }
+    return obj;
+  }
+
+  static fromJSON(data) {
+    return new RectangleShape(data);
+  }
 }

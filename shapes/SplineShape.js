@@ -96,6 +96,7 @@ export class SplineShape extends EmitterShape {
     this._tableAngle = tableAngle;
     this._tableCum = tableCum;
     this._tableLen = totalSamples;
+    this._splinePoints = points;
 
     if (options?.direction !== undefined) {
       this._setDirection(
@@ -145,5 +146,19 @@ export class SplineShape extends EmitterShape {
       }
       this._writeVelocity(particle, velAngle);
     }
+  }
+
+  toJSON() {
+    const obj = { type: "SplineShape", points: this._splinePoints };
+    if (this._direction) {
+      obj.direction = this._direction;
+      obj.speed = this._speedMin === this._speedMax ? this._speedMin : [this._speedMin, this._speedMax];
+      if (this._spread) obj.spread = this._spread;
+    }
+    return obj;
+  }
+
+  static fromJSON(data) {
+    return new SplineShape(data.points, data);
   }
 }

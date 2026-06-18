@@ -42,6 +42,7 @@ export class PathShape extends EmitterShape {
     this._segData = new Float64Array(segs);
     this._cumLen = new Float64Array(cumLen);
     this._totalLen = total;
+    this._pathPoints = points;
 
     if (options?.direction !== undefined) {
       this._setDirection(
@@ -91,5 +92,19 @@ export class PathShape extends EmitterShape {
       }
       this._writeVelocity(particle, velAngle);
     }
+  }
+
+  toJSON() {
+    const obj = { type: "PathShape", points: this._pathPoints };
+    if (this._direction) {
+      obj.direction = this._direction;
+      obj.speed = this._speedMin === this._speedMax ? this._speedMin : [this._speedMin, this._speedMax];
+      if (this._spread) obj.spread = this._spread;
+    }
+    return obj;
+  }
+
+  static fromJSON(data) {
+    return new PathShape(data.points, data);
   }
 }

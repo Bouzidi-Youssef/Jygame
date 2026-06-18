@@ -61,4 +61,17 @@ export class ConeShape extends EmitterShape {
       this._writeVelocity(particle, spawnAngle);
     }
   }
+
+  toJSON() {
+    const obj = { type: "ConeShape", radius: this._radius, angle: this._angle, direction: this._coneDirection };
+    if (this._speedMin > 0) {
+      obj.speed = this._speedMin === this._speedMax ? this._speedMin : [this._speedMin, this._speedMax];
+      if (this._spread) obj.spread = this._spread;
+    }
+    return obj;
+  }
+
+  static fromJSON(data) {
+    return new ConeShape(data);
+  }
 }

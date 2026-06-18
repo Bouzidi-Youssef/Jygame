@@ -58,4 +58,18 @@ export class RingShape extends EmitterShape {
       this._writeVelocity(particle, this._getRadialDirectionAngle(this._direction, spawnAngle));
     }
   }
+
+  toJSON() {
+    const obj = { type: "RingShape", innerRadius: this._innerRadius, outerRadius: this._outerRadius };
+    if (this._direction) {
+      obj.direction = this._direction;
+      obj.speed = this._speedMin === this._speedMax ? this._speedMin : [this._speedMin, this._speedMax];
+      if (this._spread) obj.spread = this._spread;
+    }
+    return obj;
+  }
+
+  static fromJSON(data) {
+    return new RingShape(data);
+  }
 }
