@@ -54,9 +54,20 @@ export class ForceModifier {
 
     this._tmpDX = tx - particle.x;
     this._tmpDY = ty - particle.y;
+
+    if (!Number.isFinite(this._tmpDX) || !Number.isFinite(this._tmpDY)) {
+      this._tmpDX = 0;
+      this._tmpDY = 0;
+      this._tmpDist = 0;
+      this._tmpNX = 0;
+      this._tmpNY = 0;
+      this._tmpForce = 0;
+      return;
+    }
+
     const distSq = this._tmpDX * this._tmpDX + this._tmpDY * this._tmpDY;
 
-    if (distSq === 0) {
+    if (distSq === 0 || !Number.isFinite(distSq)) {
       this._tmpDist = 0;
       this._tmpNX = 0;
       this._tmpNY = 0;

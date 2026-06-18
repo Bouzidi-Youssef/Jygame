@@ -100,6 +100,10 @@ export class Trail {
   }
 
   follow(target) {
+    if (target === null) {
+      this._followTarget = null;
+      return this;
+    }
     this._followTarget = target;
     const pos = this._resolvePosition(target);
     this._lastX = pos.x;

@@ -38,7 +38,7 @@ export class TrailSystem {
 
   updateAll(dt) {
     const trails = this._trails;
-    for (let i = 0; i < trails.length; i++) {
+    for (let i = trails.length - 1; i >= 0; i--) {
       trails[i].update(dt);
     }
   }

@@ -62,6 +62,17 @@ export class ParticleSystem {
     this._beginFrameModifiers = [];
     this._endFrameModifiers = [];
     this._modifierContext = { system: this, activeParticles: this._pool.activeObjects };
+    this._isUpdating = false;
+    this._pendingRemove = null;
+  }
+
+  _flushPendingRemovals() {
+    if (!this._pendingRemove) return;
+    const pending = this._pendingRemove;
+    this._pendingRemove = null;
+    for (let i = 0; i < pending.length; i++) {
+      this.removeModifier(pending[i]);
+    }
   }
 
   _rebuildCaches() {
@@ -93,6 +104,11 @@ export class ParticleSystem {
   }
 
   removeModifier(modifier) {
+    if (this._isUpdating) {
+      if (!this._pendingRemove) this._pendingRemove = [];
+      this._pendingRemove.push(modifier);
+      return;
+    }
     const mods = this._modifiers;
     for (let i = 0; i < mods.length; i++) {
       if (mods[i].modifier === modifier) {
@@ -157,6 +173,8 @@ export class ParticleSystem {
 
   update(dt) {
     if (!Number.isFinite(dt) || dt < 0) return;
+    this._isUpdating = true;
+
     const active = this._pool.activeObjects;
     const pool = this._pool;
     const ctx = this._modifierContext;
@@ -213,6 +231,9 @@ export class ParticleSystem {
         mod.endFrame(dt, ctx);
       }
     }
+
+    this._isUpdating = false;
+    this._flushPendingRemovals();
   }
 
   render(ctx) {

@@ -108,6 +108,10 @@ export class SpawnModifier {
     child.x = source.x + this._offsetX;
     child.y = source.y + this._offsetY;
     this._initializer(child, source);
+    if (child.maxLife <= 0) {
+      child.maxLife = 1;
+      child.life = 1;
+    }
     this._spawnedThisFrame++;
     this.spawnedCount++;
   }
