@@ -21,6 +21,12 @@ const _resetParticle = p => {
   p.color = "#ffffff";
   p.depth = 0;
   p.ageRatio = 0;
+  p.collides = false;
+  p.radius = 1;
+  p.collisionResponse = "bounce";
+  p.restitution = 1;
+  p.collisionLayer = "default";
+  p.onCollision = null;
   p.texture = null;
   p.originX = 0.5;
   p.originY = 0.5;
@@ -436,6 +442,10 @@ export class ParticleSystem {
     }
 
     ctx.restore();
+  }
+
+  setCollisionProvider(provider) {
+    this._collisionProvider = provider;
   }
 
   clear() {

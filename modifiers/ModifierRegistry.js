@@ -12,6 +12,7 @@ import { AnimationModifier } from "./AnimationModifier.js";
 import { SpawnModifier } from "./SpawnModifier.js";
 import { TrailModifier } from "./TrailModifier.js";
 import { AnimatedSpriteModifier } from "./AnimatedSpriteModifier.js";
+import { CollisionModifier } from "./CollisionModifier.js";
 
 const _registry = new Map();
 const _builtinNames = new Set();
@@ -31,6 +32,7 @@ const _builtins = [
   ["SpawnModifier", SpawnModifier],
   ["TrailModifier", TrailModifier],
   ["AnimatedSpriteModifier", AnimatedSpriteModifier],
+  ["CollisionModifier", CollisionModifier],
 ];
 
 for (const [name, ctor] of _builtins) {

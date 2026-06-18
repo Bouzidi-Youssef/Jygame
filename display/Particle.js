@@ -42,6 +42,12 @@ export class Particle {
 
     this.depth = 0;
     this.ageRatio = 0;
+    this.collides = false;
+    this.radius = 1;
+    this.collisionResponse = "bounce";
+    this.restitution = 1;
+    this.collisionLayer = "default";
+    this.onCollision = null;
     this.__jygameAnimOffset = 0;
     this.__jygameAnimPrevFrame = -1;
     this.__jygameAnimLoopCount = 0;
