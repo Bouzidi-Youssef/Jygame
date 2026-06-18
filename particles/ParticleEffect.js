@@ -2,7 +2,7 @@ import { ParticleSystem } from "./ParticleSystem.js";
 import { ParticleEmitter } from "./ParticleEmitter.js";
 
 export class ParticleEffect {
-  constructor({ asset, x = 0, y = 0 }) {
+  constructor({ asset, x = 0, y = 0, renderer, backend } = {}) {
     this._asset = asset;
     this._destroyed = false;
     this._autoDestroy = false;
@@ -11,6 +11,8 @@ export class ParticleEffect {
 
     const system = new ParticleSystem({
       renderParticle: asset._renderParticle || undefined,
+      renderer: renderer ?? asset._renderer ?? undefined,
+      backend: backend ?? asset._backend ?? undefined,
     });
 
     if (asset._modifierStack) {

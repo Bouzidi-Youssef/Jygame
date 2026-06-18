@@ -1,6 +1,8 @@
 import { hasLifecycleMethods } from "../../modifiers/ModifierUtils.js";
 import { ObjectParticleStorage } from "../storage/ObjectParticleStorage.js";
 import { ParticleStateManager } from "../ParticleStateManager.js";
+import { CanvasParticleRenderer } from "../renderers/CanvasParticleRenderer.js";
+import { ObjectParticleRenderData } from "../renderdata/ObjectParticleRenderData.js";
 
 const _createEntry = (modifier, priority) => ({ modifier, priority });
 
@@ -21,10 +23,10 @@ function _finiteCompare(a, b, field) {
 }
 
 export class CpuParticleBackend {
-  constructor({ renderParticle, system } = {}) {
+  constructor({ renderParticle, renderer, system } = {}) {
     this._system = system;
-    this._renderParticle = renderParticle;
     this._storage = new ObjectParticleStorage();
+    this._renderer = renderer || new CanvasParticleRenderer({ renderParticle });
     this._stateManager = new ParticleStateManager();
     this._modifiers = [];
     this._updateModifiers = [];
@@ -114,13 +116,22 @@ export class CpuParticleBackend {
   destroy() {
     this.clear();
     this.clearModifiers();
-    this._renderParticle = null;
+    this._renderer.destroy();
+    this._renderer = null;
     this._modifierContext.system = null;
     this._modifierContext.activeParticles = null;
     this._sortedParticles = null;
     this._sortFunction = null;
     this._storage = null;
     this._stateManager = null;
+  }
+
+  get _renderParticle() {
+    return this._renderer ? this._renderer._renderParticle : null;
+  }
+
+  set _renderParticle(value) {
+    if (this._renderer) this._renderer._renderParticle = value;
   }
 
   get sortMode() {
@@ -351,16 +362,15 @@ export class CpuParticleBackend {
     this._flushPendingRemovals();
   }
 
+  _buildRenderData(source, count) {
+    return new ObjectParticleRenderData(source, count);
+  }
+
   render(ctx) {
     const active = this._storage.activeParticles;
     const count = active.length;
 
-    ctx.save();
-
-    if (count === 0) {
-      ctx.restore();
-      return;
-    }
+    if (count === 0) return;
 
     let source;
     let renderCount;
@@ -374,30 +384,7 @@ export class CpuParticleBackend {
       renderCount = count;
     }
 
-    for (let i = 0; i < renderCount; i++) {
-      const p = source[i];
-      ctx.globalAlpha = p.alpha;
-      if (this._renderParticle) {
-        this._renderParticle(ctx, p);
-      } else if (p.texture) {
-        const w = p.width > 0 ? p.width : p.size;
-        const h = p.height > 0 ? p.height : p.size;
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        if (p.rotation) ctx.rotate(p.rotation);
-        if (p.frameWidth > 0 && p.frameHeight > 0) {
-          ctx.drawImage(p.texture, p.frameX, p.frameY, p.frameWidth, p.frameHeight, -w * p.originX, -h * p.originY, w, h);
-        } else {
-          ctx.drawImage(p.texture, -w * p.originX, -h * p.originY, w, h);
-        }
-        ctx.restore();
-      } else {
-        ctx.fillStyle = `rgb(${p.r | 0},${p.g | 0},${p.b | 0})`;
-        ctx.fillRect(p.x - p.size * 0.5, p.y - p.size * 0.5, p.size, p.size);
-      }
-    }
-
-    ctx.restore();
+    this._renderer.render(this._buildRenderData(source, renderCount), ctx);
   }
 
   setCollisionProvider(provider) {

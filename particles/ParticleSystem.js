@@ -1,8 +1,8 @@
 import { CpuParticleBackend } from "./backends/CpuParticleBackend.js";
 
 export class ParticleSystem {
-  constructor({ renderParticle, backend } = {}) {
-    this._backend = backend || new CpuParticleBackend({ renderParticle, system: this });
+  constructor({ renderParticle, renderer, backend } = {}) {
+    this._backend = backend || new CpuParticleBackend({ renderParticle, renderer, system: this });
   }
 
   // ---- Modifiers ----

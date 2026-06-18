@@ -14,6 +14,8 @@ export class ParticleAsset {
     emitter = {},
     initializer,
     renderParticle,
+    renderer,
+    backend,
     displayName,
     description,
   } = {}) {
@@ -23,6 +25,8 @@ export class ParticleAsset {
     this._description = description || "";
     this._initializer = initializer || null;
     this._renderParticle = renderParticle || null;
+    this._renderer = renderer || null;
+    this._backend = backend || null;
     this._shape = shape || null;
 
     if (modifierStack) {
@@ -42,6 +46,8 @@ export class ParticleAsset {
       asset: this,
       x: options.x ?? 0,
       y: options.y ?? 0,
+      renderer: options.renderer ?? this._renderer,
+      backend: options.backend ?? this._backend,
     });
   }
 
@@ -62,6 +68,8 @@ export class ParticleAsset {
       emitter: { ...this._emitterConfig, ...overrides.emitter },
       initializer: overrides.initializer ?? this._initializer,
       renderParticle: overrides.renderParticle ?? this._renderParticle,
+      renderer: overrides.renderer ?? this._renderer,
+      backend: overrides.backend ?? this._backend,
       displayName: overrides.displayName ?? this._displayName,
       description: overrides.description ?? this._description,
     });
@@ -88,6 +96,12 @@ export class ParticleAsset {
     }
     if (this._renderParticle) {
       throw new Error("ParticleAsset.toJSON(): assets with custom renderParticle functions cannot be serialized");
+    }
+    if (this._renderer) {
+      throw new Error("ParticleAsset.toJSON(): assets with custom renderer instances cannot be serialized");
+    }
+    if (this._backend) {
+      throw new Error("ParticleAsset.toJSON(): assets with custom backend instances cannot be serialized");
     }
     if (Object.keys(this._emitterConfig).length > 0) {
       obj.emitter = { ...this._emitterConfig };
