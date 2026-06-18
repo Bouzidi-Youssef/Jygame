@@ -210,12 +210,12 @@ export class ParticleSystem {
     switch (this._sortMode) {
       case "age":
         return (a, b) => {
-          const d = a.ageRatio - b.ageRatio;
+          const d = b.ageRatio - a.ageRatio;
           return d !== 0 ? d : tie(a, b);
         };
       case "reverseAge":
         return (a, b) => {
-          const d = b.ageRatio - a.ageRatio;
+          const d = a.ageRatio - b.ageRatio;
           return d !== 0 ? d : tie(a, b);
         };
       case "size":
@@ -343,8 +343,6 @@ export class ParticleSystem {
       }
     }
 
-    let anyReleased = false;
-
     for (let i = active.length - 1; i >= 0; i--) {
       const p = active[i];
 
@@ -373,7 +371,6 @@ export class ParticleSystem {
           }
         }
         pool.release(p);
-        anyReleased = true;
       }
     }
 
@@ -384,7 +381,7 @@ export class ParticleSystem {
       }
     }
 
-    if (anyReleased && this._sortMode !== "none") {
+    if (this._sortMode !== "none") {
       this._markSortDirty();
     }
 
