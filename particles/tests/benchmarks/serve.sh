@@ -28,6 +28,7 @@ echo "  http://localhost:$PORT/particles/tests/benchmarks/phase17g_floor_dissect
 echo "  http://localhost:$PORT/particles/tests/benchmarks/phase17h_gpu_validate_benchmark.html"
 echo "  http://localhost:$PORT/particles/tests/benchmarks/phase17h_c1_persistent_upload_benchmark.html"
 echo "  http://localhost:$PORT/particles/tests/benchmarks/phase17h_c_death_sweep_benchmark.html"
+echo "  http://localhost:$PORT/particles/tests/benchmarks/death_sweep_simd_benchmark.html"
 echo ""
 echo "Press Ctrl+C to stop."
 

@@ -47,5 +47,8 @@
   "sideEffects": false,
   "scripts": {
     "test": "echo \"No tests yet\" && exit 0"
+  },
+  "dependencies": {
+    "wabt": "^1.0.39"
   }
 }
