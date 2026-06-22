@@ -11,7 +11,12 @@ export class WebGpuDeviceManager {
     if (!this._adapter) {
       throw new Error("WebGPU not available — no adapter found");
     }
-    this._device = await this._adapter.requestDevice();
+    const limits = this._adapter.limits;
+    this._device = await this._adapter.requestDevice({
+      requiredLimits: {
+        maxStorageBufferBindingSize: limits.maxStorageBufferBindingSize,
+      },
+    });
   }
 
   static device() {

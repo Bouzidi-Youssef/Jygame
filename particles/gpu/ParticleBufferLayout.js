@@ -1,11 +1,12 @@
-let _frozen = false;
-
 const FIELD_NAMES = [
   "x", "y", "vx", "vy", "ax", "ay",
   "life", "maxLife", "ageRatio",
   "rotation", "rotationSpeed",
   "size", "alpha", "depth",
   "r", "g", "b",
+  "alive",
+  "seed",
+  "segment",
 ];
 
 const FIELD_INDEX = {};
@@ -13,7 +14,7 @@ for (let i = 0; i < FIELD_NAMES.length; i++) {
   FIELD_INDEX[FIELD_NAMES[i]] = i;
 }
 
-const STRIDE = FIELD_NAMES.length;
+const U32_FIELDS = new Set(["r", "g", "b", "alive", "segment"]);
 
 export class ParticleBufferLayout {
   static get FIELD_NAMES() {
@@ -25,7 +26,7 @@ export class ParticleBufferLayout {
   }
 
   static get STRIDE() {
-    return STRIDE;
+    return FIELD_NAMES.length;
   }
 
   static get fields() {
@@ -37,7 +38,7 @@ export class ParticleBufferLayout {
   }
 
   static get stride() {
-    return STRIDE;
+    return FIELD_NAMES.length;
   }
 
   static indexOf(fieldName) {
@@ -48,16 +49,7 @@ export class ParticleBufferLayout {
     return name in FIELD_INDEX;
   }
 
-  static registerField(name) {
-    if (_frozen) {
-      throw new Error("ParticleBufferLayout cannot be modified after first access");
-    }
-    if (name in FIELD_INDEX) return;
-    FIELD_NAMES.push(name);
-    FIELD_INDEX[name] = FIELD_NAMES.length - 1;
-  }
-
-  static freeze() {
-    _frozen = true;
+  static isU32Field(name) {
+    return U32_FIELDS.has(name);
   }
 }

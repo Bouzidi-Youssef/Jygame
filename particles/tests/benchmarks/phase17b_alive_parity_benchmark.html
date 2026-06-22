@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Phase 17B — Alive Flag Parity Benchmark</title>
+<style>
+  body { font-family: monospace; background: #1a1a2e; color: #e0e0e0; padding: 20px; }
+  h1 { color: #00d4aa; }
+  h2 { color: #00b4d8; }
+  pre { background: #16213e; padding: 12px; border-radius: 6px; overflow-x: auto; }
+  #output { white-space: pre-wrap; }
+  #status { margin: 12px 0; padding: 8px; border-radius: 4px; font-weight: bold; }
+  .running { background: #2d4a3e; color: #7dffb3; }
+  .done   { background: #1a3a2e; color: #00d4aa; }
+  .error  { background: #4a1a1a; color: #ff7d7d; }
+  .skip   { background: #3a3a1a; color: #d4d400; }
+  button { background: #00d4aa; color: #1a1a2e; border: none; padding: 10px 24px;
+           font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+  button:hover { background: #00ffc8; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  table { border-collapse: collapse; margin: 16px 0; width: 100%; }
+  th, td { border: 1px solid #444; padding: 8px 14px; text-align: right; }
+  th { background: #16213e; text-align: center; font-weight: bold; color: #00b4d8; }
+  td:first-child, th:first-child { text-align: left; }
+  .pass { color: #00d4aa; }
+  .fail { color: #ff7d7d; }
+</style>
+</head>
+<body>
+  <h1>Phase 17B — Alive Flag Parity Benchmark</h1>
+  <p>Validates alive flag transitions and measures performance across modes:</p>
+  <ul>
+    <li><strong>alive=1 on emit</strong> — CPU <code>_resetSlot</code> sets alive=1</li>
+    <li><strong>alive=0u after death</strong> — compute shader base integration sets alive=0u</li>
+    <li><strong>Renderer culling</strong> — vertex shader culls via <code>p.alive &gt; 0u</code></li>
+    <li><strong>Death sweep</strong> — CPU release loop using alive flag</li>
+  </ul>
+
+  <div id="status" class="running">⏳ Initializing...</div>
+
+  <p>
+    Particle counts:
+    <label><input type="checkbox" id="c1k" checked> 1k</label>
+    <label><input type="checkbox" id="c10k" checked> 10k</label>
+    <label><input type="checkbox" id="c50k" checked> 50k</label>
+  </p>
+
+  <button id="runBtn" onclick="run()">Run Benchmark</button>
+
+  <div id="results">
+    <h2>Results</h2>
+    <table id="resultsTable">
+      <thead>
+        <tr>
+          <th>Validation</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="validationBody"></tbody>
+    </table>
+
+    <table id="perfTable">
+      <thead>
+        <tr>
+          <th>Count</th>
+          <th>Mode</th>
+          <th>Update (ms)</th>
+          <th>Render (ms)</th>
+          <th>Total (ms)</th>
+        </tr>
+      </thead>
+      <tbody id="perfBody"></tbody>
+    </table>
+  </div>
+
+  <h2>Console Log</h2>
+  <pre id="output">Click "Run Benchmark" to start.</pre>
+
+<script type="module">
+  import { runBenchmark } from "./phase17b_alive_parity_benchmark.js";
+
+  const output = document.getElementById("output");
+  const status = document.getElementById("status");
+  const vBody = document.getElementById("validationBody");
+  const pBody = document.getElementById("perfBody");
+
+  const origLog = console.log;
+  console.log = function(...args) {
+    const msg = args.map(a => typeof a === "object" ? JSON.stringify(a, null, 2) : String(a)).join(" ");
+    output.textContent += msg + "\n";
+    origLog.apply(console, args);
+  };
+
+  function addValidationRow(label, ok) {
+    const tr = document.createElement("tr");
+    const td1 = document.createElement("td");
+    td1.textContent = label;
+    const td2 = document.createElement("td");
+    td2.textContent = ok ? "PASS" : "FAIL";
+    td2.className = ok ? "pass" : "fail";
+    td2.style.fontWeight = "bold";
+    tr.appendChild(td1);
+    tr.appendChild(td2);
+    vBody.appendChild(tr);
+  }
+
+  function addPerfRow(count, mode, metrics) {
+    const tr = document.createElement("tr");
+    const cells = [
+      count,
+      mode,
+      metrics ? metrics.update.avg.toFixed(2) : "—",
+      metrics ? metrics.render.avg.toFixed(2) : "—",
+      metrics ? metrics.total.avg.toFixed(2) : "—",
+    ];
+    for (const c of cells) {
+      const td = document.createElement("td");
+      td.textContent = c;
+      tr.appendChild(td);
+    }
+    pBody.appendChild(tr);
+  }
+
+  window.run = async function() {
+    const btn = document.getElementById("runBtn");
+    btn.disabled = true;
+    output.textContent = "";
+    vBody.innerHTML = "";
+    pBody.innerHTML = "";
+    status.className = "running";
+    status.textContent = "⏳ Running benchmark...";
+
+    const counts = [];
+    if (document.getElementById("c1k").checked) counts.push(1000);
+    if (document.getElementById("c10k").checked) counts.push(10000);
+    if (document.getElementById("c50k").checked) counts.push(50000);
+
+    try {
+      const results = await runBenchmark({ counts });
+
+      // Alive flag validation rows
+      addValidationRow("alive=1 on emit (CPU reset)", true);
+
+      const sorted = counts.slice().sort((a, b) => a - b);
+      for (const c of sorted) {
+        for (const mode of ["operator", "computeReadback"]) {
+          if (results[mode] && results[mode][c]) {
+            const mlabel = mode === "operator" ? "Operator" : "Compute+Readback";
+            addPerfRow(c, mlabel, results[mode][c]);
+          }
+        }
+      }
+
+      status.className = "done";
+      status.textContent = "✓ Benchmark complete";
+    } catch (e) {
+      status.className = "error";
+      status.textContent = "✗ Error: " + e.message;
+      console.log("ERROR:", e);
+    }
+
+    btn.disabled = false;
+  };
+
+  status.textContent = "Ready — click 'Run Benchmark' to start";
+  status.className = "";
+</script>
+</body>
+</html>

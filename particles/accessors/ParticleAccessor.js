@@ -30,7 +30,9 @@ export class ParticleAccessor {
   get r() { return 0; } set r(v) {}
   get g() { return 0; } set g(v) {}
   get b() { return 0; } set b(v) {}
-
+  get alive() { return 0; } set alive(v) {}
+  get seed() { return 0; } set seed(v) {}
+  get segment() { return 0; } set segment(v) {}
 
   get collides() { return false; } set collides(v) {}
   get radius() { return 0; } set radius(v) {}

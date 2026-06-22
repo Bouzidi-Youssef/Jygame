@@ -138,6 +138,7 @@ export class CpuParticleBackend {
       p.__jygameSortOrder = this._sortManager.nextSortOrder();
       acc.wrap(p);
       if (initializer) initializer(p, i, emitter);
+      p.alive = 1;
       for (let m = 0; m < emLen; m++) {
         const mod = emitMods[m];
         if (mod.enabled !== false) {
@@ -154,6 +155,7 @@ export class CpuParticleBackend {
     const acc = this._accessor;
     acc.wrap(p);
     if (initializer) initializer(p, 0);
+    p.alive = 1;
     const emitMods = this._emitModifiers;
     const ctx = this._modifierContext;
     for (let m = 0; m < emitMods.length; m++) {

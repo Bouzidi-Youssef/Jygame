@@ -7,17 +7,19 @@ import { StorageResolver } from "../storage/StorageResolver.js";
 import { GpuParticleRenderer } from "../renderers/GpuParticleRenderer.js";
 import { ParticleRenderCommandBuffer } from "../renderdata/ParticleRenderCommandBuffer.js";
 import { ParticleRenderData } from "../renderdata/ParticleRenderData.js";
+import { ParticleBufferLayout } from "../gpu/ParticleBufferLayout.js";
 import { ParticleSortManager } from "../ParticleSortManager.js";
 import { WebGpuDeviceManager } from "../gpu/webgpu/WebGpuDeviceManager.js";
 import { GpuComputeDispatcher } from "../gpu/webgpu/GpuComputeDispatcher.js";
 import { WebGpuParticleRenderer } from "../renderers/webgpu/WebGpuParticleRenderer.js";
 
 export class GpuParticleBackend {
-  constructor({ renderer, system, storage, mode, canvas, renderValidationMode } = {}) {
+  constructor({ renderer, system, storage, mode, canvas, renderValidationMode, gpuPersistentUpload } = {}) {
     this._system = system;
     this._mode = mode || "operator";
     this._canvas = canvas || null;
     this._renderValidationMode = renderValidationMode === true;
+    this._gpuPersistentUpload = gpuPersistentUpload === true;
     this._storage = storage || StorageResolver.createDefault();
     this._useSoA = StorageResolver.isSoA(this._storage) && this._mode !== "object";
     this._accessor = StorageResolver.createAccessor(this._storage);
@@ -38,6 +40,14 @@ export class GpuParticleBackend {
     this._activeSlots = [];
     this._webgpuInitialized = false;
     this._gpuRenderer = null;
+    this._persistentUploadTime = 0;
+    this._persistentUploadBytes = 0;
+    this._persistentUploadCount = 0;
+    this._cachedDeathModifiers = null;
+    this._deathSweepTime = 0;
+    this._deathSweepCount = 0;
+    this._aliveReadbackTime = 0;
+    this._computeUpdatePending = false;
   }
 
   get renderValidationMode() { return this._renderValidationMode; }
@@ -49,7 +59,7 @@ export class GpuParticleBackend {
       throw new Error("WebGPU not available — falling back to operator mode");
     }
     await WebGpuDeviceManager.initialize();
-    this._computeDispatcher = new GpuComputeDispatcher();
+    this._computeDispatcher = new GpuComputeDispatcher({ gpuPersistentUpload: this._gpuPersistentUpload });
     this._webgpuInitialized = true;
 
     if (this._canvas) {
@@ -85,6 +95,7 @@ export class GpuParticleBackend {
     this._modifiers.push({ modifier, priority });
     this._modifiers.sort((a, b) => a.priority - b.priority);
     this._isDirty = true;
+    this._cachedDeathModifiers = null;
   }
 
   removeModifier(modifier) {
@@ -99,6 +110,7 @@ export class GpuParticleBackend {
         mods[i].modifier.destroy?.();
         mods.splice(i, 1);
         this._isDirty = true;
+        this._cachedDeathModifiers = null;
         return;
       }
     }
@@ -111,6 +123,7 @@ export class GpuParticleBackend {
     }
     this._modifiers.length = 0;
     this._isDirty = true;
+    this._cachedDeathModifiers = null;
   }
 
   _flushPendingRemovals() {
@@ -172,12 +185,23 @@ export class GpuParticleBackend {
     this._rebuildProgram();
     const acc = this._accessor;
     const executor = this._executor;
+    const usePersistent = this._gpuPersistentUpload && this._mode === "compute";
+    const dispatcher = this._computeDispatcher;
+
+    let persistentSlots = usePersistent ? [] : null;
+
+    const t0 = usePersistent ? performance.now() : 0;
 
     for (let i = 0; i < count; i++) {
       const p = this._storage.acquire();
       p.__jygameSortOrder = this._sortManager.nextSortOrder();
       acc.wrap(p);
       if (initializer) initializer(p, i, emitter);
+      p.alive = 1;
+
+      if (usePersistent) {
+        persistentSlots.push(p._i);
+      }
 
       if (executor) {
         const program = this._program;
@@ -193,6 +217,20 @@ export class GpuParticleBackend {
         }
       }
     }
+
+    if (usePersistent && dispatcher && persistentSlots.length > 0) {
+      dispatcher.ensureParticleBuffer(Math.max(1024, this._storage.capacity));
+      if (persistentSlots.length === 1) {
+        dispatcher.writeSlot(persistentSlots[0], this._storage);
+      } else {
+        dispatcher.writeSlots(persistentSlots, this._storage);
+      }
+      const dt = performance.now() - t0;
+      this._persistentUploadTime += dt;
+      this._persistentUploadBytes += persistentSlots.length * ParticleBufferLayout.STRIDE * 4;
+      this._persistentUploadCount += persistentSlots.length;
+    }
+
     if (this._sortManager.sortMode !== "none") this._sortManager.markDirty();
   }
 
@@ -203,6 +241,7 @@ export class GpuParticleBackend {
     const acc = this._accessor;
     acc.wrap(p);
     if (initializer) initializer(p, 0);
+    p.alive = 1;
 
     const executor = this._executor;
     if (executor) {
@@ -341,6 +380,9 @@ export class GpuParticleBackend {
   }
 
   async _updateCompute(dt, storage, accessors) {
+    if (this._computeUpdatePending) return;
+    this._computeUpdatePending = true;
+    const _resetPending = () => { this._computeUpdatePending = false; };
     if (!this._webgpuInitialized) {
       try {
         await this._ensureWebGpu();
@@ -348,6 +390,7 @@ export class GpuParticleBackend {
         this._mode = "operator";
         this._executor = new GpuPassExecutor();
         this.update(dt);
+        _resetPending();
         return;
       }
     }
@@ -357,6 +400,7 @@ export class GpuParticleBackend {
     if (!program) {
       this._isUpdating = false;
       this._flushPendingRemovals();
+      _resetPending();
       return;
     }
 
@@ -368,20 +412,29 @@ export class GpuParticleBackend {
     if (count === 0) {
       this._isUpdating = false;
       this._flushPendingRemovals();
+      _resetPending();
       return;
     }
 
     this._elapsedTime = (this._elapsedTime || 0) + dt;
     const uniforms = { dt, elapsedTime: this._elapsedTime };
 
-    if (this._gpuRenderer && !this._renderValidationMode) {
-      // GPU-native path: dispatch without readback
-      dispatcher.dispatchOnly(storage, uniforms);
+    if ((this._gpuRenderer && !this._renderValidationMode) || this._gpuPersistentUpload) {
+      // GPU-native path: dispatch without full readback
 
-      // Death sweep requires particle data. Without readback, we cannot
-      // release dead particles on CPU. The renderer handles them via
-      // life <= 0 check in the vertex shader. Storage reclamation is
-      // deferred (handled in renderValidationMode or on demand).
+      if (this._gpuPersistentUpload) {
+        // Size buffer before dispatch
+        const cap = Math.max(1024, storage.capacity);
+        dispatcher.ensureParticleBuffer(cap);
+
+        // CPU-side death detection: decrement life, release dead particles
+        this._cpuDeathSweep(dt);
+
+        // Submit this frame's GPU work
+        dispatcher.dispatchOnly(storage, uniforms);
+      } else {
+        dispatcher.dispatchOnly(storage, uniforms);
+      }
     } else {
       // Readback path: dispatch + download for validation or fallback
       await dispatcher.dispatch(storage, uniforms);
@@ -398,6 +451,83 @@ export class GpuParticleBackend {
         }
       }
     }
+    _resetPending();
+  }
+
+  _getDeathModifiers() {
+    if (this._cachedDeathModifiers) return this._cachedDeathModifiers;
+    this._cachedDeathModifiers = this._modifiers
+      .map(e => e.modifier)
+      .filter(m => typeof m.onDeath === "function");
+    return this._cachedDeathModifiers;
+  }
+
+  _deathSweep(aliveFlags) {
+    if (!this._storage) return;
+    const accessors = this._storage.activeParticles;
+    const deathMods = this._getDeathModifiers();
+    let released = 0;
+    const t0 = performance.now();
+
+    let i = accessors.length;
+    while (i > 0) {
+      i--;
+      const acc = accessors[i];
+      const slotIdx = acc._i;
+      if (aliveFlags[slotIdx] === 0) {
+        for (const mod of deathMods) {
+          mod.onDeath(acc, null);
+        }
+        this._storage.release(acc);
+        released++;
+      }
+    }
+
+    this._deathSweepTime += performance.now() - t0;
+    this._deathSweepCount += released;
+  }
+
+  _cpuDeathSweep(dt) {
+    if (!this._storage) return;
+    const storage = this._storage;
+    const active = storage._activeAccessors;
+    const lifeArr = storage._life;
+    const deathMods = this._getDeathModifiers();
+    let released = 0;
+    let freeCount = storage._freeCount;
+    const freeList = storage._freeList;
+    const t0 = performance.now();
+    const len = active.length;
+    const deathModLen = deathMods.length;
+
+    // Combined pass: decrement life, check death, compact in one sweep
+    let writeIdx = 0;
+    for (let readIdx = 0; readIdx < len; readIdx++) {
+      const acc = active[readIdx];
+      const idx = acc._i;
+      lifeArr[idx] -= dt;
+      if (lifeArr[idx] > 0) {
+        if (writeIdx !== readIdx) {
+          active[writeIdx] = acc;
+          acc._activeIndex = writeIdx;
+        }
+        writeIdx++;
+      } else {
+        for (let m = 0; m < deathModLen; m++) {
+          deathMods[m].onDeath(acc, null);
+        }
+        freeList[freeCount] = idx;
+        freeCount++;
+        acc._activeIndex = -1;
+        released++;
+      }
+    }
+    active.length = writeIdx;
+    storage._activeCount = writeIdx;
+    storage._freeCount = freeCount;
+
+    this._deathSweepTime += performance.now() - t0;
+    this._deathSweepCount += released;
   }
 
   _activeParticleCount() {

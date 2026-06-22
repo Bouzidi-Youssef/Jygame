@@ -20,6 +20,9 @@ function _resetParticle(p) {
   p.r = 255;
   p.g = 255;
   p.b = 255;
+  p.alive = 1;
+  p.seed = 0;
+  p.segment = 0;
   p.color = "#ffffff";
   p.depth = 0;
   p.ageRatio = 0;

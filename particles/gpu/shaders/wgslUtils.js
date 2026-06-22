@@ -4,7 +4,7 @@ export function uid() { return _uid++; }
 export function resetUid() { _uid = 0; }
 
 export function wgslType(fieldName) {
-  if (fieldName === "r" || fieldName === "g" || fieldName === "b") return "u32";
+  if (fieldName === "r" || fieldName === "g" || fieldName === "b" || fieldName === "alive" || fieldName === "segment") return "u32";
   return "f32";
 }
 

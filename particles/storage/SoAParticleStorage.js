@@ -1,5 +1,6 @@
 import { ParticleStorage } from "./ParticleStorage.js";
 import { SoAParticleAccessor } from "../accessors/SoAParticleAccessor.js";
+import { ParticleBufferLayout } from "../gpu/ParticleBufferLayout.js";
 
 let _nextId = 1;
 
@@ -21,6 +22,9 @@ const TYPED_ARRAYS = [
   ['_r', Uint8Array],
   ['_g', Uint8Array],
   ['_b', Uint8Array],
+  ['_alive', Uint8Array],
+  ['_seed', Float32Array],
+  ['_segment', Int32Array],
   ['_id', Int32Array],
 ];
 
@@ -45,6 +49,8 @@ export class SoAParticleStorage extends ParticleStorage {
     this._freeCount = capacity;
 
     this._activeAccessors = [];
+    this._minDirty = Infinity;
+    this._maxDirty = -1;
 
     this._peakActive = 0;
     this._peakFree = capacity;
@@ -74,6 +80,9 @@ export class SoAParticleStorage extends ParticleStorage {
     this._r[i] = 255;
     this._g[i] = 255;
     this._b[i] = 255;
+    this._alive[i] = 1;
+    this._seed[i] = 0;
+    this._segment[i] = 0;
     this._id[i] = 0;
     this._accessors[i].reset();
   }
@@ -154,6 +163,20 @@ export class SoAParticleStorage extends ParticleStorage {
     this._resetSlot(acc._i);
   }
 
+  _markDirty(index) {
+    if (index < this._minDirty) this._minDirty = index;
+    if (index > this._maxDirty) this._maxDirty = index;
+  }
+
+  get dirtyMin() { return this._minDirty; }
+  get dirtyMax() { return this._maxDirty; }
+  get isDirty() { return this._minDirty <= this._maxDirty; }
+
+  clearDirty() {
+    this._minDirty = Infinity;
+    this._maxDirty = -1;
+  }
+
   clear() {
     for (let i = 0; i < this._activeAccessors.length; i++) {
       const acc = this._activeAccessors[i];
@@ -206,6 +229,47 @@ export class SoAParticleStorage extends ParticleStorage {
     return this._peakFree;
   }
 
+  destroy() {
+    this._activeAccessors.length = 0;
+    this._freeList.length = 0;
+    this._freeCount = 0;
+    this._minDirty = Infinity;
+    this._maxDirty = -1;
+  }
+
+  fillUploadBuffer(data, count, startIndex = 0) {
+    const active = this._activeAccessors;
+    const { _x, _y, _vx, _vy, _ax, _ay, _life, _maxLife, _ageRatio,
+            _rotation, _rotationSpeed, _size, _alpha, _depth,
+            _r, _g, _b, _alive, _seed, _segment } = this;
+    const stride = ParticleBufferLayout.STRIDE;
+
+    for (let i = 0; i < count; i++) {
+      const idx = active[startIndex + i]._i;
+      const base = i * stride;
+      data[base]      = _x[idx];
+      data[base + 1]  = _y[idx];
+      data[base + 2]  = _vx[idx];
+      data[base + 3]  = _vy[idx];
+      data[base + 4]  = _ax[idx];
+      data[base + 5]  = _ay[idx];
+      data[base + 6]  = _life[idx];
+      data[base + 7]  = _maxLife[idx];
+      data[base + 8]  = _ageRatio[idx];
+      data[base + 9]  = _rotation[idx];
+      data[base + 10] = _rotationSpeed[idx];
+      data[base + 11] = _size[idx];
+      data[base + 12] = _alpha[idx];
+      data[base + 13] = _depth[idx];
+      data[base + 14] = _r[idx];
+      data[base + 15] = _g[idx];
+      data[base + 16] = _b[idx];
+      data[base + 17] = _alive[idx];
+      data[base + 18] = _seed[idx];
+      data[base + 19] = _segment[idx];
+    }
+  }
+
   get totalCreated() {
     return this._totalCreated;
   }
@@ -220,6 +284,7 @@ export class SoAParticleStorage extends ParticleStorage {
 
   setFieldValue(sortIndex, fieldName, value) {
     this._activeAccessors[sortIndex][fieldName] = value;
+    this._markDirty(sortIndex);
   }
 
   getSortOrder(sortIndex) {

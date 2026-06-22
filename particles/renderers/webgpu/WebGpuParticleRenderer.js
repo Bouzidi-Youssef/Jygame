@@ -7,6 +7,9 @@ struct Particle {
   ageRatio: f32, rotation: f32, rotationSpeed: f32,
   size: f32, alpha: f32, depth: f32,
   r: u32, g: u32, b: u32,
+  alive: u32,
+  seed: f32,
+  segment: u32,
 };
 
 @group(0) @binding(0) var<storage, read> particles : array<Particle>;
@@ -36,7 +39,7 @@ fn vs_main(@builtin(vertex_index) vertexIndex: u32, @builtin(instance_index) ins
   let p = particles[instanceIndex];
 
   var pos = vec4<f32>();
-  if (p.life > 0.0) {
+  if (p.alive > 0u) {
     let w = p.size;
     let h = p.size;
     var local = QUAD_POS[vertexIndex] * vec2(w, h);

@@ -10,6 +10,7 @@ export class GpuUniformBuffer {
     this._buffer = this._device.createBuffer({
       size: UNIFORM_SIZE,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+      label: "GpuUniformBuffer",
     });
     this._data = new Float32Array(4);
   }

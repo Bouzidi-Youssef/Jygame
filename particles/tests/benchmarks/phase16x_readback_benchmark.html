@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Phase 16X — Readback Cost Benchmark</title>
+<style>
+  body { font-family: monospace; background: #1a1a2e; color: #e0e0e0; padding: 20px; }
+  h1 { color: #00d4aa; }
+  h2 { color: #00b4d8; }
+  pre { background: #16213e; padding: 12px; border-radius: 6px; overflow-x: auto; }
+  #output { white-space: pre-wrap; }
+  #status { margin: 12px 0; padding: 8px; border-radius: 4px; }
+  .running { background: #2d4a3e; color: #7dffb3; }
+  .done   { background: #1a3a2e; color: #00d4aa; }
+  .error  { background: #4a1a1a; color: #ff7d7d; }
+  button { background: #00d4aa; color: #1a1a2e; border: none; padding: 10px 24px;
+           font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+  button:hover { background: #00ffc8; }
+  table { border-collapse: collapse; margin: 12px 0; width: 100%; }
+  th, td { border: 1px solid #333; padding: 6px 12px; text-align: right; }
+  th { background: #16213e; text-align: center; }
+  td:first-child, th:first-child { text-align: left; }
+</style>
+</head>
+<body>
+  <h1>Phase 16X — Readback Cost Benchmark</h1>
+  <p>Measures independent stages of the compute dispatch pipeline:</p>
+  <ul>
+    <li><strong>Upload</strong> — writeBuffer for particle data</li>
+    <li><strong>Dispatch</strong> — compute shader execution + command encoding</li>
+    <li><strong>Readback</strong> — copy + mapAsync + read from staging buffer</li>
+    <li><strong>DeathSweep</strong> — CPU loop releasing dead particles</li>
+  </ul>
+  <div id="status" class="running">⏳ Initializing...</div>
+  <button id="runBtn" onclick="run()">Run Benchmark</button>
+  <pre id="output">Click "Run Benchmark" to start.</pre>
+
+<script type="module">
+  import { runBenchmark } from "./phase16x_readback_benchmark.js";
+
+  const origLog = console.log;
+  const output = document.getElementById("output");
+  const status = document.getElementById("status");
+
+  console.log = function(...args) {
+    const msg = args.map(a => typeof a === "object" ? JSON.stringify(a, null, 2) : String(a)).join(" ");
+    output.textContent += msg + "\n";
+    origLog.apply(console, args);
+  };
+
+  async function createWebGlRenderer() {
+    const c = document.createElement("canvas");
+    const gl = c.getContext("webgl2");
+    if (!gl) return null;
+    const { GpuParticleRenderer } = await import("../../renderers/GpuParticleRenderer.js");
+    return new GpuParticleRenderer({ gl });
+  }
+
+  window.run = async function() {
+    const btn = document.getElementById("runBtn");
+    btn.disabled = true;
+    output.textContent = "";
+    status.className = "running";
+    status.textContent = "⏳ Running benchmark...";
+
+    const renderer = await createWebGlRenderer();
+
+    try {
+      await runBenchmark({ renderer });
+      status.className = "done";
+      status.textContent = "✓ Benchmark complete";
+    } catch (e) {
+      status.className = "error";
+      status.textContent = "✗ Error: " + e.message;
+      console.log("ERROR:", e);
+    }
+
+    btn.disabled = false;
+  };
+</script>
+</body>
+</html>

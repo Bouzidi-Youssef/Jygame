@@ -71,7 +71,7 @@ export class ColorModifier {
   toDescriptor() {
     const d = { type: "color" };
     if (this._stopsArg) {
-      d.stops = this._stops.map(s => [s.pos, s.r, s.g, s.b]);
+      d.stops = this._stops.map(s => [s.pos, `#${s.r.toString(16).padStart(2, "0")}${s.g.toString(16).padStart(2, "0")}${s.b.toString(16).padStart(2, "0")}`]);
     } else {
       d.from = `#${this._stops[0].r.toString(16).padStart(2, "0")}${this._stops[0].g.toString(16).padStart(2, "0")}${this._stops[0].b.toString(16).padStart(2, "0")}`;
       d.to = `#${this._stops[1].r.toString(16).padStart(2, "0")}${this._stops[1].g.toString(16).padStart(2, "0")}${this._stops[1].b.toString(16).padStart(2, "0")}`;

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Phase 17B — Dirty-Region Upload Benchmark</title>
+<style>
+  body { font-family: monospace; background: #1a1a2e; color: #e0e0e0; padding: 20px; }
+  h1 { color: #00d4aa; }
+  h2 { color: #00b4d8; }
+  pre { background: #16213e; padding: 12px; border-radius: 6px; overflow-x: auto; }
+  #output { white-space: pre-wrap; }
+  #status { margin: 12px 0; padding: 8px; border-radius: 4px; font-weight: bold; }
+  .running { background: #2d4a3e; color: #7dffb3; }
+  .done   { background: #1a3a2e; color: #00d4aa; }
+  .error  { background: #4a1a1a; color: #ff7d7d; }
+  button { background: #00d4aa; color: #1a1a2e; border: none; padding: 10px 24px;
+           font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+  button:hover { background: #00ffc8; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  table { border-collapse: collapse; margin: 16px 0; width: 100%; }
+  th, td { border: 1px solid #444; padding: 8px 14px; text-align: right; }
+  th { background: #16213e; text-align: center; font-weight: bold; color: #00b4d8; }
+  td:first-child, th:first-child { text-align: left; }
+  .savings-high { color: #00d4aa; font-weight: bold; }
+  .savings-med { color: #b4d800; }
+  .savings-low { color: #d48000; }
+  .savings-none { color: #d45050; }
+  tr:hover { filter: brightness(1.3); }
+</style>
+</head>
+<body>
+  <h1>Phase 17B — Dirty-Region Upload Benchmark</h1>
+  <p>Measures bandwidth savings of dirty-region upload at various churn rates:</p>
+  <ul>
+    <li><strong>Full upload</strong> — all particles sent to GPU every frame (STRIDE × count × 4 bytes)</li>
+    <li><strong>Dirty upload</strong> — only modified range (minIndex → maxIndex) uploaded</li>
+    <li><strong>Churn</strong> — fraction of particles modified per frame</li>
+  </ul>
+
+  <div id="status" class="running">⏳ Initializing...</div>
+
+  <p>
+    Particle counts:
+    <label><input type="checkbox" id="c1k" checked> 1k</label>
+    <label><input type="checkbox" id="c10k" checked> 10k</label>
+    <label><input type="checkbox" id="c50k" checked> 50k</label>
+    <label><input type="checkbox" id="c100k" checked> 100k</label>
+    <label><input type="checkbox" id="c250k"> 250k</label>
+  </p>
+
+  <button id="runBtn" onclick="run()">Run Benchmark</button>
+
+  <div id="results">
+    <h2>Bandwidth Savings (%)</h2>
+    <table id="resultsTable">
+      <thead>
+        <tr><th>Count</th></tr>
+      </thead>
+      <tbody id="resultsBody"></tbody>
+    </table>
+  </div>
+
+  <h2>Console Log</h2>
+  <pre id="output">Click "Run Benchmark" to start.</pre>
+
+<script type="module">
+  import { runBenchmark } from "./phase17b_dirty_upload_benchmark.js";
+
+  const output = document.getElementById("output");
+  const status = document.getElementById("status");
+  const tbody = document.getElementById("resultsBody");
+
+  const origLog = console.log;
+  console.log = function(...args) {
+    const msg = args.map(a => typeof a === "object" ? JSON.stringify(a, null, 2) : String(a)).join(" ");
+    output.textContent += msg + "\n";
+    origLog.apply(console, args);
+  };
+
+  function savingsClass(ratio) {
+    if (ratio >= 0.99) return "savings-high";
+    if (ratio >= 0.90) return "savings-med";
+    if (ratio >= 0.50) return "savings-low";
+    return "savings-none";
+  }
+
+  window.run = async function() {
+    const btn = document.getElementById("runBtn");
+    btn.disabled = true;
+    output.textContent = "";
+    tbody.innerHTML = "";
+    status.className = "running";
+    status.textContent = "⏳ Running benchmark...";
+
+    const counts = [];
+    if (document.getElementById("c1k").checked) counts.push(1000);
+    if (document.getElementById("c10k").checked) counts.push(10000);
+    if (document.getElementById("c50k").checked) counts.push(50000);
+    if (document.getElementById("c100k").checked) counts.push(100000);
+    if (document.getElementById("c250k").checked) counts.push(250000);
+
+    try {
+      const data = await runBenchmark({ counts });
+      const churnLabels = data.churnRates.map(c => `${(c * 100).toFixed(1)}%`);
+
+      // Build header row with churn rates
+      const thead = document.querySelector("#resultsTable thead tr");
+      for (const label of churnLabels) {
+        const th = document.createElement("th");
+        th.textContent = label;
+        thead.appendChild(th);
+      }
+
+      for (const count of data.counts) {
+        const tr = document.createElement("tr");
+        const tdCount = document.createElement("td");
+        tdCount.textContent = count;
+        tr.appendChild(tdCount);
+
+        for (const churn of data.churnRates) {
+          const m = data.results[count][churn];
+          const pct = (m.savingsRatio * 100).toFixed(1);
+          const td = document.createElement("td");
+          td.textContent = pct + "%";
+          td.className = savingsClass(m.savingsRatio);
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+
+      status.className = "done";
+      status.textContent = "✓ Benchmark complete";
+    } catch (e) {
+      status.className = "error";
+      status.textContent = "✗ Error: " + e.message;
+      console.log("ERROR:", e);
+    }
+
+    btn.disabled = false;
+  };
+
+  status.textContent = "Ready — click 'Run Benchmark' to start";
+  status.className = "";
+</script>
+</body>
+</html>

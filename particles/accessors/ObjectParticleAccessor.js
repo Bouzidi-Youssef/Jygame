@@ -31,6 +31,9 @@ export class ObjectParticleAccessor extends ParticleAccessor {
   get r() { return this._p.r; } set r(v) { this._p.r = v; }
   get g() { return this._p.g; } set g(v) { this._p.g = v; }
   get b() { return this._p.b; } set b(v) { this._p.b = v; }
+  get alive() { return this._p.alive; } set alive(v) { this._p.alive = v; }
+  get seed() { return this._p.seed; } set seed(v) { this._p.seed = v; }
+  get segment() { return this._p.segment; } set segment(v) { this._p.segment = v; }
   get texture() { return this._p.texture; } set texture(v) { this._p.texture = v; }
   get originX() { return this._p.originX; } set originX(v) { this._p.originX = v; }
   get originY() { return this._p.originY; } set originY(v) { this._p.originY = v; }
