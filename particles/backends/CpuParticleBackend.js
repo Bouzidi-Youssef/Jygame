@@ -5,6 +5,7 @@ import { CanvasParticleRenderer } from "../renderers/CanvasParticleRenderer.js";
 import { ParticleRenderData } from "../renderdata/ParticleRenderData.js";
 import { ParticleRenderCommandBuffer } from "../renderdata/ParticleRenderCommandBuffer.js";
 import { ParticleSortManager } from "../ParticleSortManager.js";
+import { ParticleBackendCapabilities } from "../gpu/ParticleBackendCapabilities.js";
 
 const _createEntry = (modifier, priority) => ({ modifier, priority });
 
@@ -312,5 +313,9 @@ export class CpuParticleBackend {
 
   get modifierCount() {
     return this._modifiers.length;
+  }
+
+  get capabilities() {
+    return ParticleBackendCapabilities.CPU;
   }
 }

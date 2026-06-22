@@ -12,6 +12,11 @@ import { ParticleSortManager } from "../ParticleSortManager.js";
 import { WebGpuDeviceManager } from "../gpu/webgpu/WebGpuDeviceManager.js";
 import { GpuComputeDispatcher } from "../gpu/webgpu/GpuComputeDispatcher.js";
 import { WebGpuParticleRenderer } from "../renderers/webgpu/WebGpuParticleRenderer.js";
+import { ParticleBackendCapabilities } from "../gpu/ParticleBackendCapabilities.js";
+import { WASM_BYTES } from "./death_sweep_simd_bytes.js";
+
+const WASM_DEATH_SWEEP_THRESHOLD = 10000;
+const MAX_DT = 0.1;
 
 export class GpuParticleBackend {
   constructor({ renderer, system, storage, mode, canvas, renderValidationMode, gpuPersistentUpload } = {}) {
@@ -34,7 +39,6 @@ export class GpuParticleBackend {
     this._gpuProgram = null;
     this._isUpdating = false;
     this._pendingRemove = null;
-    this._pendingAdd = null;
     this._sortManager = new ParticleSortManager(this._storage);
     this._commandBuffer = new ParticleRenderCommandBuffer();
     this._activeSlots = [];
@@ -48,6 +52,58 @@ export class GpuParticleBackend {
     this._deathSweepCount = 0;
     this._aliveReadbackTime = 0;
     this._computeUpdatePending = false;
+    this._wasmAvailable = false;
+    this._wasmExports = null;
+    this._wasmMemory = null;
+    this._wasmLifeView = null;
+    this._wasmActiveView = null;
+    this._wasmDeathOutView = null;
+    this._wasmCapacity = 0;
+    this._slotAccArr = [];
+    this._slotIdxArr = [];
+    this._initWasm();
+  }
+
+  _initWasm() {
+    try {
+      if (typeof WebAssembly === "undefined" || typeof WebAssembly.Module === "undefined") {
+        this._wasmAvailable = false;
+        return;
+      }
+      const memory = new WebAssembly.Memory({ initial: 1, maximum: 65536 });
+      const mod = new WebAssembly.Module(WASM_BYTES);
+      const inst = new WebAssembly.Instance(mod, { env: { memory } });
+      this._wasmExports = inst.exports;
+      this._wasmMemory = memory;
+      this._wasmLifeView = null;
+      this._wasmActiveView = null;
+      this._wasmDeathOutView = null;
+      this._wasmCapacity = 0;
+      this._wasmAvailable = true;
+    } catch (e) {
+      this._wasmAvailable = false;
+    }
+  }
+
+  _ensureWasmCapacity(capacity) {
+    if (!this._wasmAvailable) return false;
+    if (capacity <= this._wasmCapacity) return true;
+    const needed = capacity * 12;
+    const neededPages = Math.ceil(needed / 65536);
+    const currentPages = this._wasmMemory.buffer.byteLength / 65536;
+    if (neededPages > currentPages) {
+      try {
+        this._wasmMemory.grow(neededPages - currentPages);
+      } catch (e) {
+        return false;
+      }
+    }
+    const b = this._wasmMemory.buffer;
+    this._wasmLifeView = new Float32Array(b, 0, capacity);
+    this._wasmActiveView = new Int32Array(b, capacity * 4, capacity);
+    this._wasmDeathOutView = new Int32Array(b, capacity * 8, capacity);
+    this._wasmCapacity = capacity;
+    return true;
   }
 
   get renderValidationMode() { return this._renderValidationMode; }
@@ -383,75 +439,66 @@ export class GpuParticleBackend {
     if (this._computeUpdatePending) return;
     this._computeUpdatePending = true;
     const _resetPending = () => { this._computeUpdatePending = false; };
-    if (!this._webgpuInitialized) {
-      try {
-        await this._ensureWebGpu();
-      } catch (e) {
-        this._mode = "operator";
-        this._executor = new GpuPassExecutor();
-        this.update(dt);
-        _resetPending();
-        return;
-      }
-    }
-
-    const dispatcher = this._computeDispatcher;
-    const program = this._gpuProgram;
-    if (!program) {
-      this._isUpdating = false;
-      this._flushPendingRemovals();
-      _resetPending();
-      return;
-    }
-
-    if (!dispatcher._program) {
-      dispatcher.setProgram(program);
-    }
-
-    const count = accessors.length;
-    if (count === 0) {
-      this._isUpdating = false;
-      this._flushPendingRemovals();
-      _resetPending();
-      return;
-    }
-
-    this._elapsedTime = (this._elapsedTime || 0) + dt;
-    const uniforms = { dt, elapsedTime: this._elapsedTime };
-
-    if ((this._gpuRenderer && !this._renderValidationMode) || this._gpuPersistentUpload) {
-      // GPU-native path: dispatch without full readback
-
-      if (this._gpuPersistentUpload) {
-        // Size buffer before dispatch
-        const cap = Math.max(1024, storage.capacity);
-        dispatcher.ensureParticleBuffer(cap);
-
-        // CPU-side death detection: decrement life, release dead particles
-        this._cpuDeathSweep(dt);
-
-        // Submit this frame's GPU work
-        dispatcher.dispatchOnly(storage, uniforms);
-      } else {
-        dispatcher.dispatchOnly(storage, uniforms);
-      }
-    } else {
-      // Readback path: dispatch + download for validation or fallback
-      await dispatcher.dispatch(storage, uniforms);
-
-      // Death sweep after readback
-      let i = 0;
-      while (i < accessors.length) {
-        const p = accessors[i];
-        const life = storage.getFieldValue(i, "life");
-        if (life <= 0) {
-          storage.release(p);
-        } else {
-          i++;
+    try {
+      if (!this._webgpuInitialized) {
+        try {
+          await this._ensureWebGpu();
+        } catch (e) {
+          this._mode = "operator";
+          this._executor = new GpuPassExecutor();
+          this.update(dt);
+          return;
         }
       }
+
+      const dispatcher = this._computeDispatcher;
+      const program = this._gpuProgram;
+      if (!program) {
+        this._isUpdating = false;
+        this._flushPendingRemovals();
+        return;
+      }
+
+      if (!dispatcher._program) {
+        dispatcher.setProgram(program);
+      }
+
+      const count = accessors.length;
+      if (count === 0) {
+        this._isUpdating = false;
+        this._flushPendingRemovals();
+        return;
+      }
+
+      this._elapsedTime = (this._elapsedTime || 0) + dt;
+      const uniforms = { dt, elapsedTime: this._elapsedTime };
+
+      if ((this._gpuRenderer && !this._renderValidationMode) || this._gpuPersistentUpload) {
+        if (this._gpuPersistentUpload) {
+          const cap = Math.max(1024, storage.capacity);
+          dispatcher.ensureParticleBuffer(cap);
+          this._cpuDeathSweep(dt);
+          dispatcher.dispatchOnly(storage, uniforms);
+        } else {
+          dispatcher.dispatchOnly(storage, uniforms);
+        }
+      } else {
+        await dispatcher.dispatch(storage, uniforms);
+
+        let i = 0;
+        while (i < accessors.length) {
+          const p = accessors[i];
+          const life = storage.getFieldValue(i, "life");
+          if (life <= 0) {
+            storage.release(p);
+          } else {
+            i++;
+          }
+        }
+      }
+    } finally {
+      _resetPending();
     }
-    _resetPending();
   }
 
   _getDeathModifiers() {
@@ -489,6 +536,18 @@ export class GpuParticleBackend {
 
   _cpuDeathSweep(dt) {
     if (!this._storage) return;
+    if (this._wasmAvailable) {
+      const len = this._storage._activeAccessors?.length || 0;
+      if (len >= WASM_DEATH_SWEEP_THRESHOLD) {
+        this._cpuDeathSweepWasm(dt);
+        return;
+      }
+    }
+    this._cpuDeathSweepJs(dt);
+  }
+
+  _cpuDeathSweepJs(dt) {
+    if (!this._storage) return;
     const storage = this._storage;
     const active = storage._activeAccessors;
     const lifeArr = storage._life;
@@ -525,6 +584,82 @@ export class GpuParticleBackend {
     active.length = writeIdx;
     storage._activeCount = writeIdx;
     storage._freeCount = freeCount;
+
+    this._deathSweepTime += performance.now() - t0;
+    this._deathSweepCount += released;
+  }
+
+  _cpuDeathSweepWasm(dt) {
+    const storage = this._storage;
+    const active = storage._activeAccessors;
+    const lifeArr = storage._life;
+    const deathMods = this._getDeathModifiers();
+    const deathModLen = deathMods.length;
+    const len = active.length;
+    const capacity = storage.capacity;
+
+    if (!this._ensureWasmCapacity(capacity)) {
+      this._cpuDeathSweepJs(dt);
+      return;
+    }
+
+    const t0 = performance.now();
+    let released = 0;
+
+    const slotAcc = this._slotAccArr;
+    const slotIdx = this._slotIdxArr;
+    slotIdx.length = len;
+    for (let i = 0; i < len; i++) {
+      const acc = active[i];
+      slotAcc[acc._i] = acc;
+      slotIdx[i] = acc._i;
+    }
+
+    this._wasmLifeView.set(lifeArr);
+    for (let i = 0; i < len; i++) {
+      this._wasmActiveView[i] = slotIdx[i];
+    }
+
+    const safeDt = Math.min(dt, MAX_DT);
+    const newCount = this._wasmExports.deathSweepFull(
+      0,
+      capacity * 4,
+      len,
+      safeDt,
+      capacity * 8,
+      capacity,
+    );
+
+    lifeArr.set(this._wasmLifeView);
+
+    const diedCount = len - newCount;
+    const freeList = storage._freeList;
+    let freeCount = storage._freeCount;
+    for (let d = 0; d < diedCount; d++) {
+      const slot = this._wasmDeathOutView[d];
+      const acc = slotAcc[slot];
+      for (let m = 0; m < deathModLen; m++) {
+        deathMods[m].onDeath(acc, null);
+      }
+      freeList[freeCount] = slot;
+      freeCount++;
+      acc._activeIndex = -1;
+      released++;
+    }
+    storage._freeCount = freeCount;
+
+    for (let i = 0; i < newCount; i++) {
+      const slot = this._wasmActiveView[i];
+      const acc = slotAcc[slot];
+      acc._activeIndex = i;
+      active[i] = acc;
+    }
+    active.length = newCount;
+    storage._activeCount = newCount;
+
+    for (let i = 0; i < len; i++) {
+      slotAcc[slotIdx[i]] = undefined;
+    }
 
     this._deathSweepTime += performance.now() - t0;
     this._deathSweepCount += released;
@@ -614,5 +749,12 @@ export class GpuParticleBackend {
 
   get modifierCount() {
     return this._modifiers.length;
+  }
+
+  get capabilities() {
+    if (this._mode === "compute") {
+      return ParticleBackendCapabilities.GPU_FULL;
+    }
+    return ParticleBackendCapabilities.GPU_RENDER;
   }
 }

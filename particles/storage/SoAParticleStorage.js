@@ -29,9 +29,10 @@ const TYPED_ARRAYS = [
 ];
 
 export class SoAParticleStorage extends ParticleStorage {
-  constructor({ capacity = 1000 } = {}) {
+  constructor({ capacity = 1000, maxCapacity = 0 } = {}) {
     super();
     this._capacity = capacity;
+    this._maxCapacity = maxCapacity || 0;
 
     for (const [name, Ctor] of TYPED_ARRAYS) {
       this[name] = new Ctor(capacity);
@@ -89,7 +90,13 @@ export class SoAParticleStorage extends ParticleStorage {
 
   _grow() {
     const oldCap = this._capacity;
-    const newCap = oldCap * 2;
+    let newCap = oldCap * 2;
+    if (this._maxCapacity > 0 && newCap > this._maxCapacity) {
+      newCap = this._maxCapacity;
+      if (this._freeCount === 0) {
+        throw new Error(`SoAParticleStorage: reached maxCapacity (${this._maxCapacity})`);
+      }
+    }
 
     for (const [name, Ctor] of TYPED_ARRAYS) {
       const old = this[name];
@@ -213,6 +220,10 @@ export class SoAParticleStorage extends ParticleStorage {
 
   get capacity() {
     return this._capacity;
+  }
+
+  get maxCapacity() {
+    return this._maxCapacity;
   }
 
   get peakActive() {

@@ -8,10 +8,6 @@ export class StorageResolver {
     return SoAParticleStorage;
   }
 
-  static get SUPPORTED_TYPES() {
-    return [SoAParticleStorage, ObjectParticleStorage];
-  }
-
   static createDefault(capacity) {
     return new SoAParticleStorage({ capacity });
   }
@@ -35,9 +31,4 @@ export class StorageResolver {
     return new ObjectParticleAccessor();
   }
 
-  static describe(storage) {
-    if (this.isSoA(storage)) return "SoA";
-    if (this.isObject(storage)) return "Object";
-    return "Unknown";
-  }
 }

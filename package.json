@@ -25,7 +25,9 @@
     "loaders/",
     "audio/",
     "modifiers/",
-    "camera/"
+    "camera/",
+    "particles/backends/death_sweep.wasm",
+    "particles/backends/death_sweep_simd_bytes.js"
   ],
   "keywords": [
     "game",
@@ -46,9 +48,12 @@
   "author": "Bouzidi Youssef",
   "sideEffects": false,
   "scripts": {
-    "test": "echo \"No tests yet\" && exit 0"
+    "test": "echo \"No tests yet\" && exit 0",
+    "build:wasm": "node tools/particles/build-wasm.mjs",
+    "build:wasm:verify": "node -e \"import('fs').then(f=>{const w=f.readFileSync('particles/backends/death_sweep.wasm');WebAssembly.instantiate(w).then(i=>{console.log('deathSweepFull:',typeof i.instance.exports.deathSweepFull)})})\""
   },
-  "dependencies": {
+  "devDependencies": {
     "wabt": "^1.0.39"
-  }
+  },
+  "dependencies": {}
 }

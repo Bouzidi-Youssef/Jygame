@@ -99,6 +99,10 @@ export class ParticleSystem {
     return this._backend.capacity;
   }
 
+  get maxCapacity() {
+    return this._backend._storage.maxCapacity;
+  }
+
   get peakActive() {
     return this._backend.peakActive;
   }

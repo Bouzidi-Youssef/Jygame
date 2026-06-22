@@ -1,5 +1,4 @@
 import { getOperator } from "./operators/index.js";
-import { WgslGenerator } from "./WgslGenerator.js";
 
 export class GpuPassExecutor {
   constructor() {
@@ -113,11 +112,6 @@ export class GpuPassExecutor {
     for (const byParticle of this._stateByDesc.values()) {
       byParticle.delete(id);
     }
-  }
-
-  compile(programDescriptor) {
-    const gen = new WgslGenerator();
-    return gen.generate(programDescriptor);
   }
 
   releaseAll() {
