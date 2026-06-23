@@ -26,7 +26,8 @@
     "audio/",
     "modifiers/",
     "camera/",
-    "particles/"
+    "particles/",
+    "shapes/"
   ],
   "keywords": [
     "game",
