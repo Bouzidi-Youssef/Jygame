@@ -4,6 +4,7 @@ import { GpuUniformLayout } from "../gpu/GpuUniformLayout.js";
 import { WgslGenerator } from "../gpu/WgslGenerator.js";
 import { SimulationBufferView } from "../gpu/SimulationBufferView.js";
 import { StorageResolver } from "../storage/StorageResolver.js";
+import { ModifierStateStore } from "../ModifierStateStore.js";
 import { GpuParticleRenderer } from "../renderers/GpuParticleRenderer.js";
 import { ParticleRenderCommandBuffer } from "../renderdata/ParticleRenderCommandBuffer.js";
 import { ParticleRenderData } from "../renderdata/ParticleRenderData.js";
@@ -48,6 +49,12 @@ export class GpuParticleBackend {
     this._persistentUploadBytes = 0;
     this._persistentUploadCount = 0;
     this._cachedDeathModifiers = null;
+    this._modifierContext = {
+      system: this._system,
+      activeParticles: this._storage.activeParticles,
+      stateStore: new ModifierStateStore(),
+      accessor: this._accessor,
+    };
     this._deathSweepTime = 0;
     this._deathSweepCount = 0;
     this._aliveReadbackTime = 0;
@@ -228,6 +235,13 @@ export class GpuParticleBackend {
     if (this._computeDispatcher) this._computeDispatcher.destroy();
     if (this._gpuRenderer) this._gpuRenderer.destroy();
     this._sortManager.destroy();
+    if (this._modifierContext) {
+      this._modifierContext.stateStore.releaseAll();
+      this._modifierContext.system = null;
+      this._modifierContext.activeParticles = null;
+      this._modifierContext.accessor = null;
+    }
+    this._modifierContext = null;
     this._storage = null;
     this._accessor = null;
     this._program = null;
@@ -333,6 +347,10 @@ export class GpuParticleBackend {
     const storage = this._storage;
     const accessors = storage.activeParticles;
 
+    if (this._sortManager.sortMode !== "none") {
+      this._sortManager.markDirty();
+    }
+
     if (this._mode === "compute") {
       this._updateCompute(dt, storage, accessors);
     } else {
@@ -353,14 +371,10 @@ export class GpuParticleBackend {
       } else {
         this._updateObject(dt, storage, accessors, program, executor);
       }
-    }
 
-    if (this._sortManager.sortMode !== "none") {
-      this._sortManager.markDirty();
+      this._isUpdating = false;
+      this._flushPendingRemovals();
     }
-
-    this._isUpdating = false;
-    this._flushPendingRemovals();
   }
 
   _updateSoA(dt, storage, accessors, program, executor, uniforms) {
@@ -384,20 +398,18 @@ export class GpuParticleBackend {
       }
     }
 
-    let remaining = count;
-    let idx = 0;
-    while (idx < remaining) {
-      const slot = this._activeSlots[idx];
+    let i = 0;
+    let n = count;
+    while (i < n) {
+      const slot = this._activeSlots[i];
       if (view.life(slot) <= 0) {
         executor.releaseStateById(view.id(slot));
-        storage.release(accessors[idx]);
-        remaining--;
-        this._activeSlots.length = remaining;
-        for (let j = idx; j < remaining; j++) {
-          this._activeSlots[j] = accessors[j]._i;
-        }
+        storage.release(accessors[i]);
+        n--;
+        this._activeSlots[i] = this._activeSlots[n];
+        this._activeSlots.length = n;
       } else {
-        idx++;
+        i++;
       }
     }
   }
@@ -438,7 +450,6 @@ export class GpuParticleBackend {
   async _updateCompute(dt, storage, accessors) {
     if (this._computeUpdatePending) return;
     this._computeUpdatePending = true;
-    const _resetPending = () => { this._computeUpdatePending = false; };
     try {
       if (!this._webgpuInitialized) {
         try {
@@ -453,22 +464,14 @@ export class GpuParticleBackend {
 
       const dispatcher = this._computeDispatcher;
       const program = this._gpuProgram;
-      if (!program) {
-        this._isUpdating = false;
-        this._flushPendingRemovals();
-        return;
-      }
+      if (!program) return;
 
       if (!dispatcher._program) {
         dispatcher.setProgram(program);
       }
 
       const count = accessors.length;
-      if (count === 0) {
-        this._isUpdating = false;
-        this._flushPendingRemovals();
-        return;
-      }
+      if (count === 0) return;
 
       this._elapsedTime = (this._elapsedTime || 0) + dt;
       const uniforms = { dt, elapsedTime: this._elapsedTime };
@@ -477,8 +480,19 @@ export class GpuParticleBackend {
         if (this._gpuPersistentUpload) {
           const cap = Math.max(1024, storage.capacity);
           dispatcher.ensureParticleBuffer(cap);
-          this._cpuDeathSweep(dt);
-          dispatcher.dispatchOnly(storage, uniforms);
+          dispatcher._particleBuffer.upload(storage);
+          await dispatcher.dispatch(storage, uniforms);
+
+          let i = 0;
+          while (i < accessors.length) {
+            const p = accessors[i];
+            const life = storage.getFieldValue(i, "life");
+            if (life <= 0) {
+              storage.release(p);
+            } else {
+              i++;
+            }
+          }
         } else {
           dispatcher.dispatchOnly(storage, uniforms);
         }
@@ -497,7 +511,9 @@ export class GpuParticleBackend {
         }
       }
     } finally {
-      _resetPending();
+      this._isUpdating = false;
+      this._flushPendingRemovals();
+      this._computeUpdatePending = false;
     }
   }
 
@@ -523,7 +539,7 @@ export class GpuParticleBackend {
       const slotIdx = acc._i;
       if (aliveFlags[slotIdx] === 0) {
         for (const mod of deathMods) {
-          mod.onDeath(acc, null);
+          mod.onDeath(acc, this._modifierContext);
         }
         this._storage.release(acc);
         released++;
@@ -573,7 +589,7 @@ export class GpuParticleBackend {
         writeIdx++;
       } else {
         for (let m = 0; m < deathModLen; m++) {
-          deathMods[m].onDeath(acc, null);
+          deathMods[m].onDeath(acc, this._modifierContext);
         }
         freeList[freeCount] = idx;
         freeCount++;
@@ -639,7 +655,7 @@ export class GpuParticleBackend {
       const slot = this._wasmDeathOutView[d];
       const acc = slotAcc[slot];
       for (let m = 0; m < deathModLen; m++) {
-        deathMods[m].onDeath(acc, null);
+        deathMods[m].onDeath(acc, this._modifierContext);
       }
       freeList[freeCount] = slot;
       freeCount++;
@@ -701,6 +717,7 @@ export class GpuParticleBackend {
   clear() {
     this._storage.clear();
     if (this._executor) this._executor.releaseAll();
+    if (this._modifierContext) this._modifierContext.stateStore.releaseAll();
   }
 
   warmup(count) {

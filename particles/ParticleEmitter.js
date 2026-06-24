@@ -26,13 +26,15 @@ export class ParticleEmitter {
 
     this._emitWrapper = (p, i, emitter) => {
       if (this._shape) {
+        this._shape.x = this.x + this.offsetX;
+        this._shape.y = this.y + this.offsetY;
         this._shape.sample(p);
       } else {
         p.x = this.x + this.offsetX;
         p.y = this.y + this.offsetY;
       }
-      p.vx = this.vx * this.velocityInheritance;
-      p.vy = this.vy * this.velocityInheritance;
+      p.vx += this.vx * this.velocityInheritance;
+      p.vy += this.vy * this.velocityInheritance;
       if (this._initializer) this._initializer(p, i, emitter);
     };
   }
@@ -75,6 +77,10 @@ export class ParticleEmitter {
 
   set shape(value) {
     this._shape = value || null;
+    if (this._shape) {
+      this._shape.x = this.x;
+      this._shape.y = this.y;
+    }
   }
 
   get initializer() {
@@ -143,11 +149,19 @@ export class ParticleEmitter {
   setPosition(x, y) {
     this.x = x;
     this.y = y;
+    if (this._shape) {
+      this._shape.x = x;
+      this._shape.y = y;
+    }
   }
 
   move(dx, dy) {
     this.x += dx;
     this.y += dy;
+    if (this._shape) {
+      this._shape.x = this.x;
+      this._shape.y = this.y;
+    }
   }
 
   setVelocity(vx, vy) {
@@ -161,6 +175,10 @@ export class ParticleEmitter {
       const pos = this._followGetter(this._target);
       this.x = pos.x;
       this.y = pos.y;
+      if (this._shape) {
+        this._shape.x = this.x;
+        this._shape.y = this.y;
+      }
     }
     this._accumulator += this._rate * dt;
     const count = Math.min(Math.floor(this._accumulator), MAX_EMIT_PER_FRAME);

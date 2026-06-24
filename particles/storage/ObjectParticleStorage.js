@@ -91,6 +91,10 @@ export class ObjectParticleStorage extends ParticleStorage {
     return this._pool.capacity;
   }
 
+  get maxCapacity() {
+    return this._pool._maxSize;
+  }
+
   get peakActive() {
     return this._pool.peakActive;
   }

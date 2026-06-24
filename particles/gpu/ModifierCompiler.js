@@ -44,15 +44,10 @@ export class ModifierCompiler {
     }
 
     const passes = { integration: [], force: [], visual: [] };
-    const seen = new Set();
 
     for (let i = 0; i < descriptors.length; i++) {
       const desc = descriptors[i];
       this._validateDescriptor(desc, i);
-
-      if (seen.has(desc.type)) {
-        seen.add(desc.type);
-      }
 
       const meta = MODIFIER_META[desc.type];
       passes[meta.pass].push(desc);

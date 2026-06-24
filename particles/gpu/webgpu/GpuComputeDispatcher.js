@@ -101,11 +101,11 @@ export class GpuComputeDispatcher {
     const count = storage.activeCount;
     if (count === 0) return 0;
 
-    this.ensureParticleBuffer(Math.max(1024, storage.capacity));
-
     if (this._gpuPersistentUpload) {
+      this.ensureParticleBuffer(Math.max(1024, storage.capacity));
       this._seedBuffer(storage);
     } else {
+      this.ensureParticleBuffer(Math.max(1024, count));
       this._particleBuffer.upload(storage);
     }
     this._uniformBuffer.write({ ...uniforms, particleCount: count });
@@ -130,11 +130,11 @@ export class GpuComputeDispatcher {
     const count = storage.activeCount;
     if (count === 0) return 0;
 
-    this.ensureParticleBuffer(Math.max(1024, storage.capacity));
-
     if (this._gpuPersistentUpload) {
+      this.ensureParticleBuffer(Math.max(1024, storage.capacity));
       this._seedBuffer(storage);
     } else {
+      this.ensureParticleBuffer(Math.max(1024, count));
       this._particleBuffer.upload(storage);
     }
     this._uniformBuffer.write({ ...uniforms, particleCount: count });
