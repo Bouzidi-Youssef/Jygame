@@ -1,6 +1,7 @@
 {
   "name": "jygame",
   "version": "0.7.7",
+
   "description": "A lightweight 2D game framework for the browser",
   "type": "module",
   "main": "./jygame.js",
