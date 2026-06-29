@@ -17,14 +17,17 @@ export {
   Renderable,
   Animation,
   Visible,
+  RenderBounds,
   EnemyTag,
   PlayerTag,
   ProjectileTag,
   StaticTag,
 } from "./components/index.js";
 
-export { MovementSystem, AnimationSystem, CollisionSystem } from "./systems/index.js";
+export { MovementSystem, AnimationSystem, CollisionSystem, RenderSystem } from "./systems/index.js";
 
 export { AnimationClip, AnimationClipRegistry } from "./animation/index.js";
 
 export { CollisionQuery } from "./collision/index.js";
+
+export { RenderCommand, RenderQueue, CanvasContext } from "./render/index.js";

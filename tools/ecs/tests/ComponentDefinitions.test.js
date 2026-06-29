@@ -8,6 +8,7 @@ import {
   Renderable,
   Animation,
   Visible,
+  RenderBounds,
   EnemyTag,
   PlayerTag,
   ProjectileTag,
@@ -18,9 +19,10 @@ const ALL_COMPONENTS = [
   { cls: Transform, schema: { x: "f32", y: "f32", rotation: "f32", scaleX: "f32", scaleY: "f32" }, hasSchema: true },
   { cls: Velocity, schema: { x: "f32", y: "f32" }, hasSchema: true },
   { cls: Collider, schema: { width: "f32", height: "f32" }, hasSchema: true },
-  { cls: Renderable, schema: { image: "u16" }, hasSchema: true },
+  { cls: Renderable, schema: { image: "u16", fillColor: "u32", shape: "u8", layer: "i16" }, hasSchema: true },
   { cls: Animation, schema: { clipId: "u16", frameIndex: "u32", elapsed: "f32", isPlaying: "u8", speed: "f32" }, hasSchema: true },
   { cls: Visible, schema: { value: "u8" }, hasSchema: true },
+  { cls: RenderBounds, schema: { width: "f32", height: "f32" }, hasSchema: true },
 ];
 
 const TAG_COMPONENTS = [
