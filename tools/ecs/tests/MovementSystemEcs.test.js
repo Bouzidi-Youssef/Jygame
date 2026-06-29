@@ -84,17 +84,17 @@ describe("MovementSystem (ECS)", () => {
       const world = createWorld();
       const sys = new MovementSystem();
       world.addSystem(sys);
-      assert.ok(sys._compiledIds);
-      assert.ok(sys._compiledIds.has(Transform));
-      assert.ok(sys._compiledIds.has(Velocity));
+      assert.ok(sys._compiled);
+      assert.ok(sys._compiled.componentIds.has(Transform));
+      assert.ok(sys._compiled.componentIds.has(Velocity));
     });
 
     it("compileQuery produces stable IDs", () => {
       const world = createWorld();
       const sys = new MovementSystem();
       world.addSystem(sys);
-      const tid = sys._compiledIds.get(Transform);
-      const vid = sys._compiledIds.get(Velocity);
+      const tid = sys._compiled.componentIds.get(Transform);
+      const vid = sys._compiled.componentIds.get(Velocity);
       assert.strictEqual(tid, world.registry.getId(Transform));
       assert.strictEqual(vid, world.registry.getId(Velocity));
     });
@@ -121,14 +121,14 @@ describe("MovementSystem (ECS)", () => {
       const sys = new MovementSystem();
       world.addSystem(sys);
       world.createEntity();
-      assert.ok(sys._compiledIds.has(Transform));
+      assert.ok(sys._compiled.componentIds.has(Transform));
     });
 
     it("compiledIds contains Velocity component ID", () => {
       const world = createWorld();
       const sys = new MovementSystem();
       world.addSystem(sys);
-      assert.ok(sys._compiledIds.has(Velocity));
+      assert.ok(sys._compiled.componentIds.has(Velocity));
     });
 
     it("query matches only entities with both components", () => {
@@ -1453,6 +1453,223 @@ describe("MovementSystem (ECS)", () => {
       const before = world.archetypeSystem.archetypeCount;
       world.update(16);
       assert.strictEqual(world.archetypeSystem.archetypeCount, before);
+    });
+  });
+
+  // ─── Compiled Metadata ──────────────────────────────
+  describe("compiled metadata", () => {
+    it("system._compiled is set after addSystem", () => {
+      const world = createWorld();
+      const sys = new MovementSystem();
+      assert.strictEqual(sys._compiled, null);
+      world.addSystem(sys);
+      assert.ok(sys._compiled);
+    });
+
+    it("system._compiled is frozen", () => {
+      const world = createWorld();
+      const sys = new MovementSystem();
+      world.addSystem(sys);
+      assert.ok(Object.isFrozen(sys._compiled));
+    });
+
+    it("system._compiled.query is a compiled query object", () => {
+      const world = createWorld();
+      const sys = new MovementSystem();
+      world.addSystem(sys);
+      assert.ok(sys._compiled.query);
+    });
+
+    it("system._compiled.componentIds is a Map with correct keys", () => {
+      const world = createWorld();
+      const sys = new MovementSystem();
+      world.addSystem(sys);
+      const ids = sys._compiled.componentIds;
+      assert.ok(ids instanceof Map);
+      assert.ok(ids.has(Transform));
+      assert.ok(ids.has(Velocity));
+      assert.strictEqual(ids.size, 2);
+    });
+
+    it("system._compiled.componentIds maps to numeric IDs", () => {
+      const world = createWorld();
+      const sys = new MovementSystem();
+      world.addSystem(sys);
+      const tid = sys._compiled.componentIds.get(Transform);
+      const vid = sys._compiled.componentIds.get(Velocity);
+      assert.strictEqual(typeof tid, "number");
+      assert.strictEqual(typeof vid, "number");
+      assert.strictEqual(tid, world.registry.getId(Transform));
+      assert.strictEqual(vid, world.registry.getId(Velocity));
+    });
+
+    it("system.query getter returns compiled query", () => {
+      const world = createWorld();
+      const sys = new MovementSystem();
+      world.addSystem(sys);
+      assert.strictEqual(sys.query, sys._compiled.query);
+    });
+
+    it("system._compiled contains priority", () => {
+      const world = createWorld();
+      const sys = new MovementSystem();
+      world.addSystem(sys);
+      assert.strictEqual(sys._compiled.priority, 0);
+    });
+
+    it("removing and re-adding system recompiles metadata", () => {
+      const world = createWorld();
+      const sys = new MovementSystem();
+      world.addSystem(sys);
+      const c1 = sys._compiled;
+      world.removeSystem(sys);
+      world.addSystem(sys);
+      const c2 = sys._compiled;
+      assert.ok(c2);
+      assert.notStrictEqual(c1, c2);
+    });
+
+    it("system without query has null compiled metadata", () => {
+      class NoQuerySystem extends System { update(ctx, dt) {} }
+      const world = createWorld();
+      const sys = new NoQuerySystem();
+      world.addSystem(sys);
+      assert.strictEqual(sys._compiled, null);
+    });
+  });
+
+  // ─── SystemContext Iterable ──────────────────────────
+  describe("SystemContext iterable", () => {
+    it("ctx is iterable via for-of", () => {
+      const world = createWorld();
+      world.addSystem(new MovementSystem());
+      const e = createEntity(world, [[Transform, { x: 0, y: 0 }], [Velocity, { x: 1, y: 0 }]]);
+      const tables = [];
+      class IterSystem extends System {
+        static query = { all: [Transform, Velocity] };
+        update(ctx, dt) {
+          for (const table of ctx) {
+            tables.push(table);
+          }
+        }
+      }
+      world.addSystem(new IterSystem());
+      world.update(16);
+      assert.ok(tables.length > 0);
+    });
+
+    it("for-of iterates same tables as ctx.tables()", () => {
+      const world = createWorld();
+      world.addSystem(new MovementSystem());
+      const e = createEntity(world, [[Transform, { x: 0, y: 0 }], [Velocity, { x: 1, y: 0 }]]);
+      const fromForOf = [];
+      const fromTables = [];
+      class CompareSystem extends System {
+        static query = { all: [Transform, Velocity] };
+        update(ctx, dt) {
+          for (const table of ctx) fromForOf.push(table);
+          for (const table of ctx.tables()) fromTables.push(table);
+        }
+      }
+      world.addSystem(new CompareSystem());
+      world.update(16);
+      assert.strictEqual(fromForOf.length, fromTables.length);
+      for (let i = 0; i < fromForOf.length; i++) {
+        assert.strictEqual(fromForOf[i], fromTables[i]);
+      }
+    });
+
+    it("for-of iteration is allocation-free (uses same tables reference)", () => {
+      const world = createWorld();
+      world.addSystem(new MovementSystem());
+      const e = createEntity(world, [[Transform, { x: 0, y: 0 }], [Velocity, { x: 1, y: 0 }]]);
+      let iterCount = 0;
+      class IterSystem extends System {
+        static query = { all: [Transform, Velocity] };
+        update(ctx, dt) {
+          for (const _ of ctx) iterCount++;
+        }
+      }
+      world.addSystem(new IterSystem());
+      world.update(16);
+      assert.strictEqual(iterCount, 1);
+    });
+
+    it("for-of handles multiple archetypes", () => {
+      const world = createWorld();
+      world.addSystem(new MovementSystem());
+      createEntity(world, [[Transform, { x: 0, y: 0 }], [Velocity, { x: 1, y: 0 }]]);
+      createEntity(world, [[Transform, { x: 0, y: 0 }], [Velocity, { x: 2, y: 0 }], [Collider]]);
+      let tableCount = 0;
+      class IterSystem extends System {
+        static query = { all: [Transform, Velocity] };
+        update(ctx, dt) {
+          for (const _ of ctx) tableCount++;
+        }
+      }
+      world.addSystem(new IterSystem());
+      world.update(16);
+      assert.strictEqual(tableCount, 2);
+    });
+
+    it("for-of on empty query is no-op", () => {
+      const world = createWorld();
+      world.addSystem(new MovementSystem());
+      let called = false;
+      class IterSystem extends System {
+        static query = { all: [Transform, Velocity] };
+        update(ctx, dt) {
+          for (const _ of ctx) called = true;
+        }
+      }
+      world.addSystem(new IterSystem());
+      world.update(16);
+      assert.ok(!called);
+    });
+  });
+
+  // ─── Canonical Pattern Verification ──────────────────
+  describe("canonical pattern", () => {
+    it("MovementSystem does not use ctx.column()", () => {
+      const src = MovementSystem.prototype.update.toString();
+      assert.ok(!src.includes("ctx.column("));
+      assert.ok(!src.includes("ctx.column ("));
+    });
+
+    it("MovementSystem uses ctx.tables() for iteration", () => {
+      const src = MovementSystem.prototype.update.toString();
+      assert.ok(src.includes("ctx.tables()"));
+    });
+
+    it("MovementSystem uses table.getColumn for column access", () => {
+      const src = MovementSystem.prototype.update.toString();
+      assert.ok(src.includes("table.getColumn("));
+    });
+
+    it("MovementSystem uses _compiled.componentIds for ID lookup", () => {
+      const src = MovementSystem.prototype.update.toString();
+      assert.ok(src.includes("_compiled.componentIds"));
+    });
+
+    it("MovementSystem iterates rows per table with for loop", () => {
+      const src = MovementSystem.prototype.update.toString();
+      assert.ok(src.includes("for (let r = 0; r < count; r"));
+    });
+
+    it("SystemContext.column() still works for backward compat", () => {
+      const world = createWorld();
+      let col = null;
+      class ColumnTestSystem extends System {
+        static query = { all: [Transform, Velocity] };
+        update(ctx, dt) {
+          col = ctx.column(Transform, "x");
+        }
+      }
+      world.addSystem(new ColumnTestSystem());
+      createEntity(world, [[Transform, { x: 42, y: 0 }], [Velocity, { x: 1, y: 0 }]]);
+      world.update(16);
+      assert.ok(col instanceof Float32Array);
+      assert.strictEqual(col[0], 42);
     });
   });
 

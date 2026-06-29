@@ -127,8 +127,9 @@ export const Palettes = {
   BloodMoon: [
     { name: "GochujangRed", hex: "#780000", family: "red" },
     { name: "CrimsonBlaze", hex: "#C1121F", family: "red" },
-    { name: "Varden", hex: "#AE1F23", family: "white" },
+    { name: "Varden", hex: "#fdf1d7", family: "white" },
     { name: "CosmosBlue", hex: "#003049", family: "blue" },
+    { name: "BlueMarble", hex: "#669BBC", family: "blue" },
   ],
 
   BlushButter: [

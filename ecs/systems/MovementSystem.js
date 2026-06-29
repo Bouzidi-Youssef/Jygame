@@ -7,8 +7,8 @@ export class MovementSystem extends System {
   static priority = 0;
 
   update(ctx, dt) {
-    const tid = this._compiledIds.get(Transform);
-    const vid = this._compiledIds.get(Velocity);
+    const tid = this._compiled.componentIds.get(Transform);
+    const vid = this._compiled.componentIds.get(Velocity);
     if (tid === undefined || vid === undefined) return;
 
     const tables = ctx.tables();

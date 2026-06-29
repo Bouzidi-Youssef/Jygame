@@ -470,26 +470,21 @@ describe("SystemContext", () => {
       assert.strictEqual(world.getComponent(e, Position).x, 15);
     });
 
-    it("returns column from first table in multi-table query", () => {
+    it("throws for multi-table query", () => {
       const world = createWorld();
       const e1 = world.createEntity();
       world.addComponent(e1, Position);
-      world.setComponent(e1, Position, { x: 100 });
       const e2 = world.createEntity();
       world.addComponent(e2, Position);
       world.addComponent(e2, Velocity);
-      world.setComponent(e2, Position, { x: 200 });
-      let firstVal = null;
       class TestSystem extends System {
         static query = { all: [Position] };
         update(ctx, dt) {
-          const colX = ctx.column(Position, "x");
-          if (colX && colX.length > 0) firstVal = colX[0];
+          ctx.column(Position, "x");
         }
       }
       world.addSystem(new TestSystem());
-      world.update(16);
-      assert.strictEqual(firstVal, 100);
+      assert.throws(() => world.update(16), /requires exactly one table/);
     });
 
     it("multiple fields from same component are cached independently", () => {
@@ -1631,28 +1626,34 @@ describe("SystemContext", () => {
       assert.strictEqual(visited[0], e2);
     });
 
-    it("column still accessible after entity in other archetype changes", () => {
+    it("column accessible with single archetype, throws when archetype split occurs", () => {
       const world = createWorld();
       const e1 = world.createEntity();
       world.addComponent(e1, Position);
       world.setComponent(e1, Position, { x: 10 });
       let colVal = 0;
+      let threw = false;
       class TestSystem extends System {
         static query = { all: [Position] };
         update(ctx, dt) {
-          const col = ctx.column(Position, "x");
-          if (col && col.length > 0) colVal = col[0];
+          try {
+            const col = ctx.column(Position, "x");
+            if (col && col.length > 0) colVal = col[0];
+          } catch (e) {
+            threw = true;
+          }
         }
       }
       world.addSystem(new TestSystem());
       world.update(16);
       assert.strictEqual(colVal, 10);
+      assert.ok(!threw);
       const e2 = world.createEntity();
       world.addComponent(e2, Position);
       world.addComponent(e2, Velocity);
       world.setComponent(e2, Position, { x: 20 });
       world.update(16);
-      assert.strictEqual(colVal, 10);
+      assert.ok(threw);
     });
   });
 

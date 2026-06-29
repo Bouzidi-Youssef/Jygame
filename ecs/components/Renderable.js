@@ -1,1 +1,3 @@
-export class Renderable {}
+export class Renderable {
+  static schema = { image: "u16" };
+}

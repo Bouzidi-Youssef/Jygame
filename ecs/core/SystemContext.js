@@ -47,6 +47,17 @@ export class SystemContext {
     return this._tables;
   }
 
+  [Symbol.iterator]() {
+    let index = 0;
+    const tables = this._tables;
+    return {
+      next() {
+        if (index >= tables.length) return { done: true, value: undefined };
+        return { done: false, value: tables[index++] };
+      },
+    };
+  }
+
   entities() {
     const tables = this._tables;
     const result = [];
@@ -73,26 +84,32 @@ export class SystemContext {
   }
 
   column(componentClass, fieldName) {
-    if (!this._system._compiledIds) {
+    if (!this._system._compiled) {
       throw new Error(
         `SystemContext.column failed: component "${componentClass.name}" ` +
         `was not compiled into this system's query. Add it to the static query definition.`
       );
     }
-    const id = this._system._compiledIds.get(componentClass);
+    const id = this._system._compiled.componentIds.get(componentClass);
     if (id === undefined) {
       throw new Error(
         `SystemContext.column failed: component "${componentClass.name}" ` +
         `was not compiled into this system's query. Add it to the static query definition.`
       );
     }
+    if (this._tables.length !== 1) {
+      if (this._tables.length === 0) {
+        return null;
+      }
+      throw new Error(
+        `SystemContext.column failed: query matched ${this._tables.length} tables (archetypes). ` +
+        `ctx.column() requires exactly one table. Use ctx.tables() + table.getColumn() ` +
+        `when queries span multiple archetypes.`
+      );
+    }
     const key = `${id}:${fieldName}`;
     let col = this._columnCache.get(key);
     if (col === undefined) {
-      if (this._tables.length === 0) {
-        this._columnCache.set(key, null);
-        return null;
-      }
       col = this._tables[0].getColumn(id, fieldName);
       this._columnCache.set(key, col);
     }

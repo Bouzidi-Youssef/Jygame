@@ -63,7 +63,6 @@ export class SystemScheduler {
 
     this._compileQuery(system);
 
-    system._queryEngine = this._queryEngine;
     if (!system._ctx) {
       system._ctx = new SystemContext(this._world, system);
     } else {
@@ -159,31 +158,34 @@ export class SystemScheduler {
     if (!queryDef) return;
 
     const resolved = {};
-    const compiledIds = new Map();
+    const componentIds = new Map();
     if (queryDef.all) {
       resolved.all = queryDef.all.map(c => {
         const id = this._resolveComponent(c);
-        compiledIds.set(c, id);
+        componentIds.set(c, id);
         return id;
       });
     }
     if (queryDef.any) {
       resolved.any = queryDef.any.map(c => {
         const id = this._resolveComponent(c);
-        compiledIds.set(c, id);
+        componentIds.set(c, id);
         return id;
       });
     }
     if (queryDef.none) {
       resolved.none = queryDef.none.map(c => {
         const id = this._resolveComponent(c);
-        compiledIds.set(c, id);
+        componentIds.set(c, id);
         return id;
       });
     }
 
-    system._compiledIds = compiledIds;
-    system._query = this._queryEngine.createQuery(resolved);
+    system._compiled = Object.freeze({
+      query: this._queryEngine.createQuery(resolved),
+      componentIds,
+      priority: system.priority,
+    });
   }
 
   _resolveComponent(component) {

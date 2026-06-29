@@ -2,9 +2,7 @@ export class System {
   constructor() {
     this.enabled = true;
     this._priority = this.constructor.priority ?? 0;
-    this._query = null;
-    this._queryEngine = null;
-    this._compiledIds = null;
+    this._compiled = null;
   }
 
   get priority() {
@@ -12,7 +10,7 @@ export class System {
   }
 
   get query() {
-    return this._query;
+    return this._compiled ? this._compiled.query : null;
   }
 
   onAdded(world) {}
