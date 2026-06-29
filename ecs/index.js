@@ -23,6 +23,8 @@ export {
   StaticTag,
 } from "./components/index.js";
 
-export { MovementSystem, AnimationSystem } from "./systems/index.js";
+export { MovementSystem, AnimationSystem, CollisionSystem } from "./systems/index.js";
 
 export { AnimationClip, AnimationClipRegistry } from "./animation/index.js";
+
+export { CollisionQuery } from "./collision/index.js";

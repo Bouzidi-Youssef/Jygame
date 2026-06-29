@@ -469,7 +469,7 @@ export const Color = {
 // ── Organized by color family ─────────────────────────
 export const Colors = {
   // Red
-  Red: "#cb2957",
+  Red: "#ff0000",
   RedShades: {
     VampireFangs: "#cb2957",
     RedArremer: "#e05454",
