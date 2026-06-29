@@ -17,6 +17,7 @@ export { FontLoader } from "./loaders/FontLoader.js";
 export { Scene } from "./core/Scene.js";
 export { Game } from "./core/Game.js";
 export { Color, Colors } from "./color/Colors.js";
+export { Palettes } from "./color/Palettes.js";
 export { Pool } from "./memory/Pool.js";
 export { ActivePool } from "./memory/ActivePool.js";
 export { Animation } from "./components/Animation.js";
