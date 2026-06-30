@@ -9,6 +9,7 @@ import {
   Animation,
   Visible,
   RenderBounds,
+  Trail,
   EnemyTag,
   PlayerTag,
   ProjectileTag,
@@ -23,6 +24,7 @@ const ALL_COMPONENTS = [
   { cls: Animation, schema: { clipId: "u16", frameIndex: "u32", elapsed: "f32", isPlaying: "u8", speed: "f32" }, hasSchema: true },
   { cls: Visible, schema: { value: "u8" }, hasSchema: true },
   { cls: RenderBounds, schema: { width: "f32", height: "f32" }, hasSchema: true },
+  { cls: Trail, schema: { enabled: "u8", maxPoints: "u16", spacing: "f32", width: "f32", color: "u32", mode: "u8" }, hasSchema: true },
 ];
 
 const TAG_COMPONENTS = [

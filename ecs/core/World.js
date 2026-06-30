@@ -276,6 +276,211 @@ export class World {
     }
   }
 
+  add(entity, component) {
+    return this.addComponent(entity, component);
+  }
+
+  remove(entity, component) {
+    return this.removeComponent(entity, component);
+  }
+
+  has(entity, component) {
+    return this.hasComponent(entity, component);
+  }
+
+  get(entity, component) {
+    return this.getComponent(entity, component);
+  }
+
+  set(entity, component, values) {
+    return this.setComponent(entity, component, values);
+  }
+
+  clear(entity) {
+    if (!this._entityManager.isAlive(entity)) {
+      throw new Error(
+        `World.clear failed: entity ${entity} is not alive.`
+      );
+    }
+
+    const currentSig = this._archetypeSystem.entitySignature(entity);
+    if (!currentSig || currentSig.size === 0) return;
+
+    const emptySig = new ComponentSignature([]);
+    this._clearEntityCache(entity);
+    this._archetypeSystem.moveEntity(entity, emptySig);
+  }
+
+  addMany(entity, ...components) {
+    if (!this._entityManager.isAlive(entity)) {
+      throw new Error(
+        `World.addMany failed: entity ${entity} is not alive.`
+      );
+    }
+
+    if (components.length === 0) return;
+
+    const currentSig = this._archetypeSystem.entitySignature(entity);
+    if (!currentSig) {
+      throw new Error(
+        `World.addMany failed: entity ${entity} has no signature.`
+      );
+    }
+
+    const existing = new Set(currentSig.components);
+    const newIds = [];
+
+    for (let i = 0; i < components.length; i++) {
+      const id = this._resolveComponentId(components[i], 'addMany');
+      if (!existing.has(id)) {
+        existing.add(id);
+        newIds.push(id);
+      }
+    }
+
+    if (newIds.length === 0) return;
+
+    const allIds = new Uint16Array(currentSig.components.length + newIds.length);
+    let pos = 0;
+    for (let i = 0; i < currentSig.components.length; i++) allIds[pos++] = currentSig.components[i];
+    for (let i = 0; i < newIds.length; i++) allIds[pos++] = newIds[i];
+    allIds.sort();
+
+    const newSig = new ComponentSignature(Array.from(allIds));
+    this._clearEntityCache(entity);
+    this._archetypeSystem.moveEntity(entity, newSig);
+  }
+
+  removeMany(entity, ...components) {
+    if (!this._entityManager.isAlive(entity)) {
+      throw new Error(
+        `World.removeMany failed: entity ${entity} is not alive.`
+      );
+    }
+
+    if (components.length === 0) return;
+
+    const currentSig = this._archetypeSystem.entitySignature(entity);
+    if (!currentSig) {
+      throw new Error(
+        `World.removeMany failed: entity ${entity} has no signature.`
+      );
+    }
+
+    if (currentSig.size === 0) return;
+
+    const removeIds = new Set();
+    for (let i = 0; i < components.length; i++) {
+      removeIds.add(this._resolveComponentId(components[i], 'removeMany'));
+    }
+
+    const keep = [];
+    const comps = currentSig.components;
+    for (let i = 0; i < comps.length; i++) {
+      if (!removeIds.has(comps[i])) {
+        keep.push(comps[i]);
+      }
+    }
+
+    if (keep.length === comps.length) return;
+
+    const newSig = new ComponentSignature(keep);
+    this._clearEntityCache(entity);
+    this._archetypeSystem.moveEntity(entity, newSig);
+  }
+
+  clone(entity) {
+    if (!this._entityManager.isAlive(entity)) {
+      throw new Error(
+        `World.clone failed: entity ${entity} is not alive.`
+      );
+    }
+
+    const sig = this._archetypeSystem.entitySignature(entity);
+    if (!sig) {
+      throw new Error(
+        `World.clone failed: entity ${entity} has no signature.`
+      );
+    }
+
+    const sourceTable = this._archetypeSystem.entityTable(entity);
+    const sourceRow = this._entityManager.getRow(entity);
+
+    const clone = this.createEntity();
+
+    if (sig.size === 0) return clone;
+
+    this._clearEntityCache(clone);
+    this._archetypeSystem.moveEntity(clone, sig);
+
+    const targetTable = this._archetypeSystem.entityTable(clone);
+    const targetRow = this._entityManager.getRow(clone);
+
+    const componentIds = sig.components;
+    for (let ci = 0; ci < componentIds.length; ci++) {
+      const cid = componentIds[ci];
+      const schema = this._registry.getSchemaById(cid);
+      if (!schema) continue;
+      const fieldNames = Object.keys(schema);
+      for (let fi = 0; fi < fieldNames.length; fi++) {
+        const srcCol = sourceTable.getColumn(cid, fieldNames[fi]);
+        const tgtCol = targetTable.getColumn(cid, fieldNames[fi]);
+        if (srcCol && tgtCol) {
+          tgtCol[targetRow] = srcCol[sourceRow];
+        }
+      }
+    }
+
+    return clone;
+  }
+
+  entity() {
+    return new (this._getEntityBuilder())(this);
+  }
+
+  _getEntityBuilder() {
+    if (!this._entityBuilderClass) {
+      this._entityBuilderClass = class EntityBuilder {
+        constructor(world) {
+          this._world = world;
+          this._components = [];
+          this._values = [];
+        }
+
+        with(component, values) {
+          const world = this._world;
+          const id = world._resolveComponentId(component, 'entity().with()');
+          if (!this._components.some(e => e.id === id)) {
+            this._components.push({ cls: component, id, values: values || null });
+          }
+          return this;
+        }
+
+        create() {
+          const world = this._world;
+          const entity = world.createEntity();
+          if (this._components.length === 0) return entity;
+
+          const ids = this._components.map(e => e.id).sort((a, b) => a - b);
+          const newSig = new ComponentSignature(ids);
+
+          world._clearEntityCache(entity);
+          world._archetypeSystem.moveEntity(entity, newSig);
+
+          for (let i = 0; i < this._components.length; i++) {
+            const { cls, values } = this._components[i];
+            if (values) {
+              world.set(entity, cls, values);
+            }
+          }
+
+          return entity;
+        }
+      };
+    }
+    return this._entityBuilderClass;
+  }
+
   addSystem(system) {
     this._scheduler.add(system);
   }

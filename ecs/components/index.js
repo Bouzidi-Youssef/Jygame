@@ -5,6 +5,7 @@ export { Renderable } from "./Renderable.js";
 export { Animation } from "./Animation.js";
 export { Visible } from "./Visible.js";
 export { RenderBounds } from "./RenderBounds.js";
+export { Trail } from "./Trail.js";
 export { EnemyTag } from "./tags/EnemyTag.js";
 export { PlayerTag } from "./tags/PlayerTag.js";
 export { ProjectileTag } from "./tags/ProjectileTag.js";

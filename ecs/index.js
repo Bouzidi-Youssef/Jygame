@@ -18,16 +18,19 @@ export {
   Animation,
   Visible,
   RenderBounds,
+  Trail,
   EnemyTag,
   PlayerTag,
   ProjectileTag,
   StaticTag,
 } from "./components/index.js";
 
-export { MovementSystem, AnimationSystem, CollisionSystem, RenderSystem } from "./systems/index.js";
+export { MovementSystem, AnimationSystem, CollisionSystem, RenderSystem, TrailSystem } from "./systems/index.js";
 
 export { AnimationClip, AnimationClipRegistry } from "./animation/index.js";
 
 export { CollisionQuery } from "./collision/index.js";
 
 export { RenderCommand, RenderQueue, CanvasContext } from "./render/index.js";
+
+export { TrailBuffer, TrailManager } from "./trails/index.js";
