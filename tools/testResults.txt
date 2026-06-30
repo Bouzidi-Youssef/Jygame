@@ -1,0 +1,5531 @@
+"tools/ecs/tests/**/*.test.js"
+
+▶ AnimationClip
+
+  ✔ creates a clip with frames and fps (2.776358ms)
+
+  ✔ defaults loop to true (0.353949ms)
+
+  ✔ accepts loop = false (0.350302ms)
+
+  ✔ frameCount returns correct value (0.430429ms)
+
+  ✔ frameDuration returns 1/fps (0.363709ms)
+
+  ✔ duration returns frameCount / fps (0.337616ms)
+
+  ✔ is frozen (immutable) (1.304572ms)
+
+  ✔ frames array is frozen (0.618125ms)
+
+  ✔ rejects empty frames (1.713969ms)
+
+  ✔ rejects non-array frames (1.124286ms)
+
+  ✔ rejects missing fps (0.25708ms)
+
+  ✔ rejects zero fps (0.412165ms)
+
+  ✔ rejects negative fps (0.203511ms)
+
+  ✔ rejects Infinity fps (0.171252ms)
+
+  ✔ rejects NaN fps (0.21707ms)
+
+  ✔ rejects non-boolean loop (0.15573ms)
+
+  ✔ rejects missing constructor argument (0.293969ms)
+
+  ✔ clip with many frames (0.421431ms)
+
+  ✔ getters return correct types (0.228208ms)
+
+✔ AnimationClip (17.174342ms)
+
+▶ AnimationClipRegistry
+
+  ✔ creates empty registry (0.429511ms)
+
+  ✔ registers a clip (0.455007ms)
+
+  ✔ returns clip by name (0.289295ms)
+
+  ✔ returns clip by id (0.427548ms)
+
+  ✔ returns id by name (0.277548ms)
+
+  ✔ has returns true for registered name (0.253472ms)
+
+  ✔ has returns false for unknown name (0.302106ms)
+
+  ✔ get returns null for unknown name (0.201582ms)
+
+  ✔ getById returns null for unknown id (0.126518ms)
+
+  ✔ rejects duplicate registration (0.392408ms)
+
+  ✔ rejects empty string name (0.203191ms)
+
+  ✔ rejects non-string name (0.169582ms)
+
+  ✔ removes a clip by name (0.485711ms)
+
+  ✔ remove returns false for unknown name (0.166232ms)
+
+  ✔ clears all clips (0.249194ms)
+
+  ✔ multiple registries are independent (0.179724ms)
+
+  ✔ count increases with each registration (0.253554ms)
+
+  ✔ IDs are sequential (0.148724ms)
+
+✔ AnimationClipRegistry (7.335625ms)
+
+▶ Animation component
+
+  ✔ has schema with clipId, frameIndex, elapsed, isPlaying, speed (0.256977ms)
+
+  ✔ fields zero-initialized on add (3.106389ms)
+
+  ✔ isPlaying can be set to 1 (0.649913ms)
+
+  ✔ clipId can be set (1.005791ms)
+
+  ✔ frameIndex can be set and read back (0.602431ms)
+
+✔ Animation component (6.029813ms)
+
+▶ Renderable component
+
+  ✔ has schema with image (0.18931ms)
+
+  ✔ image zero-initialized (0.662268ms)
+
+  ✔ image can be set (0.354178ms)
+
+✔ Renderable component (1.425617ms)
+
+▶ AnimationSystem — basic
+
+  ✔ extends System (0.496317ms)
+
+  ✔ is enabled by default (0.154395ms)
+
+  ✔ has static query requiring Animation and Renderable (0.122062ms)
+
+  ✔ has priority 1 (after Movement) (0.093691ms)
+
+  ✔ throws descriptive error when registry is missing (2.422765ms)
+
+  ✔ runs successfully when registry is set (3.678995ms)
+
+  ✔ compiledIds contain Animation and Renderable (0.398827ms)
+
+  ✔ scheduler runs system (0.484065ms)
+
+✔ AnimationSystem — basic (8.380442ms)
+
+▶ AnimationSystem — frame advancement
+
+  ✔ advances to frame 1 after one frame duration (1.255122ms)
+
+  ✔ advances to frame 2 after two frame durations (0.435582ms)
+
+  ✔ stays at frame 0 with zero dt (0.532293ms)
+
+  ✔ advances with fractional dt (0.436072ms)
+
+  ✔ advances multiple frames with large dt (0.522548ms)
+
+  ✔ accumulates elapsed time across frames (0.484559ms)
+
+  ✔ stays at frame 0 when not playing (0.373688ms)
+
+  ✔ resumes playing when re-enabled (0.331314ms)
+
+  ✔ frameIndex resets when clip loops (0.810557ms)
+
+  ✔ non-looping clip stops at last frame (0.357185ms)
+
+  ✔ non-looping clip holds last frame on large dt (0.316453ms)
+
+  ✔ looping clip wraps around multiple times (0.271773ms)
+
+  ✔ exact boundary lands on correct frame (0.269365ms)
+
+✔ AnimationSystem — frame advancement (7.051667ms)
+
+▶ AnimationSystem — cross-component writes
+
+  ✔ sets image to first frame value (0.789831ms)
+
+  ✔ updates image when frame advances (0.34443ms)
+
+  ✔ image cycles on looping clip (0.29411ms)
+
+  ✔ image holds on non-looping clip (0.287736ms)
+
+  ✔ no stale frame after multiple updates (0.324882ms)
+
+  ✔ image is u16 typed (0.278147ms)
+
+✔ AnimationSystem — cross-component writes (2.619314ms)
+
+▶ AnimationSystem — registry integration
+
+  ✔ looks up clip by numeric id from component (0.374118ms)
+
+  ✔ multiple entities with different clips (3.622832ms)
+
+  ✔ unknown clipId is skipped (no crash) (0.457635ms)
+
+  ✔ registry can be replaced between frames (0.570947ms)
+
+  ✔ multiple worlds have independent registries (0.834269ms)
+
+✔ AnimationSystem — registry integration (6.287296ms)
+
+▶ AnimationSystem — scheduler integration
+
+  ✔ runs after MovementSystem (1.167144ms)
+
+  ✔ works with multiple archetypes (0.79897ms)
+
+✔ AnimationSystem — scheduler integration (2.212016ms)
+
+▶ AnimationSystem — edge cases
+
+  ✔ disabled system does not advance animations (0.723941ms)
+
+  ✔ re-enabling system resumes advancement (1.167553ms)
+
+  ✔ entity without Renderable is not processed (2.44386ms)
+
+  ✔ entity without Animation is not processed (0.63775ms)
+
+  ✔ destroyed entity does not cause errors (0.786678ms)
+
+  ✔ add/remove Animation between frames (0.538367ms)
+
+  ✔ archetype migration preserves animation state (0.618615ms)
+
+  ✔ empty world does not crash (0.310637ms)
+
+✔ AnimationSystem — edge cases (7.960226ms)
+
+▶ AnimationSystem — performance
+
+  ✔ does not use ctx.column() in update (0.306672ms)
+
+  ✔ uses canonical table iteration (0.199954ms)
+
+  ✔ uses table.getColumn for column access (0.158878ms)
+
+  ✔ does not add properties to system during update (0.606586ms)
+
+  ✔ processes many entities (8.169852ms)
+
+  ✔ uses compiled component IDs (0.350521ms)
+
+  ✔ update is deterministic (1.030778ms)
+
+✔ AnimationSystem — performance (11.531289ms)
+
+▶ export surface
+
+  ✔ exports AnimationSystem from ecs/index (0.28435ms)
+
+  ✔ exports AnimationClip from ecs/index (0.161946ms)
+
+  ✔ exports AnimationClipRegistry from ecs/index (0.145125ms)
+
+  ✔ all exports are constructible from ecs/index barrel (0.209437ms)
+
+✔ export surface (1.127335ms)
+
+▶ AnimationClip — additional edge cases
+
+  ✔ 1-frame clip (0.301191ms)
+
+  ✔ high fps clip (0.183512ms)
+
+  ✔ low fps clip (0.175147ms)
+
+  ✔ frames array is not extensible (0.186521ms)
+
+  ✔ fps is stored as a number (0.228834ms)
+
+✔ AnimationClip — additional edge cases (1.444075ms)
+
+▶ AnimationClipRegistry — additional edge cases
+
+  ✔ remove unknown name returns false (0.242522ms)
+
+  ✔ clear after remove works (0.205551ms)
+
+  ✔ getById after remove returns null (0.186041ms)
+
+  ✔ getId after remove returns null (0.186948ms)
+
+✔ AnimationClipRegistry — additional edge cases (1.148968ms)
+
+▶ AnimationSystem — additional
+
+  ✔ entity starting at non-zero frame continues from there (0.932785ms)
+
+  ✔ multiple entities with mixed isPlaying states (0.826341ms)
+
+  ✔ system remove/re-add does not break animation (0.846404ms)
+
+  ✔ resource removal between frames causes error (0.762346ms)
+
+  ✔ exact frame boundary with non-looping (0.961838ms)
+
+  ✔ dt exactly at clip duration with looping wraps (0.855881ms)
+
+  ✔ dt exactly at clip duration with non-looping stops at last (0.653059ms)
+
+  ✔ multiple archetypes with different clips (0.847463ms)
+
+  ✔ entity with zero dt does not advance (0.621255ms)
+
+  ✔ entity with negative dt does not crash (0.53474ms)
+
+  ✔ very large dt does not crash on looping clip (0.596936ms)
+
+  ✔ clipId column holds u16 values (0.637932ms)
+
+  ✔ accessing ctx.resources.get with unknown key returns undefined (0.58182ms)
+
+  ✔ ctx.resources.has works for registered resources (0.480306ms)
+
+  ✔ speed=0 prevents frame advancement (0.573345ms)
+
+  ✔ AnimationSystem does not allocate per entity (6.732049ms)
+
+✔ AnimationSystem — additional (18.724235ms)
+
+▶ ArchetypeSystem
+
+  ▶ constructor
+
+    ✔ creates the empty archetype at construction (3.965206ms)
+
+    ✔ empty archetype has id 1 and empty signature (0.933755ms)
+
+    ✔ empty archetype has a valid table with zero columns (0.655101ms)
+
+    ✔ throws for invalid registry (0.981791ms)
+
+    ✔ throws for invalid entityManager (0.683289ms)
+
+    ✔ throws for invalid initialTableCapacity (1.514065ms)
+
+    ✔ accepts custom initialTableCapacity (0.670537ms)
+
+  ✔ constructor (12.137285ms)
+
+  ▶ createArchetype
+
+    ✔ creates a new archetype with a unique ID (1.579525ms)
+
+    ✔ creates multiple archetypes with incrementing IDs (0.709702ms)
+
+    ✔ returns existing archetype for duplicate signature (0.556973ms)
+
+    ✔ creates archetype with tag components (0.448348ms)
+
+    ✔ creates archetype with multiple components (0.417179ms)
+
+    ✔ throws for invalid signature (non-ComponentSignature) (1.264414ms)
+
+    ✔ throws for unregistered component ID in signature (1.162825ms)
+
+    ✔ created archetype stores correct signature reference (0.41678ms)
+
+  ✔ createArchetype (7.624337ms)
+
+  ▶ getTable
+
+    ✔ returns the table for an existing signature (0.507185ms)
+
+    ✔ returns null for an unknown signature (0.366486ms)
+
+    ✔ returns table for empty signature (0.358644ms)
+
+    ✔ throws for non-ComponentSignature argument (0.481268ms)
+
+  ✔ getTable (2.147164ms)
+
+  ▶ getTableById
+
+    ✔ returns the table for a valid archetype ID (0.685179ms)
+
+    ✔ returns the empty archetype table for ID 1 (0.339098ms)
+
+    ✔ returns null for unknown ID (0.377854ms)
+
+    ✔ returns null for ID 0 (0.321142ms)
+
+    ✔ throws for negative ID (0.41073ms)
+
+    ✔ throws for non-integer ID (0.424626ms)
+
+  ✔ getTableById (3.304311ms)
+
+  ▶ getArchetypeId
+
+    ✔ returns the ID for an existing signature (0.481035ms)
+
+    ✔ returns null for an unknown signature (0.384399ms)
+
+    ✔ returns 1 for the empty signature (0.319463ms)
+
+    ✔ throws for non-ComponentSignature argument (0.457255ms)
+
+  ✔ getArchetypeId (2.055104ms)
+
+  ▶ getSignature
+
+    ✔ returns the signature for a valid archetype ID (0.549301ms)
+
+    ✔ returns the empty signature for ID 1 (0.426516ms)
+
+    ✔ returns null for unknown ID (0.728495ms)
+
+    ✔ returns null for ID 0 (0.340995ms)
+
+    ✔ throws for negative ID (0.347826ms)
+
+  ✔ getSignature (2.993678ms)
+
+  ▶ has
+
+    ✔ returns true for existing signature (0.475523ms)
+
+    ✔ returns true for empty signature (0.496249ms)
+
+    ✔ returns false for unknown signature (0.617946ms)
+
+    ✔ returns false for signature with different key ordering (0.432943ms)
+
+    ✔ throws for non-ComponentSignature argument (0.591439ms)
+
+  ✔ has (3.110446ms)
+
+  ▶ entityTable
+
+    ✔ returns the correct table for an entity (1.334609ms)
+
+    ✔ returns the empty archetype table for entity in empty archetype (0.338966ms)
+
+    ✔ throws for dead entity (0.415033ms)
+
+    ✔ throws for entity 0 (0.273962ms)
+
+  ✔ entityTable (2.765738ms)
+
+  ▶ entitySignature
+
+    ✔ returns the correct signature for an entity (0.50491ms)
+
+    ✔ returns empty signature for entity in empty archetype (0.228102ms)
+
+    ✔ returns null for dead entity (0.605755ms)
+
+    ✔ returns null for entity 0 (0.262617ms)
+
+  ✔ entitySignature (2.244766ms)
+
+  ▶ moveEntity
+
+    ✔ moves an entity from empty archetype to a target archetype (0.770889ms)
+
+    ✔ moves an entity between two non-empty archetypes (0.642371ms)
+
+    ✔ initializes new components to zero defaults (0.266233ms)
+
+    ✔ removes entity from source table after migration (0.323257ms)
+
+    ✔ correctly updates moved entity's row after swap-remove (0.354306ms)
+
+    ✔ handles tag components (zero-field) migration correctly (0.584243ms)
+
+    ✔ moves entity back to empty archetype (0.326394ms)
+
+    ✔ supports multiple sequential migrations of the same entity (0.339579ms)
+
+    ✔ preserves component data through migration chain (0.39101ms)
+
+    ✔ moves entity between tables with no shared components (0.25896ms)
+
+    ✔ handles multiple entities in the same archetype (0.307668ms)
+
+    ✔ throws for dead entity (0.280672ms)
+
+    ✔ throws for entity 0 (0.388752ms)
+
+    ✔ throws for invalid signature (0.30005ms)
+
+    ✔ throws for unregistered component in destination (0.283988ms)
+
+    ✔ creates target archetype lazily during migration (0.242525ms)
+
+    ✔ reuses existing target archetype when available (0.216419ms)
+
+  ✔ moveEntity (7.280167ms)
+
+  ▶ swap-remove bookkeeping
+
+    ✔ updates moved entity's row when swap-remove occurs (0.327987ms)
+
+    ✔ does not update moved entity when removing last row (0.260868ms)
+
+  ✔ swap-remove bookkeeping (0.727709ms)
+
+  ▶ large numbers of archetypes
+
+    ✔ handles many unique archetypes via combination signatures (0.842097ms)
+
+    ✔ each archetype gets a unique ID (0.821001ms)
+
+  ✔ large numbers of archetypes (1.889983ms)
+
+  ▶ determinism and caching
+
+    ✔ same signature always returns same archetype (0.520351ms)
+
+    ✔ signatures with different order produce same archetype (0.429936ms)
+
+    ✔ createArchetype does not duplicate existing archetypes (0.346184ms)
+
+  ✔ determinism and caching (1.601158ms)
+
+  ▶ edge cases
+
+    ✔ archetypeCount is 1 before any custom archetypes (0.480457ms)
+
+    ✔ archetypeCount increments with each new archetype (0.446656ms)
+
+    ✔ getTable returns valid table for empty signature (0.310299ms)
+
+    ✔ moveEntity with same source and destination is a no-op (0.334586ms)
+
+    ✔ multiple entities can coexist in the same target archetype (3.050102ms)
+
+  ✔ edge cases (5.148003ms)
+
+  ▶ repeated migrations
+
+    ✔ entity can move back and forth between archetypes (1.310957ms)
+
+    ✔ data persists across repeated migrations with shared components (0.502105ms)
+
+  ✔ repeated migrations (1.999224ms)
+
+  ▶ multiple archetypes
+
+    ✔ tables are independent across archetypes (0.329253ms)
+
+  ✔ multiple archetypes (0.430132ms)
+
+✔ ArchetypeSystem (65.198424ms)
+
+▶ CollisionSystem (ECS)
+
+  ▶ construction
+
+    ✔ instantiates (1.742832ms)
+
+    ✔ extends System (0.403338ms)
+
+    ✔ is enabled by default (0.443081ms)
+
+    ✔ has static query requiring Transform, Collider, Visible (0.408759ms)
+
+    ✔ has priority 2 (after Animation) (0.335147ms)
+
+    ✔ has compiled componentIds after being added to world (3.745352ms)
+
+  ✔ construction (10.507352ms)
+
+  ▶ scheduler
+
+    ✔ executes when update is called (1.832974ms)
+
+    ✔ can be disabled (4.721546ms)
+
+    ✔ executes after Animation system (priority 2 > 1) (6.130774ms)
+
+    ✔ executes after Animation and Movement if all present (1.208993ms)
+
+    ✔ runs in independent worlds (4.683682ms)
+
+  ✔ scheduler (19.926769ms)
+
+  ▶ spatial hash population
+
+    ✔ inserts entities into spatial hash (1.792688ms)
+
+    ✔ rebuilds hash every frame (cleared and re-inserted) (4.902899ms)
+
+    ✔ empty world does not crash (0.666431ms)
+
+    ✔ multiple archetypes are all queried (1.074194ms)
+
+    ✔ clear removes all entries between frames (2.625742ms)
+
+  ✔ spatial hash population (11.5895ms)
+
+  ▶ visibility
+
+    ✔ invisible entity is skipped (1.718453ms)
+
+    ✔ mixed visibility only inserts visible ones (1.039256ms)
+
+  ✔ visibility (3.264031ms)
+
+  ▶ rectangle queries
+
+    ✔ returns hit for overlapping entity (2.623411ms)
+
+    ✔ returns empty for miss (2.021503ms)
+
+    ✔ touching edges counts as hit (0.647468ms)
+
+    ✔ finds overlapping rectangle with many entities (1.028074ms)
+
+    ✔ large query rect matches everything (1.737911ms)
+
+    ✔ reuses output array when provided (3.90314ms)
+
+  ✔ rectangle queries (12.658672ms)
+
+  ▶ point queries
+
+    ✔ returns hit for point inside (1.411746ms)
+
+    ✔ returns empty for point outside (1.443313ms)
+
+    ✔ boundary point is inside (0.813784ms)
+
+  ✔ point queries (5.332233ms)
+
+  ▶ circle queries
+
+    ✔ returns hit for circle overlapping entity (1.13095ms)
+
+    ✔ returns empty for circle far from entity (4.247685ms)
+
+    ✔ tangent circle touches entity edge (1.39286ms)
+
+  ✔ circle queries (7.371028ms)
+
+  ▶ AABB queries
+
+    ✔ returns hit for overlapping AABB (0.903004ms)
+
+    ✔ returns empty for non-overlapping AABB (0.523632ms)
+
+  ✔ AABB queries (1.70531ms)
+
+  ▶ raycasts
+
+    ✔ returns hit for entity along ray (1.265575ms)
+
+    ✔ returns empty when ray misses all entities (0.60612ms)
+
+    ✔ returns multiple hits along ray path (0.639365ms)
+
+    ✔ short ray does not reach entity (0.855798ms)
+
+  ✔ raycasts (3.81733ms)
+
+  ▶ archetype migration
+
+    ✔ gain Collider mid-frame (1.413175ms)
+
+    ✔ lose Collider mid-frame (1.761244ms)
+
+    ✔ gain Visible mid-frame (0.623137ms)
+
+    ✔ lose Visible mid-frame (0.544435ms)
+
+    ✔ destroyed entity is removed (1.897776ms)
+
+    ✔ new entity after update appears next frame (1.721287ms)
+
+  ✔ archetype migration (9.321497ms)
+
+  ▶ resources
+
+    ✔ missing SpatialHash throws descriptive error (1.600398ms)
+
+    ✔ replacing SpatialHash uses new instance (1.097879ms)
+
+    ✔ SpatialHash as resource supports has and get (0.363215ms)
+
+    ✔ can use CollisionQuery as a resource (4.092538ms)
+
+  ✔ resources (7.541234ms)
+
+  ▶ negative coordinates
+
+    ✔ entity at negative position is inserted (0.723184ms)
+
+    ✔ point query at negative coordinates works (0.481155ms)
+
+  ✔ negative coordinates (1.432355ms)
+
+  ▶ large world
+
+    ✔ handles 100 entities (38.001631ms)
+
+    ✔ handles 1000 entities (67.947748ms)
+
+    ✔ handles 10000 entities (275.21151ms)
+
+  ✔ large world (381.530143ms)
+
+  ▶ repeated updates
+
+    ✔ deterministic results across repeated updates (0.807555ms)
+
+    ✔ large dt does not break insertion (0.528079ms)
+
+    ✔ sparse world does not break queries (0.594846ms)
+
+    ✔ entity with zero-sized collider is inserted (0.543107ms)
+
+  ✔ repeated updates (2.866735ms)
+
+  ▶ system lifecycle
+
+    ✔ onAdded is called when system is added to world (0.510833ms)
+
+    ✔ onRemoved is called when system is removed from world (0.494832ms)
+
+    ✔ remove and re-add system (0.814762ms)
+
+  ✔ system lifecycle (2.128905ms)
+
+  ▶ edge cases
+
+    ✔ system with no matching entities does not crash (0.592883ms)
+
+    ✔ ctx.resources.has works for SpatialHash (0.788151ms)
+
+    ✔ multiple entities in same cell deduplicated in queryRect (0.466506ms)
+
+    ✔ collision system does not modify component columns (0.796477ms)
+
+  ✔ edge cases (3.011583ms)
+
+  ▶ CollisionQuery
+
+    ✔ queryRect via CollisionQuery works (0.642829ms)
+
+    ✔ queryPoint via CollisionQuery works (0.506571ms)
+
+    ✔ queryCircle via CollisionQuery works (0.495722ms)
+
+    ✔ queryAABB via CollisionQuery works (0.463371ms)
+
+    ✔ raycast via CollisionQuery works (0.357027ms)
+
+  ✔ CollisionQuery (2.828156ms)
+
+  ▶ system queries
+
+    ✔ CollisionSystem.queryRect forwards to hash (0.383677ms)
+
+    ✔ CollisionSystem.queryPoint forwards to hash (0.318025ms)
+
+  ✔ system queries (0.838869ms)
+
+  ▶ canonical pattern
+
+    ✔ does not use ctx.column() (0.198496ms)
+
+    ✔ uses for-of ctx iteration (0.1284ms)
+
+    ✔ uses table.getColumn for column access (0.158351ms)
+
+    ✔ uses _compiled.componentIds for ID lookup (0.143687ms)
+
+    ✔ iterates rows per table with for loop (0.139156ms)
+
+    ✔ uses ctx.resources.get for resource access (0.142469ms)
+
+    ✔ does not use getComponent() (0.282687ms)
+
+  ✔ canonical pattern (6.696112ms)
+
+  ▶ export surface
+
+    ✔ exports CollisionSystem from ecs/systems (0.204681ms)
+
+    ✔ exports CollisionQuery from ecs/collision (0.142824ms)
+
+  ✔ export surface (2.492983ms)
+
+  ▶ zero allocation
+
+    ✔ no object allocations in update loop (3.900504ms)
+
+  ✔ zero allocation (4.071003ms)
+
+✔ CollisionSystem (ECS) (506.643232ms)
+
+▶ Component Definitions
+
+  ▶ construction
+
+    ✔ Transform instantiates (2.768633ms)
+
+    ✔ Velocity instantiates (0.322079ms)
+
+    ✔ Collider instantiates (0.272185ms)
+
+    ✔ Renderable instantiates (0.27029ms)
+
+    ✔ Animation instantiates (0.247574ms)
+
+    ✔ Visible instantiates (0.248539ms)
+
+    ✔ RenderBounds instantiates (0.27991ms)
+
+    ✔ Trail instantiates (0.28396ms)
+
+    ✔ EnemyTag instantiates (0.726918ms)
+
+    ✔ PlayerTag instantiates (0.658331ms)
+
+    ✔ ProjectileTag instantiates (0.238881ms)
+
+    ✔ StaticTag instantiates (0.195745ms)
+
+    ✔ Transform constructor name matches (0.271983ms)
+
+    ✔ Velocity constructor name matches (0.144112ms)
+
+    ✔ Collider constructor name matches (0.143224ms)
+
+    ✔ Renderable constructor name matches (0.466422ms)
+
+    ✔ Animation constructor name matches (0.164489ms)
+
+    ✔ Visible constructor name matches (0.147431ms)
+
+    ✔ RenderBounds constructor name matches (0.144013ms)
+
+    ✔ Trail constructor name matches (0.152805ms)
+
+    ✔ EnemyTag constructor name matches (0.194186ms)
+
+    ✔ PlayerTag constructor name matches (0.413129ms)
+
+    ✔ ProjectileTag constructor name matches (0.181634ms)
+
+    ✔ StaticTag constructor name matches (0.14206ms)
+
+  ✔ construction (13.600876ms)
+
+  ▶ schema and defaults
+
+    ✔ Transform defines static schema with 5 fields (1.276532ms)
+
+    ✔ Transform.schema.x === "f32" (0.219629ms)
+
+    ✔ Transform.schema.y === "f32" (0.141471ms)
+
+    ✔ Transform.schema.rotation === "f32" (0.140572ms)
+
+    ✔ Transform.schema.scaleX === "f32" (0.426952ms)
+
+    ✔ Transform.schema.scaleY === "f32" (0.141068ms)
+
+    ✔ Velocity defines static schema with 2 fields (0.185686ms)
+
+    ✔ Velocity.schema.x === "f32" (0.137976ms)
+
+    ✔ Velocity.schema.y === "f32" (0.134329ms)
+
+    ✔ Collider defines static schema with 2 fields (0.141903ms)
+
+    ✔ Collider.schema.width === "f32" (0.161862ms)
+
+    ✔ Collider.schema.height === "f32" (0.148243ms)
+
+    ✔ Renderable defines static schema with 4 fields (0.174086ms)
+
+    ✔ Renderable.schema.image === "u16" (0.374247ms)
+
+    ✔ Renderable.schema.fillColor === "u32" (0.137346ms)
+
+    ✔ Renderable.schema.shape === "u8" (0.145709ms)
+
+    ✔ Renderable.schema.layer === "i16" (0.122836ms)
+
+    ✔ Animation defines static schema with 5 fields (0.138991ms)
+
+    ✔ Animation.schema.clipId === "u16" (0.113826ms)
+
+    ✔ Animation.schema.frameIndex === "u32" (2.602097ms)
+
+    ✔ Animation.schema.elapsed === "f32" (0.741093ms)
+
+    ✔ Animation.schema.isPlaying === "u8" (0.156586ms)
+
+    ✔ Animation.schema.speed === "f32" (0.100664ms)
+
+    ✔ Visible defines static schema with 1 fields (0.155655ms)
+
+    ✔ Visible.schema.value === "u8" (0.104374ms)
+
+    ✔ RenderBounds defines static schema with 2 fields (0.100926ms)
+
+    ✔ RenderBounds.schema.width === "f32" (0.100429ms)
+
+    ✔ RenderBounds.schema.height === "f32" (0.092376ms)
+
+    ✔ Trail defines static schema with 6 fields (0.10009ms)
+
+    ✔ Trail.schema.enabled === "u8" (0.092638ms)
+
+    ✔ Trail.schema.maxPoints === "u16" (0.090214ms)
+
+    ✔ Trail.schema.spacing === "f32" (0.361963ms)
+
+    ✔ Trail.schema.width === "f32" (0.103455ms)
+
+    ✔ Trail.schema.color === "u32" (0.09412ms)
+
+    ✔ Trail.schema.mode === "u8" (0.08836ms)
+
+    ✔ EnemyTag has no schema (0.186775ms)
+
+    ✔ PlayerTag has no schema (0.098909ms)
+
+    ✔ ProjectileTag has no schema (0.095361ms)
+
+    ✔ StaticTag has no schema (0.089068ms)
+
+  ✔ schema and defaults (12.587246ms)
+
+  ▶ no prototype methods
+
+    ✔ Transform prototype has no enumerable methods (0.639976ms)
+
+    ✔ Velocity prototype has no enumerable methods (0.118412ms)
+
+    ✔ Collider prototype has no enumerable methods (0.103823ms)
+
+    ✔ Renderable prototype has no enumerable methods (0.107276ms)
+
+    ✔ Animation prototype has no enumerable methods (0.098071ms)
+
+    ✔ Visible prototype has no enumerable methods (0.095052ms)
+
+    ✔ RenderBounds prototype has no enumerable methods (0.669043ms)
+
+    ✔ Trail prototype has no enumerable methods (0.127889ms)
+
+    ✔ EnemyTag prototype has no enumerable methods (0.207645ms)
+
+    ✔ PlayerTag prototype has no enumerable methods (0.103731ms)
+
+    ✔ ProjectileTag prototype has no enumerable methods (0.096157ms)
+
+    ✔ StaticTag prototype has no enumerable methods (0.093992ms)
+
+  ✔ no prototype methods (3.209773ms)
+
+  ▶ registration
+
+    ✔ Transform registers successfully (1.125912ms)
+
+    ✔ Velocity registers successfully (0.164082ms)
+
+    ✔ Collider registers successfully (0.132374ms)
+
+    ✔ Renderable registers successfully (0.338907ms)
+
+    ✔ Animation registers successfully (0.186952ms)
+
+    ✔ Visible registers successfully (0.143619ms)
+
+    ✔ RenderBounds registers successfully (0.120412ms)
+
+    ✔ Trail registers successfully (0.133144ms)
+
+    ✔ EnemyTag registers successfully (1.599195ms)
+
+    ✔ PlayerTag registers successfully (0.155315ms)
+
+    ✔ ProjectileTag registers successfully (0.13275ms)
+
+    ✔ StaticTag registers successfully (0.121202ms)
+
+    ✔ returns frozen metadata (0.17568ms)
+
+    ✔ registering same class twice rejects (0.807004ms)
+
+    ✔ registering same name twice rejects (0.280489ms)
+
+    ✔ register after lock rejects (0.245333ms)
+
+  ✔ registration (6.878076ms)
+
+  ▶ unique IDs
+
+    ✔ each component gets a different ID (0.496921ms)
+
+    ✔ IDs are stable across registries (0.267201ms)
+
+    ✔ IDs start at 64 (0.169379ms)
+
+    ✔ IDs increment sequentially (0.237972ms)
+
+  ✔ unique IDs (2.019793ms)
+
+  ▶ tag components
+
+    ✔ EnemyTag is a class (0.44486ms)
+
+    ✔ EnemyTag has empty schema after registration (0.350139ms)
+
+    ✔ EnemyTag adds no fields to entity (3.069286ms)
+
+    ✔ PlayerTag is a class (0.079897ms)
+
+    ✔ PlayerTag has empty schema after registration (0.095502ms)
+
+    ✔ PlayerTag adds no fields to entity (0.249497ms)
+
+    ✔ ProjectileTag is a class (0.059202ms)
+
+    ✔ ProjectileTag has empty schema after registration (0.293217ms)
+
+    ✔ ProjectileTag adds no fields to entity (0.327672ms)
+
+    ✔ StaticTag is a class (0.071475ms)
+
+    ✔ StaticTag has empty schema after registration (0.075318ms)
+
+    ✔ StaticTag adds no fields to entity (0.216955ms)
+
+    ✔ all four tags exist (0.102435ms)
+
+    ✔ tags are distinct classes (0.146515ms)
+
+  ✔ tag components (6.164765ms)
+
+  ▶ addComponent / removeComponent
+
+    ✔ adds Transform to entity (1.023787ms)
+
+    ✔ adds Velocity to entity (0.293781ms)
+
+    ✔ adds Collider to entity (2.186386ms)
+
+    ✔ adds tag component to entity (0.372962ms)
+
+    ✔ removes Transform from entity (0.5589ms)
+
+    ✔ removes tag component from entity (0.283629ms)
+
+    ✔ add is idempotent (0.216249ms)
+
+    ✔ remove is idempotent (0.158674ms)
+
+    ✔ adds multiple components (0.679789ms)
+
+    ✔ removes one component, keeps others (0.318146ms)
+
+    ✔ re-adds after remove (0.215226ms)
+
+    ✔ adding component to dead entity throws (0.210091ms)
+
+    ✔ removing component from dead entity throws (0.209807ms)
+
+  ✔ addComponent / removeComponent (7.278253ms)
+
+  ▶ getComponent
+
+    ✔ returns an object for schema component (0.809237ms)
+
+    ✔ returns an object for tag component (0.219339ms)
+
+    ✔ returned view has field getters for schema component (0.238942ms)
+
+    ✔ fields are zero-initialized (0.2035ms)
+
+    ✔ can set field via view setter (0.351628ms)
+
+    ✔ getComponent is cached (same object) (0.333604ms)
+
+    ✔ getComponent cache invalidated on archetype change (0.425122ms)
+
+    ✔ throws for entity without component (0.342416ms)
+
+    ✔ throws for dead entity (0.306796ms)
+
+    ✔ Velocity fields are accessible (0.322602ms)
+
+    ✔ Animation fields are accessible (0.551796ms)
+
+    ✔ Visible field is accessible (0.285822ms)
+
+  ✔ getComponent (5.001907ms)
+
+  ▶ hasComponent
+
+    ✔ returns true after add (0.251242ms)
+
+    ✔ returns false before add (0.138826ms)
+
+    ✔ returns false after remove (0.179635ms)
+
+    ✔ returns false for dead entity (0.144415ms)
+
+    ✔ works with tag components (0.165698ms)
+
+  ✔ hasComponent (1.075394ms)
+
+  ▶ setComponent
+
+    ✔ sets Transform fields (0.461505ms)
+
+    ✔ sets Velocity fields (0.225368ms)
+
+    ✔ sets Collider fields (0.192472ms)
+
+    ✔ throws for entity without component (0.213358ms)
+
+  ✔ setComponent (1.29414ms)
+
+  ▶ archetype migration
+
+    ✔ adding component changes archetype signature (0.275876ms)
+
+    ✔ removing component reverts archetype signature (0.320692ms)
+
+    ✔ multiple components create combined archetype (0.357558ms)
+
+    ✔ tag component triggers archetype migration (0.656411ms)
+
+    ✔ remove one of two components keeps the other (0.761299ms)
+
+    ✔ component data preserved across add/remove/re-add (0.37802ms)
+
+  ✔ archetype migration (3.107558ms)
+
+  ▶ query matching
+
+    ✔ query all of [Transform] matches entity with Transform (1.384149ms)
+
+    ✔ query all of [Transform, Velocity] matches entity with both (0.487912ms)
+
+    ✔ query all of [EnemyTag] matches tagged entity (0.603873ms)
+
+    ✔ query all of [ProjectileTag] matches projectile entity (0.434366ms)
+
+    ✔ query none of [EnemyTag] excludes tagged entity (0.599576ms)
+
+    ✔ query with Transform + EnemyTag combined (0.510115ms)
+
+    ✔ query matches zero entities when none match (0.342759ms)
+
+    ✔ archetype split creates new matchable table (0.499761ms)
+
+    ✔ multiple entities in same archetype all match (1.133808ms)
+
+  ✔ query matching (6.653653ms)
+
+  ▶ world integration
+
+    ✔ full entity lifecycle with components (1.569518ms)
+
+    ✔ multiple worlds have independent registries (0.555212ms)
+
+    ✔ system can query by Transform (2.069798ms)
+
+    ✔ system can query by tag component (0.887387ms)
+
+    ✔ system can query by combined component + tag (0.774211ms)
+
+  ✔ world integration (6.784249ms)
+
+  ▶ serialization friendliness
+
+    ✔ Transform can be stringified via JSON (0.594965ms)
+
+    ✔ Velocity can be stringified via JSON (0.130942ms)
+
+    ✔ Collider can be stringified via JSON (0.116771ms)
+
+    ✔ Renderable can be stringified via JSON (0.118413ms)
+
+    ✔ Animation can be stringified via JSON (0.114439ms)
+
+    ✔ Visible can be stringified via JSON (0.130948ms)
+
+    ✔ RenderBounds can be stringified via JSON (0.119881ms)
+
+    ✔ Trail can be stringified via JSON (0.108161ms)
+
+    ✔ EnemyTag can be stringified via JSON (0.768872ms)
+
+    ✔ PlayerTag can be stringified via JSON (0.164044ms)
+
+    ✔ ProjectileTag can be stringified via JSON (0.1389ms)
+
+    ✔ StaticTag can be stringified via JSON (0.119752ms)
+
+    ✔ schema is JSON-serializable (0.246246ms)
+
+  ✔ serialization friendliness (3.75103ms)
+
+  ▶ immutable schemas
+
+    ✔ registry returns frozen schema (0.252726ms)
+
+    ✔ cannot add fields to registered schema (0.173193ms)
+
+  ✔ immutable schemas (0.635867ms)
+
+  ▶ component identity
+
+    ✔ Transform !== Velocity (0.229195ms)
+
+    ✔ Collider !== Animation (0.156535ms)
+
+    ✔ Renderable !== Visible (0.14439ms)
+
+    ✔ all data components are distinct classes (0.190432ms)
+
+  ✔ component identity (1.027838ms)
+
+  ▶ export surface
+
+    ✔ exports Transform (0.365333ms)
+
+    ✔ exports Velocity (0.15814ms)
+
+    ✔ exports Collider (0.203966ms)
+
+    ✔ exports Renderable (0.159961ms)
+
+    ✔ exports Animation (0.150539ms)
+
+    ✔ exports Visible (0.154285ms)
+
+    ✔ exports EnemyTag (0.884172ms)
+
+    ✔ exports PlayerTag (0.221921ms)
+
+    ✔ exports ProjectileTag (0.157389ms)
+
+    ✔ exports StaticTag (0.157733ms)
+
+    ✔ imports from ecs/index.js barrel (0.143045ms)
+
+  ✔ export surface (3.682482ms)
+
+✔ Component Definitions (87.747523ms)
+
+▶ ComponentRegistry
+
+  ▶ register (class form)
+
+    ✔ registers a class component with static schema (3.122658ms)
+
+    ✔ registers a class component without schema as tag (1.685738ms)
+
+    ✔ returns metadata (3.167795ms)
+
+  ✔ register (class form) (10.046984ms)
+
+  ▶ register (string form)
+
+    ✔ registers a component by name and schema (0.833895ms)
+
+    ✔ returns metadata (0.324679ms)
+
+  ✔ register (string form) (1.5711ms)
+
+  ▶ register invalid arguments
+
+    ✔ rejects non-class, non-string first argument (1.439437ms)
+
+    ✔ rejects anonymous class (0.991234ms)
+
+    ✔ rejects non-object schema (0.428426ms)
+
+    ✔ rejects schema with exotic prototype (0.314952ms)
+
+    ✔ rejects array schema (0.673969ms)
+
+    ✔ rejects class instance as schema (0.34366ms)
+
+  ✔ register invalid arguments (5.95324ms)
+
+  ▶ IDs
+
+    ✔ user components start at 64 (0.675215ms)
+
+    ✔ are deterministic (0.313782ms)
+
+    ✔ accepts reserved IDs in range 1–63 (0.281696ms)
+
+    ✔ rejects reserved ID outside range 1–63 (0.383191ms)
+
+    ✔ rejects reserved ID conflict (0.405318ms)
+
+    ✔ exhausted ID pool throws (0.331489ms)
+
+  ✔ IDs (2.897315ms)
+
+  ▶ field validation
+
+    ✔ rejects invalid field names (0.508839ms)
+
+    ✔ rejects invalid field types (0.396474ms)
+
+    ✔ resolves type aliases (0.40497ms)
+
+    ✔ rejects non-string field types (0.330143ms)
+
+    ✔ allows empty schema (tag component) (0.293435ms)
+
+  ✔ field validation (2.382638ms)
+
+  ▶ locking
+
+    ✔ register works before lock (0.295006ms)
+
+    ✔ register fails after lock (0.377337ms)
+
+    ✔ isLocked returns correct state (0.199172ms)
+
+  ✔ locking (1.173797ms)
+
+  ▶ duplicate handling
+
+    ✔ rejects duplicate component class (0.506507ms)
+
+    ✔ rejects duplicate name via string form (0.355471ms)
+
+    ✔ rejects name collision between class and string form (0.327344ms)
+
+  ✔ duplicate handling (1.523978ms)
+
+  ▶ schema immutability
+
+    ✔ freezes the schema after registration (0.46623ms)
+
+    ✔ prevents mutations to internal schema (0.427308ms)
+
+    ✔ does not freeze the class static schema (0.490626ms)
+
+  ✔ schema immutability (1.728291ms)
+
+  ▶ getMetadata
+
+    ✔ returns full metadata for registered component (0.456468ms)
+
+    ✔ returns frozen metadata (0.259808ms)
+
+    ✔ returns null for unregistered component (0.26821ms)
+
+    ✔ sets component to null for string-registered components (0.215337ms)
+
+  ✔ getMetadata (1.635054ms)
+
+  ▶ getSchema
+
+    ✔ returns schema for registered component (0.822968ms)
+
+    ✔ returns null for unregistered component (0.458789ms)
+
+  ✔ getSchema (2.424896ms)
+
+  ▶ getId
+
+    ✔ returns id for class lookup (0.363363ms)
+
+    ✔ returns id for string lookup (0.184694ms)
+
+    ✔ returns null for unregistered component (0.214036ms)
+
+  ✔ getId (1.13969ms)
+
+  ▶ has
+
+    ✔ returns true for registered class (0.3507ms)
+
+    ✔ returns true for registered name (0.225167ms)
+
+    ✔ returns false for unregistered (0.184025ms)
+
+  ✔ has (1.117189ms)
+
+  ▶ destroy
+
+    ✔ clears all state (0.536246ms)
+
+    ✔ allows new registration after destroy (0.337847ms)
+
+  ✔ destroy (1.822139ms)
+
+  ▶ componentCount
+
+    ✔ returns the number of registered components (0.340525ms)
+
+  ✔ componentCount (0.496676ms)
+
+  ▶ edge cases
+
+    ✔ allows tag component (empty schema) (0.331815ms)
+
+    ✔ allows string-registered tag component (0.279528ms)
+
+    ✔ handles class form with options (no schema override) (0.323156ms)
+
+  ✔ edge cases (1.287218ms)
+
+✔ ComponentRegistry (41.084795ms)
+
+▶ ComponentSignature
+
+  ▶ construction
+
+    ✔ creates an empty signature (2.375986ms)
+
+    ✔ creates a signature with a single component (0.641651ms)
+
+    ✔ creates a signature with multiple components (0.223176ms)
+
+    ✔ sorts components in ascending order (0.207134ms)
+
+    ✔ removes duplicates (0.516695ms)
+
+    ✔ accepts no arguments (defaults to empty) (0.258045ms)
+
+  ✔ construction (6.232794ms)
+
+  ▶ validation
+
+    ✔ rejects non-array argument (1.129346ms)
+
+    ✔ rejects NaN (0.299096ms)
+
+    ✔ rejects floating point numbers (0.283743ms)
+
+    ✔ rejects negative component IDs (0.244879ms)
+
+    ✔ rejects zero as component ID (0.180717ms)
+
+    ✔ rejects IDs above maximum (65535) (0.98829ms)
+
+    ✔ rejects arrays containing at least one invalid value among valid ones (0.296645ms)
+
+    ✔ rejects non-number values like strings (0.512435ms)
+
+  ✔ validation (4.762396ms)
+
+  ▶ immutability
+
+    ✔ the signature instance is frozen (0.512374ms)
+
+    ✔ cannot add new properties (0.92317ms)
+
+    ✔ components getter returns the same frozen Uint16Array (0.538521ms)
+
+    ✔ add() returns a new instance (1.053871ms)
+
+    ✔ remove() returns a new instance (0.29787ms)
+
+  ✔ immutability (3.964793ms)
+
+  ▶ key
+
+    ✔ is empty string for empty signature (0.169414ms)
+
+    ✔ joins component IDs with commas (0.172064ms)
+
+    ✔ is deterministic regardless of input order (0.131548ms)
+
+    ✔ is deterministic regardless of duplicate entries (0.138126ms)
+
+    ✔ identical signatures always produce identical keys (0.129137ms)
+
+  ✔ key (1.041117ms)
+
+  ▶ equals
+
+    ✔ returns true for identical signatures (0.298187ms)
+
+    ✔ returns true for signatures with same components in different order (0.130595ms)
+
+    ✔ returns true for signatures with duplicates removed (0.126401ms)
+
+    ✔ returns false for signatures with different component sets (0.2573ms)
+
+    ✔ returns false for signatures of different sizes (0.160478ms)
+
+    ✔ returns true when comparing same instance (0.115676ms)
+
+    ✔ returns false for non-ComponentSignature argument (0.124156ms)
+
+    ✔ two empty signatures are equal (0.110538ms)
+
+  ✔ equals (1.778153ms)
+
+  ▶ contains
+
+    ✔ returns true when component is present (0.439687ms)
+
+    ✔ returns false when component is absent (0.134249ms)
+
+    ✔ returns false for empty signature (0.114938ms)
+
+    ✔ returns true for first and last elements (binary search boundaries) (0.148444ms)
+
+    ✔ throws TypeError for NaN (0.256546ms)
+
+    ✔ throws TypeError for floating point (0.303196ms)
+
+    ✔ throws RangeError for negative ID (0.225864ms)
+
+    ✔ throws RangeError for zero (0.234694ms)
+
+    ✔ throws RangeError for exceeding MAX_COMPONENT_ID (0.326965ms)
+
+  ✔ contains (2.816496ms)
+
+  ▶ containsAll
+
+    ✔ returns true when all components are present (0.568796ms)
+
+    ✔ returns false when some components are missing (0.156309ms)
+
+    ✔ returns true when the subset is empty (0.14869ms)
+
+    ✔ returns true for identical signatures (0.150541ms)
+
+    ✔ returns false when this is empty but other is not (0.142901ms)
+
+    ✔ returns false when subset is larger than superset (0.133744ms)
+
+    ✔ returns true for proper superset (disjoint check) (0.124478ms)
+
+    ✔ throws TypeError for non-ComponentSignature argument (0.238642ms)
+
+  ✔ containsAll (2.280448ms)
+
+  ▶ containsAny
+
+    ✔ returns true when at least one component is present (0.492996ms)
+
+    ✔ returns false when no components intersect (0.233436ms)
+
+    ✔ returns false when this is empty (0.201194ms)
+
+    ✔ returns false when other is empty (0.126754ms)
+
+    ✔ returns true when both are identical (0.115902ms)
+
+    ✔ returns true on first element match (0.121047ms)
+
+    ✔ throws TypeError for non-ComponentSignature argument (0.210439ms)
+
+  ✔ containsAny (1.917179ms)
+
+  ▶ add
+
+    ✔ adds a new component in sorted position (0.332733ms)
+
+    ✔ adds at the beginning when smaller than all existing (0.263239ms)
+
+    ✔ adds at the end when larger than all existing (0.132835ms)
+
+    ✔ returns the same instance when component already present (0.146673ms)
+
+    ✔ adds to an empty signature (0.185561ms)
+
+    ✔ does not mutate the original signature (0.16181ms)
+
+    ✔ throws for invalid component IDs (0.248839ms)
+
+  ✔ add (3.218254ms)
+
+  ▶ remove
+
+    ✔ removes an existing component (0.369205ms)
+
+    ✔ removes the first component (0.137663ms)
+
+    ✔ removes the last component (0.118866ms)
+
+    ✔ returns the same instance when component is absent (0.100265ms)
+
+    ✔ does not mutate the original signature (0.156873ms)
+
+    ✔ removes the only component yields empty signature (0.124376ms)
+
+    ✔ throws for invalid component IDs (0.254345ms)
+
+  ✔ remove (1.601892ms)
+
+  ▶ size
+
+    ✔ returns 0 for empty signature (0.128894ms)
+
+    ✔ returns the number of unique components (0.094418ms)
+
+    ✔ increases with add (0.109147ms)
+
+    ✔ decreases with remove (0.15437ms)
+
+  ✔ size (0.650336ms)
+
+  ▶ canonical ordering
+
+    ✔ all permutations produce equal signatures (0.19468ms)
+
+    ✔ identical keys for all permutations (0.12033ms)
+
+  ✔ canonical ordering (0.435361ms)
+
+  ▶ large signatures
+
+    ✔ handles a large number of components (1.1005ms)
+
+    ✔ binary search still works on large signature (0.93267ms)
+
+  ✔ large signatures (2.307896ms)
+
+  ▶ deterministic behavior
+
+    ✔ same input produces identical signatures (0.442158ms)
+
+    ✔ add-then-remove returns to original (0.152373ms)
+
+    ✔ remove-then-add returns to original (0.13034ms)
+
+  ✔ deterministic behavior (0.923392ms)
+
+  ▶ edge cases
+
+    ✔ signature with max component ID (65535) is valid (0.250112ms)
+
+    ✔ signature with ID 1 is valid (0.119786ms)
+
+    ✔ add returns same instance for no-op (0.107242ms)
+
+    ✔ remove returns same instance for no-op (0.188231ms)
+
+    ✔ toString returns descriptive string (0.207998ms)
+
+    ✔ empty signature toString (0.206359ms)
+
+  ✔ edge cases (1.583404ms)
+
+✔ ComponentSignature (39.527835ms)
+
+▶ EntityManager
+
+  ▶ create
+
+    ✔ returns entity 1 for the first entity (slot 0 is reserved) (1.96088ms)
+
+    ✔ returns monotonic increasing IDs (1.991452ms)
+
+    ✔ increments aliveCount (0.452501ms)
+
+  ✔ create (9.625484ms)
+
+  ▶ isAlive
+
+    ✔ returns true for a created entity (1.132373ms)
+
+    ✔ returns false for entity 0 (null sentinel) (3.050716ms)
+
+    ✔ returns false for a destroyed entity (0.593716ms)
+
+    ✔ returns false for unallocated slots (0.388454ms)
+
+    ✔ returns false for NaN (0.348035ms)
+
+    ✔ returns false for negative numbers (1.397923ms)
+
+    ✔ returns false for floating point numbers (0.823371ms)
+
+    ✔ returns false for strings (0.28653ms)
+
+    ✔ returns false for null (0.221662ms)
+
+    ✔ returns false for undefined (0.207419ms)
+
+    ✔ returns false for objects (0.256415ms)
+
+    ✔ never throws (0.657276ms)
+
+  ✔ isAlive (11.280708ms)
+
+  ▶ destroy
+
+    ✔ makes the entity no longer alive (0.544818ms)
+
+    ✔ decrements aliveCount (0.264769ms)
+
+    ✔ is a no-op for entity 0 (0.24072ms)
+
+    ✔ is a no-op for already destroyed entity (double destroy) (0.2463ms)
+
+    ✔ is a no-op for stale entity with wrong generation (0.317426ms)
+
+    ✔ is a no-op for out-of-range slot (0.219535ms)
+
+    ✔ is a no-op for NaN (0.315578ms)
+
+    ✔ is a no-op for negative numbers (0.247562ms)
+
+    ✔ is a no-op for floating point (0.241746ms)
+
+    ✔ never throws for any input (0.789747ms)
+
+  ✔ destroy (4.943152ms)
+
+  ▶ slot reuse
+
+    ✔ reuses slots from the free list (0.667877ms)
+
+    ✔ reuses slots in LIFO order (0.724492ms)
+
+    ✔ recycled entity has correct generation (0.78973ms)
+
+  ✔ slot reuse (3.421095ms)
+
+  ▶ generation
+
+    ✔ increments generation on destroy (0.411001ms)
+
+    ✔ stale entity ID is not alive after recreating the slot (0.362762ms)
+
+    ✔ wraps generation at 255 (0.309669ms)
+
+    ✔ generation wraps through 256 cycles (0.590299ms)
+
+  ✔ generation (2.531533ms)
+
+  ▶ setLocation
+
+    ✔ stores archetype and row for an entity (2.331612ms)
+
+    ✔ overwrites previous location (0.379035ms)
+
+    ✔ throws TypeError for NaN entity (0.814412ms)
+
+    ✔ throws TypeError for negative entity (0.490081ms)
+
+    ✔ throws TypeError for floating point entity (0.374331ms)
+
+    ✔ throws Error for entity 0 (0.361565ms)
+
+    ✔ throws Error for stale entity (0.650118ms)
+
+    ✔ throws Error for out-of-range slot (0.383776ms)
+
+    ✔ persists location across slot reuse (0.243028ms)
+
+  ✔ setLocation (7.947399ms)
+
+  ▶ getLocation
+
+    ✔ returns null for NaN (0.511438ms)
+
+    ✔ returns null for negative (0.27328ms)
+
+    ✔ returns null for entity 0 (0.324747ms)
+
+    ✔ returns null for stale entity (0.843194ms)
+
+    ✔ returns null for out-of-range slot (0.515893ms)
+
+    ✔ never throws (0.716677ms)
+
+  ✔ getLocation (4.462362ms)
+
+  ▶ getArchetype / getRow
+
+    ✔ return the expected values from setLocation (0.948133ms)
+
+    ✔ return null for stale entities (1.92315ms)
+
+  ✔ getArchetype / getRow (3.374733ms)
+
+  ▶ capacity growth
+
+    ✔ starts at the configured initial capacity (0.474125ms)
+
+    ✔ doubles capacity when more entities are created (0.415402ms)
+
+    ✔ grows multiple times as needed (0.294347ms)
+
+    ✔ preserves alive entities across growth (0.668517ms)
+
+    ✔ preserves generations across growth (0.291364ms)
+
+    ✔ throws when max entities is reached (0.438202ms)
+
+    ✔ respects maxEntities cap on entity count (0.399601ms)
+
+  ✔ capacity growth (3.689029ms)
+
+  ▶ constructor validation
+
+    ✔ accepts default options (0.488042ms)
+
+    ✔ rejects initialCapacity < 1 (0.293481ms)
+
+    ✔ rejects maxEntities < 1 (0.268424ms)
+
+    ✔ rejects maxEntities > 2^24 (0.233871ms)
+
+  ✔ constructor validation (1.737714ms)
+
+  ▶ aliveCount
+
+    ✔ tracks alive entities correctly through create/destroy cycles (0.362904ms)
+
+    ✔ is not affected by no-op destroy on stale entities (0.228959ms)
+
+  ✔ aliveCount (3.371534ms)
+
+  ▶ destroy() lifecycle method
+
+    ✔ clears all state (0.383363ms)
+
+    ✔ allows creation after lifecycle destroy (0.657573ms)
+
+    ✔ resets nextSlot to 1 (0.546184ms)
+
+  ✔ destroy() lifecycle method (2.00831ms)
+
+  ▶ edge cases
+
+    ✔ handles single entity lifecycle (0.884059ms)
+
+    ✔ handles destroy-recreate cycle for the same slot (0.827444ms)
+
+    ✔ multiple slot reuse does not leak metadata (0.735115ms)
+
+    ✔ slot 0 metadata remains all zeros (0.242953ms)
+
+    ✔ Maps are not used internally (0.216087ms)
+
+  ✔ edge cases (3.514191ms)
+
+✔ EntityManager (67.005548ms)
+
+▶ Group — construction
+
+  ✔ creates empty manual group (4.966999ms)
+
+  ✔ accepts explicit world (0.667392ms)
+
+  ✔ creates query-backed group via static query() (2.114015ms)
+
+  ✔ query group starts empty (1.462876ms)
+
+  ✔ query group with any filter (0.882434ms)
+
+  ✔ query group with none filter (0.960436ms)
+
+  ✔ uses default world when none provided (2.302762ms)
+
+✔ Group — construction (20.409417ms)
+
+▶ Group — membership
+
+  ✔ add adds a sprite (4.926082ms)
+
+  ✔ add pushes group to sprite.groups (1.016521ms)
+
+  ✔ add ignores duplicate (0.969831ms)
+
+  ✔ remove removes sprite (1.661639ms)
+
+  ✔ remove removes group from sprite.groups (2.081724ms)
+
+  ✔ remove missing sprite is no-op (1.104081ms)
+
+  ✔ has returns true for added sprite (2.322871ms)
+
+  ✔ has returns false for non-member (0.920235ms)
+
+  ✔ clear removes all sprites (1.008313ms)
+
+  ✔ clear removes group from each sprite.groups (0.663219ms)
+
+  ✔ clear is idempotent (0.315309ms)
+
+  ✔ can add multiple sprites (1.421994ms)
+
+  ✔ remove only removes the specified sprite (0.879702ms)
+
+✔ Group — membership (22.167918ms)
+
+▶ Group — properties
+
+  ✔ size returns member count (0.804198ms)
+
+  ✔ length aliases size (0.600071ms)
+
+  ✔ children returns copy of sprites (8.831236ms)
+
+  ✔ children returns new array each call (1.953922ms)
+
+  ✔ first returns first sprite (0.804338ms)
+
+  ✔ first returns null for empty group (0.211006ms)
+
+  ✔ last returns last sprite (1.43433ms)
+
+  ✔ last returns null for empty group (0.293763ms)
+
+✔ Group — properties (15.772442ms)
+
+▶ Group — iteration
+
+  ✔ forEach iterates all members (8.340444ms)
+
+  ✔ forEach passes index (3.202876ms)
+
+  ✔ map transforms members (3.21526ms)
+
+  ✔ filter selects members (0.966828ms)
+
+  ✔ find returns matching member (0.950018ms)
+
+  ✔ find returns undefined when no match (0.557332ms)
+
+  ✔ some returns true when condition met (0.689438ms)
+
+  ✔ some returns false otherwise (0.63626ms)
+
+  ✔ every returns true for all matching (0.794967ms)
+
+  ✔ every returns false for any mismatch (0.609817ms)
+
+  ✔ Symbol.iterator yields sprites (1.229426ms)
+
+✔ Group — iteration (26.187851ms)
+
+▶ Group — dynamic queries
+
+  ✔ query group includes matching entities (2.989013ms)
+
+  ✔ query group excludes non-matching entities (0.797859ms)
+
+  ✔ query group updates automatically when entity gains component (1.402891ms)
+
+  ✔ query group updates automatically when entity loses component (1.099804ms)
+
+  ✔ query group excludes destroyed entities (0.993059ms)
+
+  ✔ query group forEach iterates wrapped sprites (1.239038ms)
+
+  ✔ query group map works (0.607266ms)
+
+  ✔ query group filter works (0.6634ms)
+
+  ✔ query group find works (0.642889ms)
+
+  ✔ query group some/every work (4.324455ms)
+
+  ✔ query group properties (size, first, last, children) (4.561737ms)
+
+  ✔ Symbol.iterator works on query group (0.537299ms)
+
+  ✔ query group with any filter matches entities with any of the tags (0.545167ms)
+
+  ✔ query group with none filter excludes entities (0.555675ms)
+
+✔ Group — dynamic queries (22.394807ms)
+
+▶ Group — query-backed read-only
+
+  ✔ add throws (1.480752ms)
+
+  ✔ remove throws (0.610519ms)
+
+  ✔ clear throws (0.405246ms)
+
+  ✔ has works on query groups (0.48104ms)
+
+✔ Group — query-backed read-only (3.353409ms)
+
+▶ Group — sprite integration
+
+  ✔ forEach on query group returns Sprite wrappers (0.680373ms)
+
+  ✔ forEach on query group wrappers are mutable (0.540387ms)
+
+  ✔ Sprite._wrap returns valid sprite wrapper (0.444839ms)
+
+  ✔ Sprite._wrap wrapper properties are live (0.378447ms)
+
+  ✔ groups array updated on manual group membership (0.398063ms)
+
+  ✔ sprite.kill removes from manual groups (0.444413ms)
+
+✔ Group — sprite integration (3.364734ms)
+
+▶ Group — entity lifecycle
+
+  ✔ destroyed sprite removed from query group (0.831329ms)
+
+  ✔ destroy removes sprite from manual group via kill() (0.70059ms)
+
+✔ Group — entity lifecycle (1.813739ms)
+
+▶ Group — error handling
+
+  ✔ query group add throws descriptive error (0.811695ms)
+
+  ✔ query group remove throws descriptive error (0.975333ms)
+
+  ✔ query group clear throws descriptive error (0.808586ms)
+
+✔ Group — error handling (3.013115ms)
+
+▶ Group — collision
+
+  ▶ collideRect
+
+    ✔ finds overlapping sprites brute force (1.039103ms)
+
+    ✔ returns empty for no overlap (0.420672ms)
+
+    ✔ accepts out array (0.427152ms)
+
+    ✔ skips invisible sprites (0.448537ms)
+
+    ✔ works with spatial hash (1.442223ms)
+
+  ✔ collideRect (4.236989ms)
+
+  ▶ collidePoint
+
+    ✔ finds sprite containing point (0.817083ms)
+
+    ✔ returns empty for point outside (0.486253ms)
+
+    ✔ skips invisible sprites (0.474841ms)
+
+  ✔ collidePoint (2.082902ms)
+
+  ▶ collideCircle
+
+    ✔ finds sprites within radius (0.796424ms)
+
+    ✔ returns empty for far point (0.399295ms)
+
+  ✔ collideCircle (1.413837ms)
+
+  ▶ collideGroup
+
+    ✔ finds overlapping pairs (0.917934ms)
+
+    ✔ returns empty for non-overlapping groups (0.44613ms)
+
+    ✔ accepts callback (3.302666ms)
+
+  ✔ collideGroup (5.021356ms)
+
+  ▶ collideSprite
+
+    ✔ finds overlapping sprites (3.471002ms)
+
+    ✔ returns empty for non-overlapping (1.727848ms)
+
+    ✔ returns empty for invisible target (0.41904ms)
+
+  ✔ collideSprite (5.931147ms)
+
+  ▶ raycast
+
+    ✔ returns empty without spatial hash (0.533702ms)
+
+    ✔ finds entities with spatial hash (4.624714ms)
+
+  ✔ raycast (5.402789ms)
+
+  ▶ useSpatialHash
+
+    ✔ returns the group for chaining (0.233017ms)
+
+  ✔ useSpatialHash (0.366089ms)
+
+✔ Group — collision (25.371841ms)
+
+▶ Group — query group collision
+
+  ✔ collideRect works on query group (0.577779ms)
+
+  ✔ collidePoint works on query group (0.485357ms)
+
+  ✔ collideCircle works on query group (0.41411ms)
+
+✔ Group — query group collision (1.717585ms)
+
+▶ Group — dispose
+
+  ✔ dispose clears group (0.449798ms)
+
+  ✔ dispose removes group from sprite.groups (0.437898ms)
+
+✔ Group — dispose (1.071683ms)
+
+▶ Group — performance
+
+  ✔ sprite wrappers are cached per entity in query group (0.542561ms)
+
+  ✔ can create and iterate many sprites in query group (9.100557ms)
+
+  ✔ can create and iterate many sprites in manual group (5.463708ms)
+
+✔ Group — performance (15.407441ms)
+
+▶ MovementSystem (ECS)
+
+  ▶ construction
+
+    ✔ instantiates (1.450667ms)
+
+    ✔ extends System (0.320595ms)
+
+    ✔ is enabled by default (0.425966ms)
+
+    ✔ has static query (0.483186ms)
+
+    ✔ static query requires Transform and Velocity (0.35656ms)
+
+    ✔ has default priority (0.318659ms)
+
+  ✔ construction (5.530546ms)
+
+  ▶ scheduler integration
+
+    ✔ adds to scheduler (4.189416ms)
+
+    ✔ removes from scheduler (2.305702ms)
+
+    ✔ compiles query on add (3.09468ms)
+
+    ✔ compileQuery produces stable IDs (0.755826ms)
+
+    ✔ scheduler calls update with context (4.00793ms)
+
+  ✔ scheduler integration (15.521826ms)
+
+  ▶ static query compilation
+
+    ✔ compiledIds contains Transform component ID (1.068371ms)
+
+    ✔ compiledIds contains Velocity component ID (0.479133ms)
+
+    ✔ query matches only entities with both components (1.805732ms)
+
+  ✔ static query compilation (3.747475ms)
+
+  ▶ movement on X
+
+    ✔ moves entity along positive X (1.84255ms)
+
+    ✔ moves entity along X repeatedly (2.652702ms)
+
+    ✔ preserves Y when moving on X (2.109472ms)
+
+    ✔ handles large X velocity (1.263648ms)
+
+  ✔ movement on X (8.56315ms)
+
+  ▶ movement on Y
+
+    ✔ moves entity along positive Y (0.788621ms)
+
+    ✔ moves entity along Y repeatedly (0.60222ms)
+
+    ✔ preserves X when moving on Y (1.802309ms)
+
+  ✔ movement on Y (3.652858ms)
+
+  ▶ diagonal movement
+
+    ✔ moves entity diagonally (0.840964ms)
+
+    ✔ diagonal movement with non-uniform velocities (3.718548ms)
+
+    ✔ diagonal adds correctly over multiple frames (0.549536ms)
+
+  ✔ diagonal movement (5.468832ms)
+
+  ▶ zero velocity
+
+    ✔ no movement with zero velocity (1.437501ms)
+
+    ✔ no movement with zero velocity multiple frames (1.583002ms)
+
+  ✔ zero velocity (3.334652ms)
+
+  ▶ negative velocity
+
+    ✔ moves entity backward on X (1.550964ms)
+
+    ✔ moves entity backward on Y (0.909478ms)
+
+    ✔ negative velocity in both axes (0.60705ms)
+
+  ✔ negative velocity (3.981877ms)
+
+  ▶ fractional dt
+
+    ✔ moves with fractional dt (0.585302ms)
+
+    ✔ moves with very small dt (0.519497ms)
+
+    ✔ moves with decimal dt (0.846077ms)
+
+    ✔ handles pi as dt (0.567089ms)
+
+  ✔ fractional dt (3.621668ms)
+
+  ▶ zero dt
+
+    ✔ no movement with zero dt (0.592911ms)
+
+    ✔ no movement with zero dt repeatedly (0.566807ms)
+
+  ✔ zero dt (1.513287ms)
+
+  ▶ multiple entities
+
+    ✔ moves all entities independently (0.735824ms)
+
+    ✔ moves entities with different velocities (0.607661ms)
+
+    ✔ many entities with same velocity stay in formation (1.235568ms)
+
+  ✔ multiple entities (2.8768ms)
+
+  ▶ multiple archetypes
+
+    ✔ processes only entities with Transform+Velocity (0.58513ms)
+
+    ✔ handles entities in different archetypes with same components (0.576411ms)
+
+    ✔ processes multiple archetypes containing Transform+Velocity (1.984619ms)
+
+  ✔ multiple archetypes (3.521978ms)
+
+  ▶ missing Velocity
+
+    ✔ entity without Velocity is not moved (0.921881ms)
+
+    ✔ entity without Velocity is not visited (1.208897ms)
+
+    ✔ entity that loses Velocity stops moving (1.630198ms)
+
+  ✔ missing Velocity (4.171893ms)
+
+  ▶ missing Transform
+
+    ✔ entity without Transform is not processed (0.766777ms)
+
+    ✔ entity without Transform is not visited (0.473439ms)
+
+    ✔ entity that loses Transform stops being processed (0.35517ms)
+
+  ✔ missing Transform (1.814497ms)
+
+  ▶ disabled system
+
+    ✔ disabled system does not move entities (0.380817ms)
+
+    ✔ re-enabled system resumes movement (3.609645ms)
+
+    ✔ toggle disable/enable mid-frame works (0.45783ms)
+
+    ✔ disabled by default does not move on first frame (0.412358ms)
+
+  ✔ disabled system (5.136626ms)
+
+  ▶ priority ordering
+
+    ✔ has default priority 0 (0.331563ms)
+
+    ✔ systems run in priority order (0.68025ms)
+
+    ✔ movement system runs at priority 0 (1.434029ms)
+
+  ✔ priority ordering (2.667254ms)
+
+  ▶ archetype migration
+
+    ✔ entity gains Velocity mid-frame and moves in subsequent frames (3.195511ms)
+
+    ✔ entity loses Velocity mid-frame and stops (1.102589ms)
+
+    ✔ entity gains Transform mid-frame and starts moving (0.896667ms)
+
+    ✔ entity loses Transform mid-frame and stops (0.545061ms)
+
+    ✔ adding Collider to moving entity does not affect movement (0.411593ms)
+
+    ✔ adding tag does not affect movement (0.669204ms)
+
+    ✔ multiple archetype hops preserve movement (0.594888ms)
+
+    ✔ re-add removed component restores movement (0.3578ms)
+
+    ✔ add component to entity not in system query (no Velocity) then add Velocity (0.408579ms)
+
+  ✔ archetype migration (8.846903ms)
+
+  ▶ add/remove component during runtime
+
+    ✔ add component between frames works (0.413289ms)
+
+    ✔ remove component between frames stops processing (3.474629ms)
+
+    ✔ remove then re-add component between frames (0.443983ms)
+
+    ✔ add component at entity creation before system runs (0.391696ms)
+
+  ✔ add/remove component during runtime (4.995909ms)
+
+  ▶ repeated updates
+
+    ✔ movement accumulates over many frames (0.869881ms)
+
+    ✔ movement with alternating dt values (0.368921ms)
+
+    ✔ 1000 updates with small dt (5.587659ms)
+
+  ✔ repeated updates (7.209542ms)
+
+  ▶ deterministic execution
+
+    ✔ same inputs produce same outputs (3.378715ms)
+
+    ✔ order of entity creation does not affect movement (1.718709ms)
+
+  ✔ deterministic execution (5.502919ms)
+
+  ▶ zero allocations during update
+
+    ✔ update does not add new properties to system (0.798225ms)
+
+    ✔ update mutates columns in place (0.603715ms)
+
+    ✔ update does not create new SystemContext each frame (0.917948ms)
+
+    ✔ column returns same typed array each frame (0.862036ms)
+
+  ✔ zero allocations during update (4.193842ms)
+
+  ▶ large iteration
+
+    ✔ processes 100 entities (15.554251ms)
+
+    ✔ processes 1000 entities (67.893635ms)
+
+    ✔ processes 1000 entities with diverse velocities (23.225801ms)
+
+    ✔ processes 1000 entities across multiple archetypes (39.385317ms)
+
+    ✔ 1000 entities with repeated updates (39.8772ms)
+
+  ✔ large iteration (186.428796ms)
+
+  ▶ edge cases
+
+    ✔ entity with zero Transform does not crash (0.638818ms)
+
+    ✔ negative dt does not crash (0.412083ms)
+
+    ✔ Infinity velocity does not crash (0.3607ms)
+
+    ✔ NaN in velocity does not crash columns (0.3434ms)
+
+    ✔ empty world does not crash (0.357219ms)
+
+    ✔ world with only non-matching entities does not crash (0.295464ms)
+
+    ✔ system with no entities in query returns early (0.259322ms)
+
+    ✔ velocity carries over across frames (0.367337ms)
+
+    ✔ transform x and y are independent (0.658874ms)
+
+  ✔ edge cases (4.298458ms)
+
+  ▶ entity lifecycle
+
+    ✔ entity created after system added is processed (0.476782ms)
+
+    ✔ destroyed entity stops accumulating (0.567236ms)
+
+    ✔ entity created mid-frame is processed next frame (0.433423ms)
+
+  ✔ entity lifecycle (1.723211ms)
+
+  ▶ system lifecycle
+
+    ✔ add system then entities works (0.415925ms)
+
+    ✔ remove system stops movement (0.371326ms)
+
+    ✔ remove and re-add system (0.45248ms)
+
+    ✔ system with priority runs in correct order (0.583376ms)
+
+  ✔ system lifecycle (2.097526ms)
+
+  ▶ non-matching entities
+
+    ✔ entity with only Transform is not moved (0.379554ms)
+
+    ✔ entity with only Velocity is not moved (0.274495ms)
+
+    ✔ entity with neither Transform nor Velocity is ignored (0.249249ms)
+
+    ✔ mixed matching and non-matching entities (0.424349ms)
+
+  ✔ non-matching entities (1.59083ms)
+
+  ▶ velocity changes
+
+    ✔ changing velocity mid-frame affects next frame (0.468148ms)
+
+    ✔ setting velocity to zero stops movement (0.392548ms)
+
+    ✔ changing from zero to positive velocity starts movement (0.347405ms)
+
+    ✔ velocity is unchanged by movement system (0.313025ms)
+
+  ✔ velocity changes (1.816956ms)
+
+  ▶ other components unaffected
+
+    ✔ Collider component is not modified by movement system (0.754293ms)
+
+    ✔ transform rotation and scale are not modified (1.621405ms)
+
+  ✔ other components unaffected (2.551189ms)
+
+  ▶ multiple worlds
+
+    ✔ two worlds with independent movement (0.640009ms)
+
+    ✔ worlds with different dt values (0.477315ms)
+
+    ✔ system removed from one world does not affect other (0.497465ms)
+
+  ✔ multiple worlds (1.85099ms)
+
+  ▶ varying dt patterns
+
+    ✔ alternating large and small dt (0.742574ms)
+
+    ✔ dt pattern matches expected total (0.398687ms)
+
+    ✔ dt sums correctly over irregular intervals (0.301159ms)
+
+  ✔ varying dt patterns (1.697649ms)
+
+  ▶ combined scenarios
+
+    ✔ only matching entities move, others stay (0.375807ms)
+
+    ✔ entities with extra components move correctly (0.396507ms)
+
+    ✔ multiple archetypes all move at correct rates (0.51294ms)
+
+  ✔ combined scenarios (1.474578ms)
+
+  ▶ floating point precision
+
+    ✔ f32 columns accumulate predictably (0.397743ms)
+
+    ✔ f32 large dt does not overflow (0.273988ms)
+
+    ✔ f32 very small velocities accumulate (3.167211ms)
+
+  ✔ floating point precision (4.049827ms)
+
+  ▶ static properties
+
+    ✔ priority is 0 by default (0.219537ms)
+
+    ✔ query.all contains Transform and Velocity (0.159193ms)
+
+    ✔ query has no any or none constraints (0.133551ms)
+
+  ✔ static properties (0.727801ms)
+
+  ▶ no side effects
+
+    ✔ movement system does not modify scheduler state (0.484192ms)
+
+    ✔ movement system does not create new tables (0.325796ms)
+
+  ✔ no side effects (0.962388ms)
+
+  ▶ compiled metadata
+
+    ✔ system._compiled is set after addSystem (0.811645ms)
+
+    ✔ system._compiled is frozen (0.325504ms)
+
+    ✔ system._compiled.query is a compiled query object (0.211505ms)
+
+    ✔ system._compiled.componentIds is a Map with correct keys (0.220485ms)
+
+    ✔ system._compiled.componentIds maps to numeric IDs (0.249757ms)
+
+    ✔ system.query getter returns compiled query (0.207609ms)
+
+    ✔ system._compiled contains priority (0.203843ms)
+
+    ✔ removing and re-adding system recompiles metadata (0.314221ms)
+
+    ✔ system without query has null compiled metadata (0.317183ms)
+
+  ✔ compiled metadata (3.390228ms)
+
+  ▶ SystemContext iterable
+
+    ✔ ctx is iterable via for-of (0.881011ms)
+
+    ✔ for-of iterates same tables as ctx.tables() (0.629491ms)
+
+    ✔ for-of iteration is allocation-free (uses same tables reference) (0.70344ms)
+
+    ✔ for-of handles multiple archetypes (0.717799ms)
+
+    ✔ for-of on empty query is no-op (0.546725ms)
+
+  ✔ SystemContext iterable (3.876995ms)
+
+  ▶ canonical pattern
+
+    ✔ MovementSystem does not use ctx.column() (0.303372ms)
+
+    ✔ MovementSystem uses ctx.tables() for iteration (0.145058ms)
+
+    ✔ MovementSystem uses table.getColumn for column access (0.180971ms)
+
+    ✔ MovementSystem uses _compiled.componentIds for ID lookup (0.130557ms)
+
+    ✔ MovementSystem iterates rows per table with for loop (0.133597ms)
+
+    ✔ SystemContext.column() still works for backward compat (0.557379ms)
+
+  ✔ canonical pattern (1.791708ms)
+
+  ▶ export surface
+
+    ✔ exports MovementSystem from ecs/systems (0.2241ms)
+
+  ✔ export surface (0.42529ms)
+
+✔ MovementSystem (ECS) (340.391938ms)
+
+▶ QueryEngine
+
+  ▶ constructor
+
+    ✔ creates a QueryEngine with a valid ArchetypeSystem (4.394296ms)
+
+    ✔ throws for null archetypeSystem (1.745831ms)
+
+    ✔ throws for undefined archetypeSystem (0.416433ms)
+
+    ✔ throws for object without version (0.350113ms)
+
+    ✔ throws for object without getSignature (0.738092ms)
+
+    ✔ throws for object without getArchetypeById (1.4581ms)
+
+  ✔ constructor (15.095771ms)
+
+  ▶ createQuery
+
+    ✔ creates a query with only 'all' components (6.42334ms)
+
+    ✔ creates a query with only 'any' components (1.016747ms)
+
+    ✔ creates a query with only 'none' components (1.053699ms)
+
+    ✔ creates a query with all, any, and none combined (0.899828ms)
+
+    ✔ creates an empty (wildcard) query with no arguments (1.096246ms)
+
+    ✔ creates an empty (wildcard) query with empty object (0.676296ms)
+
+    ✔ creates a query with only 'all' as empty array (0.693409ms)
+
+    ✔ assigns monotonic query IDs (1.613639ms)
+
+    ✔ throws for impossible query where all and none overlap (0.645768ms)
+
+    ✔ throws for impossible query where any and none overlap (0.785371ms)
+
+  ✔ createQuery (16.497424ms)
+
+  ▶ canonicalization
+
+    ✔ different input orders produce the same cached query for 'all' (0.732459ms)
+
+    ✔ different input orders produce the same cached query for 'any' (0.561815ms)
+
+    ✔ duplicate IDs in input collapse to the same cache entry (1.169904ms)
+
+  ✔ canonicalization (2.981498ms)
+
+  ▶ query cache
+
+    ✔ same query filter returns the same object (===) (0.98907ms)
+
+    ✔ different query filters return different objects (1.546567ms)
+
+    ✔ query with same all and none returns the same object (0.776085ms)
+
+    ✔ empty wildcard query is cached (0.703983ms)
+
+  ✔ query cache (4.943967ms)
+
+  ▶ query immutability
+
+    ✔ query object is frozen (0.707674ms)
+
+    ✔ cannot modify query properties (0.611355ms)
+
+    ✔ all signature is frozen (0.452315ms)
+
+    ✔ any signature is frozen (0.493911ms)
+
+    ✔ none signature is frozen (0.643392ms)
+
+  ✔ query immutability (3.549219ms)
+
+  ▶ matching
+
+    ✔ matches archetype with all required components (1.561139ms)
+
+    ✔ rejects archetype missing a required component in 'all' (0.634047ms)
+
+    ✔ matches archetype with at least one 'any' component (0.6722ms)
+
+    ✔ rejects archetype with none of the 'any' components (3.104759ms)
+
+    ✔ rejects archetype with a 'none' component (1.284745ms)
+
+    ✔ matches archetype without any 'none' components (0.745762ms)
+
+    ✔ matches archetype with combined all, any, none (1.273254ms)
+
+    ✔ rejects archetype when combined query fails the 'none' check (1.206274ms)
+
+    ✔ empty archetype matches wildcard query (0.79517ms)
+
+    ✔ empty archetype does not match query with 'all' (0.441582ms)
+
+    ✔ tag-only archetype matches tag-specific query (0.407037ms)
+
+    ✔ tag-only archetype rejected by query requiring field component (0.747415ms)
+
+    ✔ wildcard query with empty any matches all archetypes (0.605613ms)
+
+    ✔ query with only none matches archetypes without those components (1.405067ms)
+
+    ✔ query with only any matches archetypes with at least one of those (0.95356ms)
+
+    ✔ empty archetype matches none-only query (0.576087ms)
+
+    ✔ empty archetype does not match any-only query (0.448863ms)
+
+  ✔ matching (18.511275ms)
+
+  ▶ archetype cache
+
+    ✔ initial query returns matching archetypes from existing archetypes (1.006486ms)
+
+    ✔ getTables returns matching tables (0.733589ms)
+
+    ✔ lazy rebuild after new archetype creation (0.577853ms)
+
+    ✔ multiple new archetypes are picked up in one rebuild (0.570192ms)
+
+    ✔ no unnecessary rebuilds when version has not changed (2.979616ms)
+
+    ✔ repeated getTables does not rescan archetypes (2.343175ms)
+
+    ✔ creates query before any archetypes returns empty matches (0.832209ms)
+
+    ✔ arch created before query is included in initial scan (0.978018ms)
+
+    ✔ new archetype caught by existing any-only query (0.650249ms)
+
+    ✔ new archetype caught by existing none-only query (0.485268ms)
+
+  ✔ archetype cache (13.270412ms)
+
+  ▶ returned collections
+
+    ✔ getTables returns the cached internal array (zero allocation) (0.570496ms)
+
+    ✔ getArchetypes returns a new array (not internal reference) (0.506129ms)
+
+  ✔ returned collections (1.35405ms)
+
+  ▶ error paths
+
+    ✔ getTables throws for non-Query argument (1.504115ms)
+
+    ✔ getArchetypes throws for non-Query argument (0.556544ms)
+
+    ✔ matches throws for non-ComponentSignature (0.835259ms)
+
+    ✔ matches throws for non-Query (0.615753ms)
+
+    ✔ createQuery throws for invalid component ID (zero) (0.551868ms)
+
+    ✔ createQuery throws for invalid component ID (negative) (0.620032ms)
+
+    ✔ createQuery throws for invalid component ID (above max) (0.471572ms)
+
+    ✔ createQuery throws for invalid component ID (float) (1.415029ms)
+
+    ✔ createQuery throws for non-array all (0.793548ms)
+
+    ✔ createQuery throws for non-array any (1.416181ms)
+
+    ✔ createQuery throws for non-array none (1.046755ms)
+
+    ✔ createQuery throws when array contains string (3.522783ms)
+
+  ✔ error paths (15.133006ms)
+
+  ▶ matches function
+
+    ✔ returns true when all conditions are satisfied (0.61573ms)
+
+    ✔ returns false when 'all' is not satisfied (0.409668ms)
+
+    ✔ returns true when 'any' is empty (2.30174ms)
+
+    ✔ returns true when 'none' is empty (0.417161ms)
+
+  ✔ matches function (4.216922ms)
+
+  ▶ lazy invalidation
+
+    ✔ creating an archetype automatically invalidates queries (2.127106ms)
+
+    ✔ query is not rebuilt if no new archetypes since last access (0.522049ms)
+
+    ✔ multiple queries all get rebuilt lazily after new archetypes (0.856471ms)
+
+    ✔ version is derived from ArchetypeSystem automatically (2.585722ms)
+
+  ✔ lazy invalidation (6.784383ms)
+
+  ▶ complex matching scenarios
+
+    ✔ handles multiple archetypes with different component sets (1.050806ms)
+
+    ✔ matches archetype with the maximum component count (1.424516ms)
+
+    ✔ matches archetype with single tag component (0.417068ms)
+
+    ✔ matches multiple tag-only queries correctly (0.370998ms)
+
+    ✔ any matches archetype with the least expected component (0.383134ms)
+
+    ✔ none excludes multiple archetypes correctly (0.397649ms)
+
+  ✔ complex matching scenarios (4.591227ms)
+
+  ▶ edge cases
+
+    ✔ query with all empty components is wildcard matching all (0.635645ms)
+
+    ✔ query that matches zero archetypes returns empty arrays (0.374891ms)
+
+    ✔ archetype with zero components matches none-only query (0.317966ms)
+
+    ✔ new query after archetypes catches all existing (0.511951ms)
+
+  ✔ edge cases (5.163607ms)
+
+  ▶ cache key format
+
+    ✔ key includes 'A:' prefix for all components (1.446947ms)
+
+    ✔ key includes 'O:' prefix for any components (0.37692ms)
+
+    ✔ key includes 'N:' prefix for none components (0.454322ms)
+
+    ✔ key omits empty sections (1.097362ms)
+
+    ✔ key is deterministic for all permutations (0.769367ms)
+
+    ✔ wildcard query has empty key (1.337483ms)
+
+  ✔ cache key format (6.150353ms)
+
+✔ QueryEngine (122.900922ms)
+
+▶ QueryView
+
+  ▶ construction
+
+    ✔ creates a QueryView from a Query (3.319761ms)
+
+    ✔ QueryView exposes the query (0.632976ms)
+
+    ✔ creates a QueryView for wildcard query (0.378152ms)
+
+  ✔ construction (5.949099ms)
+
+  ▶ cache
+
+    ✔ same Query returns the same QueryView (0.493168ms)
+
+    ✔ different Queries produce different QueryViews (0.675478ms)
+
+    ✔ cached QueryView persists across frames (0.630688ms)
+
+  ✔ cache (2.380193ms)
+
+  ▶ table iteration
+
+    ✔ yields one table for a single archetype (2.529839ms)
+
+    ✔ yields multiple tables for multiple matching archetypes (1.013041ms)
+
+    ✔ yields zero tables for no matches (0.493564ms)
+
+    ✔ tables are returned in deterministic archetype ID order (0.887975ms)
+
+    ✔ no duplicate tables (0.591397ms)
+
+    ✔ yields no tables for empty matches from any-only query (0.437657ms)
+
+    ✔ yields empty archetype table for wildcard query (0.40129ms)
+
+  ✔ table iteration (7.269972ms)
+
+  ▶ entity iteration
+
+    ✔ yields one entity from a single archetype (0.774809ms)
+
+    ✔ yields multiple entities from a single archetype (0.41325ms)
+
+    ✔ yields entities from multiple archetypes (0.541904ms)
+
+    ✔ yields zero entities for no matches (0.265161ms)
+
+    ✔ yields zero entities in an empty world (0.280713ms)
+
+    ✔ entity IDs are numbers (not objects) (0.381024ms)
+
+    ✔ every entity is visited exactly once (0.994603ms)
+
+    ✔ entity order is stable across iterations (1.327112ms)
+
+    ✔ yields entity from wildcard query (0.269034ms)
+
+  ✔ entity iteration (5.884198ms)
+
+  ▶ row iteration
+
+    ✔ yields rows with table and row index (0.496059ms)
+
+    ✔ row index matches entity position (0.358721ms)
+
+    ✔ yields correct rows for multiple entities (0.680438ms)
+
+    ✔ yields rows across multiple tables (0.391666ms)
+
+    ✔ yields zero rows for no matches (0.329605ms)
+
+    ✔ each row references the correct table (2.078196ms)
+
+    ✔ tables().entities() and rows() produce consistent entity count (0.549852ms)
+
+  ✔ row iteration (5.438904ms)
+
+  ▶ archetype invalidation
+
+    ✔ QueryView discovers newly created archetypes (0.467207ms)
+
+    ✔ QueryView discovers entities in new archetypes (0.600211ms)
+
+    ✔ multiple invalidation cycles work (0.787306ms)
+
+    ✔ cached QueryView returns updated results after archetype creation (1.19684ms)
+
+  ✔ archetype invalidation (3.709649ms)
+
+  ▶ reusability
+
+    ✔ same QueryView can be iterated multiple times (1.861581ms)
+
+    ✔ same QueryView can interleave tables(), entities(), rows() (1.731882ms)
+
+    ✔ iteration after entity destroy does not include destroyed entity (0.920776ms)
+
+    ✔ iteration after entity add includes new entity (0.719461ms)
+
+  ✔ reusability (6.266344ms)
+
+  ▶ concurrent views
+
+    ✔ multiple QueryViews for different queries work independently (1.321688ms)
+
+    ✔ multiple QueryViews for same query share cache and results (0.372687ms)
+
+  ✔ concurrent views (3.382516ms)
+
+  ▶ integration with systems
+
+    ✔ system can iterate entities via QueryView (1.625185ms)
+
+    ✔ system can iterate tables via QueryView (0.656123ms)
+
+    ✔ system can read component data via table iteration (0.941241ms)
+
+    ✔ system can iterate rows and modify component data (1.188161ms)
+
+    ✔ two systems with different queries iterate independently (0.987958ms)
+
+    ✔ system sees newly created archetypes after entity migration (0.894737ms)
+
+  ✔ integration with systems (6.995103ms)
+
+  ▶ edge cases
+
+    ✔ handles World with no entities (0.599444ms)
+
+    ✔ handles World with entities but no matching components (0.439834ms)
+
+    ✔ handles entity with tag components (0.737797ms)
+
+    ✔ handles wildcard query iteration (0.478091ms)
+
+    ✔ iteration after destroying all entities yields none (0.494302ms)
+
+    ✔ none filter excludes matching entities (1.607384ms)
+
+    ✔ any filter includes entities with at least one (1.51273ms)
+
+    ✔ iteration works with reserved ID components (0.216007ms)
+
+    ✔ does not throw when archetypes have no matching entities (0.41324ms)
+
+  ✔ edge cases (8.328726ms)
+
+  ▶ determinism
+
+    ✔ multiple iterations return same entity order (4.381516ms)
+
+    ✔ archetypes are always visited in ID order (1.140674ms)
+
+  ✔ determinism (5.760454ms)
+
+  ▶ combined filters
+
+    ✔ all + any + none together (1.068192ms)
+
+  ✔ combined filters (1.252016ms)
+
+  ▶ stress tests
+
+    ✔ iterates 1000 entities in one archetype (21.270127ms)
+
+    ✔ iterates entities across 50 archetypes (3.446931ms)
+
+    ✔ repeated iteration over 500 entities is stable (5.977784ms)
+
+  ✔ stress tests (31.130462ms)
+
+  ▶ swap-remove ordering
+
+    ✔ last added entity is visited when entity destroyed from middle (0.461328ms)
+
+    ✔ destroying first entity shifts order due to swap-remove (0.46389ms)
+
+  ✔ swap-remove ordering (1.188391ms)
+
+  ▶ multi-view invalidation
+
+    ✔ three QueryViews all see new archetype after one creation (0.646415ms)
+
+  ✔ multi-view invalidation (0.82224ms)
+
+  ▶ for-of compatibility
+
+    ✔ tables() works with for-of (0.838906ms)
+
+    ✔ entities() works with for-of (0.469652ms)
+
+    ✔ rows() works with for-of destructuring (0.449837ms)
+
+  ✔ for-of compatibility (2.081283ms)
+
+  ▶ empty table handling
+
+    ✔ empty archetype table is yielded by wildcard query but has no entities (0.50614ms)
+
+    ✔ empty matching table (no entities) yields zero rows (0.345755ms)
+
+  ✔ empty table handling (1.077249ms)
+
+  ▶ data access via iteration
+
+    ✔ read component fields through table iteration (2.405177ms)
+
+    ✔ write component fields through table iteration (1.414093ms)
+
+  ✔ data access via iteration (5.858056ms)
+
+  ▶ regression
+
+    ✔ World.query still works after clearSystems (0.685651ms)
+
+    ✔ QueryView works after scheduler update (0.636513ms)
+
+    ✔ multiple worlds have independent caches (0.547287ms)
+
+    ✔ zero-entity tables produce correct iteration counts (0.391321ms)
+
+  ✔ regression (2.748284ms)
+
+✔ QueryView (112.8099ms)
+
+▶ RenderSystem (ECS)
+
+  ▶ construction
+
+    ✔ instantiates (2.584315ms)
+
+    ✔ extends System (0.437179ms)
+
+    ✔ is enabled by default (0.498023ms)
+
+    ✔ has static query requiring Transform, Renderable, RenderBounds, Visible (0.392879ms)
+
+    ✔ has priority 3 (after Collision) (0.303182ms)
+
+    ✔ has compiled componentIds after being added to world (3.824669ms)
+
+  ✔ construction (11.36886ms)
+
+  ▶ resources
+
+    ✔ missing RenderQueue throws descriptive error (8.063296ms)
+
+    ✔ missing CanvasContext throws descriptive error (1.668554ms)
+
+    ✔ camera is optional (no error when absent) (2.293621ms)
+
+    ✔ RenderQueue resource can be replaced between frames (2.539211ms)
+
+    ✔ CanvasContext resource works with system (0.956269ms)
+
+  ✔ resources (16.584676ms)
+
+  ▶ queue state
+
+    ✔ queue is cleared each frame (1.368841ms)
+
+    ✔ empty world does not push commands (0.746785ms)
+
+    ✔ queue commands contain correct transform data (1.76921ms)
+
+    ✔ queue commands contain correct render bounds (2.712731ms)
+
+    ✔ queue commands contain correct renderable data (1.160932ms)
+
+  ✔ queue state (8.419309ms)
+
+  ▶ visibility
+
+    ✔ invisible entity is skipped (0.817986ms)
+
+    ✔ mixed visibility only pushes visible ones (0.892082ms)
+
+    ✔ toggling visibility via setComponent works (1.022097ms)
+
+  ✔ visibility (3.12744ms)
+
+  ▶ transforms
+
+    ✔ multiple transformed entities (1.203897ms)
+
+    ✔ zero transform is valid (0.845733ms)
+
+  ✔ transforms (2.402117ms)
+
+  ▶ RenderBounds
+
+    ✔ RenderBounds width and height are independent from Collider (0.864886ms)
+
+    ✔ RenderBounds defaults to zero (0.804402ms)
+
+  ✔ RenderBounds (1.945853ms)
+
+  ▶ camera
+
+    ✔ camera is read from resources when available (1.085384ms)
+
+    ✔ camera can be replaced at runtime (1.027137ms)
+
+    ✔ missing camera does not throw (1.488897ms)
+
+  ✔ camera (4.088335ms)
+
+  ▶ RenderQueue execute
+
+    ✔ execute with OffscreenCanvas does not crash (0.813106ms)
+
+    ✔ execute draws rectangles (0.661439ms)
+
+    ✔ execute draws circles (3.174622ms)
+
+    ✔ execute with camera applies transform (0.354939ms)
+
+    ✔ execute draws multiple commands (0.349512ms)
+
+    ✔ execute with empty queue does nothing (0.900149ms)
+
+  ✔ RenderQueue execute (7.179513ms)
+
+  ▶ multiple archetypes
+
+    ✔ entities from multiple tables are all rendered (1.105223ms)
+
+  ✔ multiple archetypes (1.343931ms)
+
+  ▶ archetype migration
+
+    ✔ gain Renderable (1.012079ms)
+
+    ✔ lose Renderable (1.107556ms)
+
+    ✔ gain Visible (0.464201ms)
+
+    ✔ lose Visible (0.444134ms)
+
+    ✔ destroyed entity is removed (0.790991ms)
+
+    ✔ new entity after update appears next frame (1.575664ms)
+
+    ✔ lose RenderBounds removes from query (1.627106ms)
+
+  ✔ archetype migration (7.764358ms)
+
+  ▶ scheduler
+
+    ✔ can be disabled (2.621834ms)
+
+    ✔ runs in independent worlds (1.44114ms)
+
+    ✔ executes after Collision system (3.10256ms)
+
+  ✔ scheduler (7.568361ms)
+
+  ▶ runtime
+
+    ✔ repeated updates produce deterministic state (0.749825ms)
+
+    ✔ handles 100 entities (22.782111ms)
+
+    ✔ handles 1000 entities (85.413718ms)
+
+  ✔ runtime (109.305833ms)
+
+  ▶ RenderCommand
+
+    ✔ create returns a command object with defaults (0.347759ms)
+
+    ✔ create returns a new object each call (0.269602ms)
+
+  ✔ RenderCommand (0.890135ms)
+
+  ▶ RenderQueue
+
+    ✔ starts empty (0.246465ms)
+
+    ✔ clear resets count to zero (0.170294ms)
+
+    ✔ push increases count (0.155965ms)
+
+    ✔ reuses command objects after clear (0.161583ms)
+
+  ✔ RenderQueue (1.025775ms)
+
+  ▶ canonical pattern
+
+    ✔ does not use ctx.column() (0.31449ms)
+
+    ✔ uses for-of ctx iteration (0.161287ms)
+
+    ✔ uses table.getColumn for column access (0.146366ms)
+
+    ✔ uses _compiled.componentIds for ID lookup (0.137779ms)
+
+    ✔ iterates rows per table with for loop (0.13801ms)
+
+    ✔ uses ctx.resources.get for resource access (0.136697ms)
+
+    ✔ does not use getComponent() (0.163197ms)
+
+  ✔ canonical pattern (1.701401ms)
+
+  ▶ export surface
+
+    ✔ exports RenderSystem from ecs/systems (0.199488ms)
+
+    ✔ exports RenderQueue from ecs/render (0.145456ms)
+
+    ✔ exports RenderCommand from ecs/render (0.152066ms)
+
+  ✔ export surface (0.835319ms)
+
+  ▶ zero allocation
+
+    ✔ no object allocations in update loop (10.725159ms)
+
+  ✔ zero allocation (10.890985ms)
+
+✔ RenderSystem (ECS) (201.133556ms)
+
+▶ Scene — world creation
+
+  ✔ creates world lazily on .world access (5.756623ms)
+
+  ✔ returns same world instance on repeated access (1.247295ms)
+
+  ✔ different scenes have different worlds (1.697381ms)
+
+  ✔ world exists after enter() (2.952246ms)
+
+  ✔ world is null after exit() (1.241734ms)
+
+✔ Scene — world creation (17.510233ms)
+
+▶ Scene — resources
+
+  ✔ registers SpatialHash resource (0.960197ms)
+
+  ✔ registers TrailManager resource (0.959365ms)
+
+  ✔ registers RenderQueue resource (0.768224ms)
+
+  ✔ registers AnimationClipRegistry resource (0.438477ms)
+
+  ✔ does not register CanvasContext without game (0.560076ms)
+
+  ✔ does not register Camera without game (2.408761ms)
+
+  ✔ registers CanvasContext and Camera when game is available (3.788449ms)
+
+✔ Scene — resources (12.23827ms)
+
+▶ Scene — systems
+
+  ✔ installs systems into scheduler (0.616058ms)
+
+  ✔ systems have correct priorities (0.253154ms)
+
+✔ Scene — systems (1.2892ms)
+
+▶ Scene — sprite default world
+
+  ✔ enter() sets Sprite default world (0.597305ms)
+
+  ✔ exit() restores previous default world (0.616954ms)
+
+  ✔ sprites created after enter use scene world (4.218572ms)
+
+  ✔ sprites created before enter use original default world (0.792679ms)
+
+✔ Scene — sprite default world (7.283253ms)
+
+▶ Scene — lifecycle
+
+  ✔ enter() sets _entered flag (0.598675ms)
+
+  ✔ enter() throws if called twice (1.357742ms)
+
+  ✔ exit() sets _exited flag (1.257817ms)
+
+  ✔ exit() throws if called twice (1.328387ms)
+
+  ✔ exit() clears cleanups (1.772366ms)
+
+  ✔ enter/exit cycle is clean (0.755575ms)
+
+✔ Scene — lifecycle (8.112812ms)
+
+▶ Scene — scheduler
+
+  ✔ world has scheduler (0.625312ms)
+
+  ✔ scheduler is bound to the world (0.425862ms)
+
+  ✔ scheduler.update runs without error when mock game provided (3.164411ms)
+
+  ✔ systems execute in correct priority order (1.001787ms)
+
+  ✔ systems execute without crashing on empty world (0.943583ms)
+
+✔ Scene — scheduler (6.768457ms)
+
+▶ Game loop integration
+
+  ✔ Scene world has all components registered (0.638271ms)
+
+✔ Game loop integration (0.867515ms)
+
+▶ Scene switching
+
+  ✔ new scene after switching has fresh world (0.889633ms)
+
+  ✔ exited scene world is null (0.843746ms)
+
+  ✔ switching sprites to new scene works (1.488335ms)
+
+✔ Scene switching (3.850244ms)
+
+▶ SpatialHash (pure index)
+
+  ▶ construction
+
+    ✔ creates with default cell size (1.828919ms)
+
+    ✔ creates with custom cell size (0.249788ms)
+
+    ✔ starts empty (0.174245ms)
+
+    ✔ queryStamp starts at 0 (0.168193ms)
+
+  ✔ construction (4.13626ms)
+
+  ▶ insertion
+
+    ✔ inserts a primitive entry (0.86264ms)
+
+    ✔ stores entry with correct id (1.260069ms)
+
+    ✔ inserts multiple entries (0.620928ms)
+
+    ✔ inserts entries at same position (1.610691ms)
+
+    ✔ inserts zero-size entry (0.921091ms)
+
+    ✔ inserts entry spanning multiple cells (0.743626ms)
+
+    ✔ entry pre-computes left/right/top/bottom (0.351219ms)
+
+  ✔ insertion (8.836391ms)
+
+  ▶ clear
+
+    ✔ removes all entries (0.284772ms)
+
+    ✔ resets query stamp (0.159852ms)
+
+    ✔ allows re-insertion after clear (0.140062ms)
+
+  ✔ clear (0.851251ms)
+
+  ▶ queryRect
+
+    ✔ finds overlapping entry (0.264191ms)
+
+    ✔ returns empty for non-overlapping rect (0.143395ms)
+
+    ✔ touching edges counts as hit (0.128488ms)
+
+    ✔ finds multiple overlapping entries (0.139632ms)
+
+    ✔ large rect matches everything (0.87053ms)
+
+  ✔ queryRect (2.082842ms)
+
+  ▶ queryPoint
+
+    ✔ returns hit for point inside entry (0.352626ms)
+
+    ✔ returns empty for point outside (0.278887ms)
+
+    ✔ boundary point is inside (0.291101ms)
+
+  ✔ queryPoint (1.41105ms)
+
+  ▶ queryCircle
+
+    ✔ returns hit for circle overlapping entry (0.655999ms)
+
+    ✔ returns empty for far circle (0.238936ms)
+
+    ✔ tangent circle touches entry edge (0.369849ms)
+
+    ✔ returns multiple hits (0.188846ms)
+
+  ✔ queryCircle (1.837879ms)
+
+  ▶ queryAABB
+
+    ✔ returns hit for overlapping AABB (0.302022ms)
+
+    ✔ returns empty for non-overlapping AABB (0.408371ms)
+
+  ✔ queryAABB (0.964964ms)
+
+  ▶ raycast
+
+    ✔ returns hit for entity along ray (0.748606ms)
+
+    ✔ returns empty when ray misses (1.314957ms)
+
+    ✔ returns multiple hits along ray path (0.641424ms)
+
+    ✔ short ray does not reach (0.720154ms)
+
+    ✔ raycast in negative direction (0.527595ms)
+
+  ✔ raycast (5.240049ms)
+
+  ▶ empty hash
+
+    ✔ queryRect returns empty (1.744898ms)
+
+    ✔ queryPoint returns empty (0.488602ms)
+
+    ✔ queryCircle returns empty (0.338452ms)
+
+    ✔ queryAABB returns empty (0.216882ms)
+
+    ✔ raycast returns empty (0.190917ms)
+
+  ✔ empty hash (3.993285ms)
+
+  ▶ reused output arrays
+
+    ✔ queryRect accepts caller-provided array (0.37251ms)
+
+    ✔ queryPoint accepts caller-provided array (0.207506ms)
+
+    ✔ queryCircle accepts caller-provided array (0.212353ms)
+
+    ✔ queryAABB accepts caller-provided array (0.20923ms)
+
+    ✔ raycast accepts caller-provided array (0.242431ms)
+
+    ✔ appends to caller-provided array (0.282076ms)
+
+  ✔ reused output arrays (2.054679ms)
+
+  ▶ query stamping
+
+    ✔ deduplicates entries spanning multiple cells (0.355309ms)
+
+    ✔ deduplicates across multiple queries (1.690166ms)
+
+    ✔ stamp increments after each query (0.299426ms)
+
+  ✔ query stamping (2.67963ms)
+
+  ▶ negative coordinates
+
+    ✔ inserts at negative position (0.301938ms)
+
+    ✔ point query at negative position works (0.19973ms)
+
+    ✔ circle query at negative position works (0.219358ms)
+
+  ✔ negative coordinates (1.013036ms)
+
+  ▶ boundary conditions
+
+    ✔ entry exactly at cell boundary (0.295959ms)
+
+    ✔ entry spanning origin (2.844382ms)
+
+    ✔ query rect at origin (0.461839ms)
+
+  ✔ boundary conditions (4.08539ms)
+
+  ▶ multiple occupied cells
+
+    ✔ entries in different cells all found by large query (0.728713ms)
+
+    ✔ entries in adjacent cells found by spanning query (0.256979ms)
+
+  ✔ multiple occupied cells (1.339946ms)
+
+  ▶ no external references
+
+    ✔ stores only primitive data in entries (0.850454ms)
+
+    ✔ has no visible property on entries (0.49141ms)
+
+    ✔ has no transform property on entries (0.714237ms)
+
+    ✔ has no collider property on entries (0.307621ms)
+
+    ✔ has no __shId or __shStamp on entries (0.281315ms)
+
+  ✔ no external references (3.459167ms)
+
+  ▶ no legacy methods
+
+    ✔ has no rebuild method (0.878326ms)
+
+    ✔ has no collideRect method (0.237411ms)
+
+    ✔ has no collidePoint method (0.154875ms)
+
+    ✔ has no collideSprite method (0.247428ms)
+
+    ✔ has no collideGroup method (0.149732ms)
+
+    ✔ has no _insert method (0.143375ms)
+
+    ✔ has no _seen Set (0.14301ms)
+
+  ✔ no legacy methods (2.456905ms)
+
+  ▶ performance
+
+    ✔ handles 1000 entries (2.92682ms)
+
+    ✔ no per-query object allocation by queryRect (0.529899ms)
+
+  ✔ performance (3.681574ms)
+
+✔ SpatialHash (pure index) (53.887787ms)
+
+▶ Construction
+
+  ✔ creates a sprite with default values (6.692398ms)
+
+  ✔ creates a sprite with specified values (0.719098ms)
+
+  ✔ creates ECS entity with entity property (0.498112ms)
+
+  ✔ entity exists in world (0.460645ms)
+
+  ✔ accepts custom world (0.851209ms)
+
+  ✔ required components attached (0.621307ms)
+
+  ✔ visible by default (0.527657ms)
+
+  ✔ scale defaults to 1, 1 (0.627764ms)
+
+  ✔ angle defaults to 0 (0.607823ms)
+
+  ✔ center positioned correctly (0.670498ms)
+
+✔ Construction (15.630637ms)
+
+▶ Accessors
+
+  ✔ x getter returns top-left (0.976632ms)
+
+  ✔ x setter updates center (0.505463ms)
+
+  ✔ y getter returns top-left (0.300646ms)
+
+  ✔ y setter updates center (0.461607ms)
+
+  ✔ width getter (0.373835ms)
+
+  ✔ width setter (0.427416ms)
+
+  ✔ height getter (0.321164ms)
+
+  ✔ height setter (0.443563ms)
+
+  ✔ image getter defaults to 0 (0.404675ms)
+
+  ✔ image setter (0.492853ms)
+
+  ✔ angle getter (0.388479ms)
+
+  ✔ angle setter (0.480355ms)
+
+  ✔ scale getter with uniform scale (0.366115ms)
+
+  ✔ scale setter with object (0.453699ms)
+
+  ✔ scale setter with number (0.375791ms)
+
+  ✔ transform getter returns ECS view (0.357384ms)
+
+  ✔ transform setter updates fields (0.461799ms)
+
+  ✔ collider getter returns ECS view (0.423573ms)
+
+  ✔ collider setter updates fields (0.438428ms)
+
+  ✔ visible getter returns boolean (0.369441ms)
+
+  ✔ visible setter accepts boolean (0.456769ms)
+
+✔ Accessors (11.179074ms)
+
+▶ Velocity (lazy)
+
+  ✔ velocity.x defaults to 0 (1.303258ms)
+
+  ✔ velocity.y defaults to 0 (0.466182ms)
+
+  ✔ velocity is created lazily on first access (0.478744ms)
+
+  ✔ velocity setter updates values (2.44081ms)
+
+  ✔ velocity persists in ECS (0.46715ms)
+
+  ✔ velocity getter returns same ECS view (0.388136ms)
+
+✔ Velocity (lazy) (6.216871ms)
+
+▶ Style
+
+  ✔ style.fill defaults to white (0.554123ms)
+
+  ✔ style.fill setter converts hex string to color (0.625384ms)
+
+  ✔ style.shape defaults to rect (0.329323ms)
+
+  ✔ style.shape setter to circle (0.892489ms)
+
+  ✔ style.shape setter back to rect (0.414339ms)
+
+  ✔ style wrapper is cached (same object) (0.272742ms)
+
+✔ Style (3.627987ms)
+
+▶ Animation
+
+  ✔ animation.playing defaults to false (2.873109ms)
+
+  ✔ animation.playing setter (0.796654ms)
+
+  ✔ animation wrapper is cached (0.462624ms)
+
+  ✔ animation component created lazily (0.881478ms)
+
+  ✔ animation.add stores clip (1.382896ms)
+
+  ✔ animation.play sets clipId and playing (0.785169ms)
+
+  ✔ animation.pause stops playing (0.649768ms)
+
+  ✔ animation.resume continues (0.457336ms)
+
+  ✔ animation.stop resets frame and elapsed (0.434637ms)
+
+  ✔ onComplete stores callback (1.858358ms)
+
+✔ Animation (11.611076ms)
+
+▶ Entity lifecycle
+
+  ✔ destroy destroys ECS entity (0.747798ms)
+
+  ✔ destroy removes from groups (0.256264ms)
+
+  ✔ destroy is idempotent (0.162081ms)
+
+  ✔ destroyed sprite throws on access (0.862662ms)
+
+  ✔ kill removes from groups only (0.324636ms)
+
+  ✔ entity getter returns entity ID (0.195316ms)
+
+  ✔ world getter returns owning world (0.154936ms)
+
+✔ Entity lifecycle (3.132108ms)
+
+▶ ECS synchronization
+
+  ✔ mutating ECS updates sprite.x (0.304695ms)
+
+  ✔ mutating sprite.x updates ECS (0.195016ms)
+
+  ✔ mutating ECS collider updates sprite.width (0.172339ms)
+
+  ✔ mutating sprite.visible updates ECS (0.24925ms)
+
+  ✔ ecs and sprite share same transform state (0.359626ms)
+
+✔ ECS synchronization (1.647595ms)
+
+▶ Multiple sprites
+
+  ✔ two sprites have different entities (0.397178ms)
+
+  ✔ two sprites have independent positions (0.700832ms)
+
+  ✔ two sprites can share same world (0.552291ms)
+
+✔ Multiple sprites (1.963967ms)
+
+▶ Custom world
+
+  ✔ uses provided world (0.383728ms)
+
+  ✔ entity created in provided world (0.546721ms)
+
+✔ Custom world (2.185593ms)
+
+▶ Groups
+
+  ✔ groups defaults to empty array (1.15483ms)
+
+  ✔ groups setter (0.233335ms)
+
+  ✔ kill removes from groups (2.07078ms)
+
+✔ Groups (3.781556ms)
+
+▶ Renderable
+
+  ✔ renderable.image defaults to 0 (0.26928ms)
+
+  ✔ renderable.fillColor defaults to 0xffffff (0.164809ms)
+
+  ✔ renderable setter updates fields (0.247777ms)
+
+✔ Renderable (0.843899ms)
+
+▶ Error handling
+
+  ✔ destroyed sprite throws on transform access (0.316408ms)
+
+  ✔ destroyed sprite throws on velocity access (0.326479ms)
+
+  ✔ destroyed sprite throws on visible access (0.249768ms)
+
+  ✔ destroyed sprite throws on animation access (0.239645ms)
+
+  ✔ destroyed sprite throws on style access (0.291806ms)
+
+✔ Error handling (1.700879ms)
+
+▶ Performance
+
+  ✔ style wrapper is cached (no allocation per access) (0.350882ms)
+
+  ✔ animation wrapper is cached (0.327769ms)
+
+  ✔ create many sprites (25.581421ms)
+
+✔ Performance (26.55386ms)
+
+▶ Legacy API compatibility
+
+  ✔ constructor(x, y, w, h) without world works (0.470379ms)
+
+  ✔ kill() legacy method works (0.286331ms)
+
+  ✔ destroy() method added (0.34088ms)
+
+  ✔ setDefaultWorld overrides default (0.475993ms)
+
+✔ Legacy API compatibility (2.114649ms)
+
+▶ System
+
+  ▶ default state
+
+    ✔ is enabled by default (1.165754ms)
+
+    ✔ has priority 0 by default (0.261766ms)
+
+    ✔ has null query before registration (0.211256ms)
+
+  ✔ default state (3.13301ms)
+
+  ▶ priority
+
+    ✔ reads priority from static property (0.504724ms)
+
+    ✔ supports negative priority (0.614749ms)
+
+    ✔ supports zero priority (0.397163ms)
+
+  ✔ priority (2.028166ms)
+
+  ▶ update
+
+    ✔ throws if update is not overridden (1.440628ms)
+
+    ✔ can be overridden by subclass (0.460565ms)
+
+    ✔ receives ctx and dt (0.469354ms)
+
+  ✔ update (2.997524ms)
+
+  ▶ lifecycle hooks
+
+    ✔ onAdded is callable and does nothing by default (1.811756ms)
+
+    ✔ onRemoved is callable and does nothing by default (0.256317ms)
+
+    ✔ subclass can override onAdded (0.390453ms)
+
+    ✔ subclass can override onRemoved (0.332299ms)
+
+  ✔ lifecycle hooks (5.404998ms)
+
+  ▶ query definition
+
+    ✔ subclass can define static query (3.188624ms)
+
+    ✔ subclass can define query with any and none (0.726809ms)
+
+    ✔ subclass without query is valid (0.295985ms)
+
+  ✔ query definition (4.619381ms)
+
+✔ System (20.137115ms)
+
+▶ SystemContext
+
+  ▶ resource registration
+
+    ✔ sets and gets a resource (3.918506ms)
+
+    ✔ hasResource returns true for set resource (2.776624ms)
+
+    ✔ hasResource returns false for unset resource (0.591593ms)
+
+    ✔ removes a resource (0.58241ms)
+
+    ✔ removeResource on missing key is no-op (0.809612ms)
+
+    ✔ clears all resources (1.252106ms)
+
+    ✔ overwrites existing resource (0.785765ms)
+
+    ✔ uses class as resource key (0.485983ms)
+
+    ✔ rejects null key (2.546215ms)
+
+    ✔ rejects undefined key (1.345136ms)
+
+  ✔ resource registration (18.796541ms)
+
+  ▶ ctx.resources
+
+    ✔ accesses resource via ctx.resources.get() (1.523683ms)
+
+    ✔ ctx.resources.has returns true for existing resource (0.555946ms)
+
+    ✔ ctx.resources.has returns false for missing resource (0.538242ms)
+
+    ✔ ctx.resources.get returns undefined for missing resource (0.758214ms)
+
+    ✔ ctx.resources.get with class key works (0.562691ms)
+
+    ✔ system accesses multiple resources (0.549865ms)
+
+    ✔ resources persist across frames (2.243255ms)
+
+  ✔ ctx.resources (7.561433ms)
+
+  ▶ ctx.deltaTime
+
+    ✔ carries the dt value from update call (0.549205ms)
+
+    ✔ updates every frame (0.468253ms)
+
+  ✔ ctx.deltaTime (1.296777ms)
+
+  ▶ ctx.world
+
+    ✔ provides the world reference (0.556509ms)
+
+  ✔ ctx.world (0.982124ms)
+
+  ▶ ctx.tables()
+
+    ✔ returns matching tables for a query (3.991087ms)
+
+    ✔ returns empty array for no matching tables (2.052773ms)
+
+    ✔ returns same cached array across calls within same frame (1.134973ms)
+
+    ✔ returns empty array for system with no query (0.548345ms)
+
+  ✔ ctx.tables() (8.265669ms)
+
+  ▶ ctx.entityCount
+
+    ✔ returns 0 when no entities match (0.763432ms)
+
+    ✔ returns correct count for a single table (0.796887ms)
+
+    ✔ returns correct count across multiple tables (1.021127ms)
+
+    ✔ updates when entities are added between frames (1.442031ms)
+
+  ✔ ctx.entityCount (7.702405ms)
+
+  ▶ ctx.column()
+
+    ✔ returns typed array from first matching table (1.942118ms)
+
+    ✔ returns null when no tables match (0.657425ms)
+
+    ✔ caches column lookup within the same frame (1.349291ms)
+
+    ✔ throws for component not in query (0.736602ms)
+
+    ✔ throws for system with no query (0.505372ms)
+
+    ✔ writes through column data propagate to entity (1.026985ms)
+
+    ✔ throws for multi-table query (0.830698ms)
+
+    ✔ multiple fields from same component are cached independently (1.19931ms)
+
+    ✔ columns from different components both cached (0.902563ms)
+
+  ✔ ctx.column() (11.254347ms)
+
+  ▶ ctx.get()
+
+    ✔ returns a component view for an entity (0.927969ms)
+
+    ✔ writes through view propagate to storage (0.539836ms)
+
+    ✔ throws for entity without the component (0.487007ms)
+
+    ✔ throws for dead entity (0.936047ms)
+
+  ✔ ctx.get() (3.329428ms)
+
+  ▶ ctx.has()
+
+    ✔ returns true when entity has the component (0.986834ms)
+
+    ✔ returns false when entity lacks the component (0.516768ms)
+
+    ✔ returns false for dead entity (0.644426ms)
+
+  ✔ ctx.has() (2.553787ms)
+
+  ▶ ctx.forEach()
+
+    ✔ iterates all matching entities (2.282524ms)
+
+    ✔ does nothing for empty query result (0.680225ms)
+
+    ✔ iterates across multiple tables (0.95072ms)
+
+    ✔ allows data mutation inside callback (3.079203ms)
+
+    ✔ provides table and row to callback (0.754172ms)
+
+    ✔ can be called multiple times producing same results (1.497858ms)
+
+    ✔ forEach combined with column writes inside callback (0.805178ms)
+
+  ✔ ctx.forEach() (10.851862ms)
+
+  ▶ ctx.entities()
+
+    ✔ returns all matching entity IDs (1.111653ms)
+
+    ✔ returns empty array for no matches (0.395694ms)
+
+    ✔ works with for-of loop (0.484818ms)
+
+  ✔ ctx.entities() (2.253555ms)
+
+  ▶ ctx.rows()
+
+    ✔ returns rows with table and row index (0.767144ms)
+
+    ✔ returns empty array for no matches (0.607768ms)
+
+    ✔ works with for-of destructuring (0.583435ms)
+
+  ✔ ctx.rows() (6.060406ms)
+
+  ▶ context reuse
+
+    ✔ same context object reused across frames (0.487256ms)
+
+    ✔ each system has its own context (0.84695ms)
+
+    ✔ context persists after system removal and re-add (4.15032ms)
+
+    ✔ context is stable across multiple updates (0.654092ms)
+
+  ✔ context reuse (6.584476ms)
+
+  ▶ context refresh
+
+    ✔ deltaTime is updated every frame (0.892177ms)
+
+    ✔ entityCount is refreshed after entity creation (0.819172ms)
+
+    ✔ column cache is cleared between frames (0.709126ms)
+
+  ✔ context refresh (2.743519ms)
+
+  ▶ multiple systems
+
+    ✔ multiple systems with different queries all work (0.82489ms)
+
+    ✔ each system gets its own fresh entityCount (0.745639ms)
+
+  ✔ multiple systems (1.782737ms)
+
+  ▶ zero allocation per frame
+
+    ✔ ctx.tables() returns cached array across calls (0.626058ms)
+
+    ✔ ctx.column() returns cached result across calls (1.087139ms)
+
+  ✔ zero allocation per frame (1.929819ms)
+
+  ▶ system with no query
+
+    ✔ ctx.tables() returns empty array (0.596284ms)
+
+    ✔ ctx.entityCount is 0 (0.405595ms)
+
+    ✔ ctx.forEach is no-op (0.3654ms)
+
+    ✔ ctx.column throws (0.460173ms)
+
+  ✔ system with no query (2.162669ms)
+
+  ▶ edge cases
+
+    ✔ system with wildcard query has entityCount for all entities (0.741876ms)
+
+    ✔ forEach with destroy during iteration is safe (0.788216ms)
+
+    ✔ system with any query has entityCount for matching (0.841953ms)
+
+    ✔ system with none query excludes matching components from count (4.239029ms)
+
+    ✔ ctx.get for tag component returns empty view object (0.547596ms)
+
+    ✔ ctx.has for unregistered component throws (0.504286ms)
+
+    ✔ ctx.get for unregistered component throws (0.479849ms)
+
+    ✔ tables update after entity migration between frames (2.105077ms)
+
+    ✔ forEach skips empty tables (0.488324ms)
+
+  ✔ edge cases (11.597558ms)
+
+  ▶ resource binding
+
+    ✔ ctx.resources sees newly set resource after setResource (0.477218ms)
+
+    ✔ ctx.resources sees removed resource (0.391905ms)
+
+    ✔ ctx.resources cleared by clearResources (0.676046ms)
+
+  ✔ resource binding (1.831496ms)
+
+  ▶ performance guarantees
+
+    ✔ column lookup returns same reference within frame (1.178462ms)
+
+    ✔ tables array is reused across many frames (0.707865ms)
+
+  ✔ performance guarantees (2.172174ms)
+
+  ▶ consistency
+
+    ✔ entityCount matches forEach iteration count (6.302681ms)
+
+    ✔ entities().length matches entityCount (1.711465ms)
+
+    ✔ rows().length matches entityCount (1.269963ms)
+
+  ✔ consistency (9.766088ms)
+
+  ▶ multiple worlds
+
+    ✔ independent resource registries (0.528786ms)
+
+    ✔ independent entity counts (0.651175ms)
+
+  ✔ multiple worlds (1.379994ms)
+
+  ▶ disabled systems
+
+    ✔ context is not refreshed for disabled system (0.740065ms)
+
+    ✔ re-enabling system restores context refresh (0.479843ms)
+
+  ✔ disabled systems (1.490424ms)
+
+  ▶ destroy and archetype changes
+
+    ✔ entityCount decreases after destroy (0.822388ms)
+
+    ✔ entities() excludes destroyed entity (0.7095ms)
+
+    ✔ forEach after entity destroy visits remaining entities (0.852463ms)
+
+    ✔ column accessible with single archetype, throws when archetype split occurs (0.90573ms)
+
+  ✔ destroy and archetype changes (3.739425ms)
+
+  ▶ column type handling
+
+    ✔ f32 column returns Float32Array (0.798245ms)
+
+    ✔ u32 column returns Uint32Array (0.560861ms)
+
+  ✔ column type handling (1.59733ms)
+
+  ▶ dt propagation
+
+    ✔ fractional dt is propagated correctly (0.489643ms)
+
+    ✔ zero dt is propagated (0.361948ms)
+
+    ✔ large dt values are propagated (2.080696ms)
+
+    ✔ dt is independent for each system in same frame (2.429328ms)
+
+  ✔ dt propagation (7.328576ms)
+
+  ▶ ctx.has edge cases
+
+    ✔ has returns false for entity 0 (0.747731ms)
+
+    ✔ has returns false for destroyed entity that had component (0.626445ms)
+
+  ✔ ctx.has edge cases (1.638907ms)
+
+  ▶ ctx.get edge cases
+
+    ✔ get throws for entity 0 (0.671172ms)
+
+  ✔ ctx.get edge cases (0.926557ms)
+
+  ▶ context properties
+
+    ✔ world, deltaTime, resources, entityCount are all accessible (3.344294ms)
+
+  ✔ context properties (3.513352ms)
+
+✔ SystemContext (149.309135ms)
+
+▶ SystemIteration
+
+  ▶ SystemContext
+
+    ✔ provides world reference (4.616395ms)
+
+    ✔ provides tables from compiled query (4.601057ms)
+
+    ✔ provides entities from compiled query (2.248849ms)
+
+    ✔ provides rows from compiled query (1.9452ms)
+
+    ✔ provides column access via column() (1.679016ms)
+
+    ✔ column() returns null when no tables match (1.133097ms)
+
+    ✔ column() throws for component not in query (2.27583ms)
+
+    ✔ provides forEach iteration with zero-allocation (3.415756ms)
+
+  ✔ SystemContext (28.028667ms)
+
+  ▶ QueryView.column()
+
+    ✔ returns typed array from first matching table (2.037812ms)
+
+    ✔ returns null when no tables match (0.669157ms)
+
+    ✔ returns null for unknown component on matching table (0.668782ms)
+
+    ✔ accesses column data from single-archetype query (2.036871ms)
+
+    ✔ column data writes propagate back to entity (1.017541ms)
+
+    ✔ column from multi-archetype query returns first table's data (0.907374ms)
+
+  ✔ QueryView.column() (8.496009ms)
+
+  ▶ QueryView.forEach()
+
+    ✔ iterates all rows across all tables (0.729849ms)
+
+    ✔ does nothing for empty query results (0.341004ms)
+
+    ✔ provides table and row to callback (0.483634ms)
+
+    ✔ allows data mutation inside callback (2.025522ms)
+
+    ✔ iterates multiple tables in order (1.152968ms)
+
+    ✔ can be called multiple times producing same results (5.094123ms)
+
+  ✔ QueryView.forEach() (10.734357ms)
+
+  ▶ Table.columns()
+
+    ✔ returns object with field name keys (1.537185ms)
+
+    ✔ values are typed arrays (0.623187ms)
+
+    ✔ returns null for component not in table (0.391126ms)
+
+    ✔ returns same cached object on repeated calls (0.35666ms)
+
+    ✔ fields match schema definition (0.704425ms)
+
+    ✔ columns from multi-field component have correct types (0.448949ms)
+
+    ✔ data written via columns() is reflected in entity (0.603394ms)
+
+  ✔ Table.columns() (5.731942ms)
+
+  ▶ ctx.forEach integration
+
+    ✔ iterates all matching entities in system update (0.94123ms)
+
+    ✔ allows mutation through ctx.forEach (4.561849ms)
+
+    ✔ ctx.forEach with no matching entities is no-op (1.872689ms)
+
+    ✔ ctx.forEach across multiple archetypes (1.504416ms)
+
+    ✔ ctx.forEach can be mixed with ctx.entities() (0.967117ms)
+
+  ✔ ctx.forEach integration (10.657903ms)
+
+  ▶ ctx.column integration
+
+    ✔ accesses column data in update (3.649159ms)
+
+    ✔ writes through column data (0.809144ms)
+
+    ✔ column() for tag component returns null (no fields) (0.535902ms)
+
+    ✔ column works with any query filter (1.017819ms)
+
+    ✔ column throws for multi-table query (0.696818ms)
+
+  ✔ ctx.column integration (7.325748ms)
+
+  ▶ system with no query
+
+    ✔ ctx.tables() returns empty array (0.473159ms)
+
+    ✔ ctx.entities() returns empty generator (1.719353ms)
+
+    ✔ ctx.forEach is no-op (1.097192ms)
+
+    ✔ ctx.column throws (0.731687ms)
+
+  ✔ system with no query (4.63726ms)
+
+  ▶ context reusability
+
+    ✔ same context object reused across frames (1.005502ms)
+
+    ✔ context object is stable across multiple updates (0.503562ms)
+
+    ✔ each system has its own context (0.647271ms)
+
+    ✔ context persists after system removal and re-add (0.577202ms)
+
+  ✔ context reusability (4.908159ms)
+
+  ▶ zero allocation per frame
+
+    ✔ getTables() returns cached array across calls (0.732673ms)
+
+    ✔ column() returns direct typed array reference (0.583648ms)
+
+    ✔ columns() returns cached object (0.527143ms)
+
+  ✔ zero allocation per frame (3.575373ms)
+
+  ▶ edge cases
+
+    ✔ system with wildcard query iterates all entities (0.90322ms)
+
+    ✔ ctx.column works before archetype split, throws after (1.002529ms)
+
+    ✔ forEach with destroy during iteration is safe (2.167794ms)
+
+    ✔ system with any query has ctx.column from first matched component (1.561905ms)
+
+    ✔ system with none-only query provides iteration (1.758603ms)
+
+  ✔ edge cases (8.816373ms)
+
+✔ SystemIteration (97.334629ms)
+
+▶ SystemScheduler
+
+  ▶ constructor
+
+    ✔ creates a scheduler with valid dependencies (5.317747ms)
+
+    ✔ throws for null queryEngine (2.267056ms)
+
+    ✔ throws for null componentRegistry (0.677333ms)
+
+    ✔ starts with zero systems (0.567603ms)
+
+  ✔ constructor (13.811531ms)
+
+  ▶ add
+
+    ✔ registers a system (1.6591ms)
+
+    ✔ rejects duplicate systems (3.250243ms)
+
+    ✔ rejects non-System instances (0.702768ms)
+
+    ✔ rejects adding during update (3.166913ms)
+
+  ✔ add (9.913896ms)
+
+  ▶ remove
+
+    ✔ removes a registered system (2.034079ms)
+
+    ✔ throws for unregistered system (1.141259ms)
+
+    ✔ rejects removing during update (0.647593ms)
+
+  ✔ remove (4.3921ms)
+
+  ▶ has
+
+    ✔ returns true for registered system (0.692922ms)
+
+    ✔ returns false for unregistered system (0.401703ms)
+
+    ✔ returns false after removal (0.347054ms)
+
+  ✔ has (1.816469ms)
+
+  ▶ clear
+
+    ✔ removes all systems (0.899012ms)
+
+    ✔ rejects clearing during update (0.690105ms)
+
+  ✔ clear (1.901661ms)
+
+  ▶ systemCount
+
+    ✔ reflects the number of registered systems (3.35998ms)
+
+  ✔ systemCount (3.804338ms)
+
+  ▶ query compilation
+
+    ✔ compiles a system query with component classes (1.99983ms)
+
+    ✔ compiles a system with any and none (0.987688ms)
+
+    ✔ does not compile if system has no query (0.400017ms)
+
+    ✔ reuses cached queries for same component filter (0.829559ms)
+
+    ✔ throws for unregistered component in query (0.650915ms)
+
+  ✔ query compilation (5.441515ms)
+
+  ▶ ordering
+
+    ✔ executes systems in ascending priority order (2.083044ms)
+
+    ✔ maintains stable registration order for same priority (0.795714ms)
+
+    ✔ supports negative priorities (0.547534ms)
+
+    ✔ remove and re-add places system at end of priority group (0.55828ms)
+
+  ✔ ordering (4.641193ms)
+
+  ▶ execution
+
+    ✔ calls update on registered systems (0.553004ms)
+
+    ✔ forwards correct dt to systems (0.398373ms)
+
+    ✔ forwards world to systems (1.795521ms)
+
+    ✔ skips disabled systems (2.377245ms)
+
+    ✔ executes multiple systems (0.773048ms)
+
+    ✔ executes system with no query definition (0.353278ms)
+
+    ✔ allows systems to access matching tables via query and queryEngine (1.56202ms)
+
+    ✔ system with no query definition executes without error (0.746212ms)
+
+  ✔ execution (9.618103ms)
+
+  ▶ lifecycle
+
+    ✔ calls onAdded once when system is added with world set (0.541579ms)
+
+    ✔ calls onRemoved once when system is removed (0.415013ms)
+
+    ✔ calls onRemoved for all systems on clear (0.547129ms)
+
+    ✔ does not call onAdded if world is not set (0.738871ms)
+
+  ✔ lifecycle (3.191334ms)
+
+  ▶ error paths
+
+    ✔ update throws if world is not set (3.242537ms)
+
+    ✔ update throws on recursive call (0.564944ms)
+
+    ✔ rejects invalid query definition with unregistered component (0.398193ms)
+
+  ✔ error paths (4.505983ms)
+
+  ▶ no per-frame allocations
+
+    ✔ does not sort every update when no systems change (0.335867ms)
+
+  ✔ no per-frame allocations (0.448975ms)
+
+✔ SystemScheduler (66.495056ms)
+
+▶ Table
+
+  ▶ construction
+
+    ✔ creates a table with a valid signature and default capacity (3.308096ms)
+
+    ✔ creates a table with custom initial capacity (0.59875ms)
+
+    ✔ creates a table with a tag-only signature (no typed array columns) (0.674994ms)
+
+    ✔ creates a table with multiple components, building correct columns (0.99508ms)
+
+    ✔ throws for unregistered component ID in signature (1.104564ms)
+
+    ✔ throws for negative initialCapacity (0.583508ms)
+
+    ✔ throws for zero initialCapacity (0.766671ms)
+
+    ✔ throws for non-integer initialCapacity (0.517973ms)
+
+  ✔ construction (11.457458ms)
+
+  ▶ allocate
+
+    ✔ allocates a row and returns its index (2.752687ms)
+
+    ✔ allocates multiple rows with sequential indices (0.817907ms)
+
+    ✔ triggers growth when count reaches capacity (0.580791ms)
+
+    ✔ preserves column data after growth (0.477179ms)
+
+    ✔ throws when table is destroyed (0.494819ms)
+
+  ✔ allocate (7.218235ms)
+
+  ▶ reserve
+
+    ✔ reserves capacity for more rows without incrementing count (0.438593ms)
+
+    ✔ is a no-op when count is less than capacity (0.187492ms)
+
+    ✔ doubles until capacity meets the requested count (0.218831ms)
+
+    ✔ throws for non-positive count (0.448021ms)
+
+    ✔ throws when table is destroyed (0.396018ms)
+
+  ✔ reserve (2.041884ms)
+
+  ▶ allocateRange
+
+    ✔ allocates a contiguous range of rows and returns the start index (0.607733ms)
+
+    ✔ allocates multiple ranges contiguously (0.224993ms)
+
+    ✔ triggers growth when needed (0.245734ms)
+
+    ✔ throws for non-positive count (0.375652ms)
+
+    ✔ throws when table is destroyed (0.308954ms)
+
+  ✔ allocateRange (2.135794ms)
+
+  ▶ getEntity / setEntity
+
+    ✔ getEntity returns entity ID at the given row (0.486743ms)
+
+    ✔ getEntity throws for out-of-range row (0.320059ms)
+
+    ✔ getEntity throws for negative row (0.290438ms)
+
+    ✔ setEntity throws for out-of-range row (0.261916ms)
+
+    ✔ setEntity throws for negative entity ID (0.237232ms)
+
+    ✔ entityIds getter returns a view of the correct length (0.252127ms)
+
+    ✔ throws when table is destroyed (0.304841ms)
+
+  ✔ getEntity / setEntity (2.577297ms)
+
+  ▶ removeRow
+
+    ✔ removes the last row without moving data (1.528861ms)
+
+    ✔ removes a middle row via swap-remove (0.447679ms)
+
+    ✔ removes the only entity, leaving count at 0 (0.502294ms)
+
+    ✔ removes entities sequentially leaving capacity unchanged (0.464076ms)
+
+    ✔ throws for out-of-range row (1.355881ms)
+
+    ✔ throws for negative row (2.004474ms)
+
+    ✔ throws when table is destroyed (0.695164ms)
+
+  ✔ removeRow (7.678796ms)
+
+  ▶ getColumn
+
+    ✔ returns the correct typed array for a given component and field (0.569881ms)
+
+    ✔ returns null for a component not in the table (0.365919ms)
+
+    ✔ returns null for a valid component but unknown field (0.33577ms)
+
+    ✔ throws for invalid component ID (1.496294ms)
+
+    ✔ throws for empty field name (0.513752ms)
+
+    ✔ throws when table is destroyed (0.665007ms)
+
+  ✔ getColumn (4.636758ms)
+
+  ▶ hasComponent
+
+    ✔ returns true for a component present in the table (0.574169ms)
+
+    ✔ returns true for a tag component present in the table (0.95077ms)
+
+    ✔ returns false for a component not in the table (0.525013ms)
+
+    ✔ throws for invalid component ID (0.552848ms)
+
+    ✔ throws when table is destroyed (0.472374ms)
+
+  ✔ hasComponent (5.292846ms)
+
+  ▶ moveRowTo
+
+    ✔ moves a row from one table to another, copying shared component data (0.962367ms)
+
+    ✔ moves a row with tag components (no field data to copy) (0.568374ms)
+
+    ✔ moves between tables with no shared components (entity only) (0.407087ms)
+
+    ✔ moves multiple rows independently (0.459173ms)
+
+    ✔ throws for out-of-range source row (0.477662ms)
+
+    ✔ throws when destination is not a Table (0.413422ms)
+
+    ✔ throws when source table is destroyed (0.433643ms)
+
+  ✔ moveRowTo (4.348015ms)
+
+  ▶ growth
+
+    ✔ grow doubles the capacity (0.497064ms)
+
+    ✔ data survives multiple grow cycles (0.417327ms)
+
+    ✔ throws when table is destroyed (0.421964ms)
+
+  ✔ growth (1.692317ms)
+
+  ▶ destroy
+
+    ✔ clears all state and marks as destroyed (0.341854ms)
+
+  ✔ destroy (0.477053ms)
+
+  ▶ edge cases
+
+    ✔ empty signature table works (zero columns) (0.340272ms)
+
+    ✔ allocates up to capacity, then growth allows more (0.366907ms)
+
+    ✔ column data is independent per row (0.327508ms)
+
+  ✔ edge cases (1.463888ms)
+
+✔ Table (60.566533ms)
+
+▶ Trail component
+
+  ✔ defines static schema with 6 fields (2.170282ms)
+
+  ✔ schema has correct field types (0.428089ms)
+
+  ✔ instantiates (0.507305ms)
+
+  ✔ registers successfully (2.400104ms)
+
+  ✔ fields are zero-initialized (4.495413ms)
+
+  ✔ prototype has no enumerable methods (1.252211ms)
+
+  ✔ can be set via setComponent (1.193981ms)
+
+✔ Trail component (16.028979ms)
+
+▶ TrailBuffer
+
+  ✔ constructs with given capacity (1.092431ms)
+
+  ✔ minimum capacity is 2 (0.390151ms)
+
+  ✔ addPoint increases count (0.606775ms)
+
+  ✔ addPoint stores values (2.189275ms)
+
+  ✔ forEach iterates in insertion order (0.413938ms)
+
+  ✔ wraparound overwrites oldest (0.436134ms)
+
+  ✔ multiple wraps preserve correct ordering (0.413416ms)
+
+  ✔ clear resets state (0.282149ms)
+
+  ✔ resize to larger preserves data (0.47431ms)
+
+  ✔ resize to smaller truncates oldest (0.311187ms)
+
+  ✔ resize with wrapped data preserves correct order (0.282011ms)
+
+  ✔ addPoint after clear works (0.60454ms)
+
+  ✔ addPoint and forEach do not allocate new objects (1.149016ms)
+
+  ✔ forEach provides correct index (0.868844ms)
+
+  ✔ capacity is read-only via getter (0.306361ms)
+
+  ✔ count is read-only via getter (0.200554ms)
+
+✔ TrailBuffer (15.106364ms)
+
+▶ TrailManager
+
+  ✔ constructs empty (0.462362ms)
+
+  ✔ get returns null for unknown entity (0.229217ms)
+
+  ✔ getOrCreate creates lazily (0.251478ms)
+
+  ✔ getOrCreate returns existing buffer (0.177959ms)
+
+  ✔ get returns buffer after getOrCreate (0.167183ms)
+
+  ✔ remove deletes buffer (0.234944ms)
+
+  ✔ has returns false for unknown entity (0.154483ms)
+
+  ✔ clear removes all buffers (0.206584ms)
+
+  ✔ getOrCreate resizes when maxPoints changes (0.22847ms)
+
+  ✔ forEach iterates all buffers (0.402307ms)
+
+  ✔ reuse entity ID after remove (0.325981ms)
+
+  ✔ multiple independent entities (0.197716ms)
+
+✔ TrailManager (4.307421ms)
+
+▶ TrailSystem
+
+  ✔ has static priority 4 (1.329972ms)
+
+  ✔ has static query with all: [Transform, Trail, Visible] (0.29986ms)
+
+  ✔ throws descriptive error when TrailManager resource is missing (8.337166ms)
+
+  ✔ throws descriptive error when CanvasContext resource is missing (2.082652ms)
+
+  ✔ creates TrailBuffer on first move (2.432287ms)
+
+  ✔ does nothing when entity hasn't moved (1.333609ms)
+
+  ✔ applies spacing threshold (1.206335ms)
+
+  ✔ spawns point when moved past spacing (1.35897ms)
+
+  ✔ spawns multiple points for large distance (1.594139ms)
+
+  ✔ respects maxPoints cap (1.57205ms)
+
+  ✔ invisible entity does not append points (2.376826ms)
+
+  ✔ disabled trail does not append points (2.063896ms)
+
+  ✔ trail becomes enabled after being disabled (5.531574ms)
+
+  ✔ entity destruction cleans up buffer (1.47187ms)
+
+  ✔ component removal cleans up buffer (1.381211ms)
+
+  ✔ visibility removal cleans up buffer (1.16264ms)
+
+  ✔ Transform removal cleans up buffer (1.137273ms)
+
+  ✔ archetype migration updates buffer ownership (2.948802ms)
+
+  ✔ multiple entities in same archetype (2.997976ms)
+
+  ✔ multiple archetypes both processed (2.146706ms)
+
+  ✔ repeated updates accumulate points (3.709114ms)
+
+  ✔ buffer does not grow beyond maxPoints across frames (24.449295ms)
+
+  ✔ renders line mode via CanvasContext (1.094623ms)
+
+  ✔ renders ribbon mode via CanvasContext (2.604656ms)
+
+  ✔ does not render when count < 2 (0.728323ms)
+
+  ✔ does not render invisible entity (0.651756ms)
+
+  ✔ does not render disabled trail (0.656577ms)
+
+  ✔ applies camera transform when Camera resource is present (1.337816ms)
+
+  ✔ applies save/restore even without Camera (1.067245ms)
+
+  ✔ multiple worlds independently track trails (3.265267ms)
+
+  ✔ entity re-added to query restores buffer (3.084321ms)
+
+  ✔ stress test with 500 entities (323.526332ms)
+
+  ✔ high-frequency update produces consistent results (87.795826ms)
+
+  ✔ does not append for zero spacing (0.781641ms)
+
+  ✔ does not append for maxPoints < 2 (3.742885ms)
+
+  ✔ per-frame spawns capped at maxPoints (1.692803ms)
+
+  ✔ color is passed through to strokeStyle (1.047195ms)
+
+  ✔ color is passed through to fillStyle for ribbon (6.257298ms)
+
+  ✔ width is passed through to lineWidth (1.780107ms)
+
+  ✔ line mode uses stroke (1.043577ms)
+
+  ✔ ribbon mode uses fill (2.437698ms)
+
+  ✔ multiple frames keep buffer within bounds (63.625222ms)
+
+✔ TrailSystem (585.242837ms)
+
+▶ World
+
+  ▶ constructor
+
+    ✔ creates a World with all subsystems (2.402858ms)
+
+    ✔ accepts custom options (0.279842ms)
+
+    ✔ throws for invalid initialTableCapacity (0.617175ms)
+
+    ✔ uses default initialTableCapacity of 64 (0.264686ms)
+
+  ✔ constructor (5.168424ms)
+
+  ▶ register
+
+    ✔ registers a component class (1.276703ms)
+
+    ✔ registers a component by name (0.440823ms)
+
+    ✔ returns metadata (0.808838ms)
+
+  ✔ register (3.15284ms)
+
+  ▶ registry locking
+
+    ✔ allows registration before any entity exists (0.469995ms)
+
+    ✔ locks registry on first entity creation (0.901955ms)
+
+    ✔ does not lock registry before any entity is created (0.543917ms)
+
+  ✔ registry locking (2.418889ms)
+
+  ▶ createEntity
+
+    ✔ creates an entity and returns its ID (0.772349ms)
+
+    ✔ creates entities with monotonic IDs (0.338092ms)
+
+    ✔ entity is alive after creation (0.373682ms)
+
+    ✔ entity starts in the empty archetype (0.393744ms)
+
+    ✔ entity is placed in the empty archetype table (0.319859ms)
+
+    ✔ multiple entities all start in empty archetype (0.357392ms)
+
+  ✔ createEntity (3.01357ms)
+
+  ▶ destroyEntity
+
+    ✔ destroys an entity (0.602202ms)
+
+    ✔ removes the entity from its table (0.267628ms)
+
+    ✔ updates swapped entity location when swap-remove occurs (1.09019ms)
+
+    ✔ is a no-op for already dead entity (0.30149ms)
+
+    ✔ is a no-op for entity 0 (0.297356ms)
+
+  ✔ destroyEntity (2.925962ms)
+
+  ▶ addComponent
+
+    ✔ adds a component to an entity (0.851294ms)
+
+    ✔ moves entity to the correct archetype (0.782737ms)
+
+    ✔ initializes component fields to zero (0.476526ms)
+
+    ✔ is a no-op when component is already present (0.492337ms)
+
+    ✔ accepts component class (0.522162ms)
+
+    ✔ accepts component name string (0.553107ms)
+
+    ✔ adds multiple different components (0.849161ms)
+
+    ✔ throws for dead entity (0.544537ms)
+
+    ✔ throws for unregistered component (0.547703ms)
+
+    ✔ throws for invalid component argument type (0.465824ms)
+
+  ✔ addComponent (9.094942ms)
+
+  ▶ removeComponent
+
+    ✔ removes a component from an entity (0.872731ms)
+
+    ✔ moves entity back to empty archetype after removing all components (0.399065ms)
+
+    ✔ is a no-op when component is absent (0.287092ms)
+
+    ✔ removes one component while keeping others (0.440863ms)
+
+    ✔ accepts component name string (0.308798ms)
+
+    ✔ throws for dead entity (0.397659ms)
+
+    ✔ throws for unregistered component (0.31043ms)
+
+  ✔ removeComponent (3.537584ms)
+
+  ▶ hasComponent
+
+    ✔ returns true when entity has the component (0.479517ms)
+
+    ✔ returns false when entity does not have the component (0.327866ms)
+
+    ✔ returns false for dead entity (0.450572ms)
+
+    ✔ returns false for entity 0 (0.210704ms)
+
+    ✔ throws for unregistered component (0.267721ms)
+
+  ✔ hasComponent (2.122067ms)
+
+  ▶ getComponent
+
+    ✔ returns a view object with component fields (0.917921ms)
+
+    ✔ view fields read from typed array storage (0.537737ms)
+
+    ✔ view field writes propagate to typed array storage (0.56185ms)
+
+    ✔ view is valid only for the entity's archetype (0.522886ms)
+
+    ✔ throws for dead entity (0.557159ms)
+
+    ✔ throws when entity does not have the component (0.49789ms)
+
+    ✔ throws for unregistered component (0.508841ms)
+
+    ✔ view exposes only the component's declared fields (0.536901ms)
+
+  ✔ getComponent (5.42704ms)
+
+  ▶ setComponent
+
+    ✔ sets component field values (0.881637ms)
+
+    ✔ partially updates fields (missing fields unchanged) (0.513425ms)
+
+    ✔ throws for unknown field name (0.605531ms)
+
+    ✔ throws for dead entity (0.552528ms)
+
+    ✔ throws when entity does not have the component (0.469964ms)
+
+    ✔ throws for non-object values parameter (0.502545ms)
+
+  ✔ setComponent (4.112317ms)
+
+  ▶ repeated add/remove
+
+    ✔ can add and remove the same component repeatedly (0.912611ms)
+
+    ✔ cycles through multiple archetypes correctly (0.604964ms)
+
+  ✔ repeated add/remove (1.766299ms)
+
+  ▶ component persistence across migrations
+
+    ✔ data persists when adding a component (0.602523ms)
+
+    ✔ data persists through remove followed by re-add (0.465358ms)
+
+    ✔ view stays writable after migrations (2.55187ms)
+
+  ✔ component persistence across migrations (3.94196ms)
+
+  ▶ multiple components
+
+    ✔ supports 3+ components per entity (0.626816ms)
+
+    ✔ each component has independent storage (0.532103ms)
+
+  ✔ multiple components (1.377466ms)
+
+  ▶ entity migration chains
+
+    ✔ entity moves through multiple archetypes in sequence (0.769503ms)
+
+    ✔ multiple entities can exist in different archetypes (0.616459ms)
+
+  ✔ entity migration chains (1.582706ms)
+
+  ▶ swap-remove during destroy
+
+    ✔ updates location of swapped entity (0.345457ms)
+
+    ✔ swapped entity's component data is preserved (0.246285ms)
+
+  ✔ swap-remove during destroy (0.706477ms)
+
+  ▶ stress tests
+
+    ✔ handles hundreds of entities (15.278571ms)
+
+    ✔ handles entities moving between archetypes repeatedly (2.509198ms)
+
+  ✔ stress tests (17.958662ms)
+
+  ▶ tag components
+
+    ✔ adds a tag component (no fields) (0.456162ms)
+
+    ✔ removes a tag component (0.300345ms)
+
+    ✔ tag component archetype has one entry per entity (0.326766ms)
+
+  ✔ tag components (1.350619ms)
+
+  ▶ edge cases
+
+    ✔ destroy entity removes view cache entries (0.519595ms)
+
+    ✔ isAlive returns false for destroyed entities (0.227894ms)
+
+    ✔ isAlive returns false for entity 0 (0.246324ms)
+
+    ✔ isAlive returns false for very large entity ID (0.54986ms)
+
+  ✔ edge cases (1.822618ms)
+
+✔ World (74.088003ms)
+
+▶ Entity lifecycle
+
+  ✔ creates an entity (6.389643ms)
+
+  ✔ creates unique entities (0.609122ms)
+
+  ✔ destroys an entity (1.125971ms)
+
+  ✔ destroy is idempotent for dead entity (0.542621ms)
+
+  ✔ recycles entity slots after destroy (0.657827ms)
+
+  ✔ entity is alive after creation (0.480449ms)
+
+  ✔ entity is not alive after destroy (1.96226ms)
+
+  ✔ zero is not alive (0.741325ms)
+
+  ✔ negative numbers are not alive (0.558911ms)
+
+  ✔ float entity number is not alive (0.627423ms)
+
+  ✔ repeated create/destroy cycles (1.907444ms)
+
+  ✔ large number of entities (7.809804ms)
+
+✔ Entity lifecycle (29.684611ms)
+
+▶ Component operations
+
+  ✔ add component via add() (2.702162ms)
+
+  ✔ add is idempotent (0.630507ms)
+
+  ✔ remove component via remove() (0.688619ms)
+
+  ✔ remove is idempotent when missing (0.365764ms)
+
+  ✔ has returns true for owned component (0.412622ms)
+
+  ✔ has returns false for absent component (0.275292ms)
+
+  ✔ has returns false for dead entity (0.261229ms)
+
+  ✔ get returns component view (0.742261ms)
+
+  ✔ get throws for entity without component (1.014315ms)
+
+  ✔ get throws for dead entity (0.399691ms)
+
+  ✔ set assigns fields (0.956605ms)
+
+  ✔ set partial fields does not overwrite others (0.637843ms)
+
+  ✔ set throws for entity without component (0.425006ms)
+
+  ✔ set throws for unknown field (0.63287ms)
+
+  ✔ get/set field via view (0.48287ms)
+
+  ✔ add multiple components sequentially (0.871126ms)
+
+  ✔ remove one component keeps others (0.414909ms)
+
+  ✔ add after remove works (0.368755ms)
+
+  ✔ add throws for dead entity (0.306855ms)
+
+  ✔ remove throws for dead entity (0.275013ms)
+
+  ✔ add throws for unregistered component (0.364661ms)
+
+  ✔ set after get mutates in place (0.333434ms)
+
+  ✔ view is cached (same object) (0.323746ms)
+
+✔ Component operations (18.101972ms)
+
+▶ clear
+
+  ✔ removes all components (0.691611ms)
+
+  ✔ entity is still alive after clear (0.297451ms)
+
+  ✔ can add components after clear (0.369941ms)
+
+  ✔ clear on empty entity is no-op (0.213238ms)
+
+  ✔ clear throws for dead entity (0.315403ms)
+
+✔ clear (2.28821ms)
+
+▶ addMany / removeMany
+
+  ✔ addMany adds multiple components (0.861101ms)
+
+  ✔ addMany with no components is no-op (0.291466ms)
+
+  ✔ addMany is idempotent for existing components (0.453529ms)
+
+  ✔ removeMany removes multiple components (0.655021ms)
+
+  ✔ removeMany with no components is no-op (0.267007ms)
+
+  ✔ removeMany idempotent for missing components (0.30533ms)
+
+  ✔ addMany reduces archetype transitions (0.467241ms)
+
+  ✔ removeMany reduces archetype transitions (0.424112ms)
+
+  ✔ addMany with tags (0.338958ms)
+
+  ✔ removeMany with tags (0.369052ms)
+
+  ✔ addMany throws for dead entity (0.344749ms)
+
+  ✔ removeMany throws for dead entity (0.295056ms)
+
+✔ addMany / removeMany (6.08634ms)
+
+▶ Entity builder
+
+  ✔ builds entity with single component (1.217577ms)
+
+  ✔ builds entity with multiple components (1.213973ms)
+
+  ✔ builds entity with component values (0.564449ms)
+
+  ✔ builder with duplicate components (0.864586ms)
+
+  ✔ builder with tags (0.575259ms)
+
+  ✔ empty builder creates bare entity (0.308724ms)
+
+  ✔ builder with() returns this for chaining (0.3154ms)
+
+  ✔ builder with unregistered component throws (0.954654ms)
+
+  ✔ chained builder sets values correctly (1.835091ms)
+
+  ✔ multiple builders produce independent entities (0.482012ms)
+
+✔ Entity builder (9.222071ms)
+
+▶ clone
+
+  ✔ clones entity with all components (0.892697ms)
+
+  ✔ cloned entity is independent (5.137172ms)
+
+  ✔ clone preserves tags (0.39038ms)
+
+  ✔ clone preserves archetype (0.529864ms)
+
+  ✔ clone of bare entity (6.016224ms)
+
+  ✔ mutating clone does not affect original (0.551548ms)
+
+  ✔ clone with many components (0.677515ms)
+
+  ✔ clone throws for dead entity (0.313167ms)
+
+  ✔ clone then modify both independently (0.582559ms)
+
+✔ clone (18.286093ms)
+
+▶ Query integration
+
+  ✔ query matches entity after add (1.338977ms)
+
+  ✔ query updates after remove (3.586092ms)
+
+  ✔ query matches entity after addMany (0.457063ms)
+
+  ✔ query updates after removeMany (0.569797ms)
+
+  ✔ world.query() returns cached QueryView (0.319961ms)
+
+✔ Query integration (6.668944ms)
+
+▶ Resources unaffected
+
+  ✔ clone does not copy resources (0.3675ms)
+
+  ✔ destroy entity does not affect resources (0.212094ms)
+
+  ✔ clear entity does not affect resources (3.333129ms)
+
+✔ Resources unaffected (4.230777ms)
+
+▶ Error handling
+
+  ✔ add throws for dead entity (0.561571ms)
+
+  ✔ remove throws for dead entity (0.314513ms)
+
+  ✔ get throws for dead entity (0.269391ms)
+
+  ✔ set throws for dead entity (0.276199ms)
+
+  ✔ clear throws for dead entity (0.271168ms)
+
+  ✔ clone throws for dead entity (0.247144ms)
+
+  ✔ add throws for unregistered component (0.271433ms)
+
+  ✔ get throws when component missing (3.58074ms)
+
+  ✔ set throws when component missing (0.443355ms)
+
+  ✔ add throws with invalid component type (0.337295ms)
+
+  ✔ add throws with null component (0.318155ms)
+
+✔ Error handling (7.632403ms)
+
+▶ Archetype migration
+
+  ✔ add component changes archetype (0.628692ms)
+
+  ✔ remove component changes archetype back (0.400034ms)
+
+  ✔ addMany produces single archetype transition (1.804304ms)
+
+  ✔ remove of all components returns to empty archetype (0.388525ms)
+
+  ✔ entity starts in empty archetype (0.226204ms)
+
+✔ Archetype migration (7.961081ms)
+
+▶ Performance
+
+  ✔ addMany with 100 entities (13.176211ms)
+
+  ✔ repeated create/destroy cycles (7.487535ms)
+
+  ✔ builder with 100 entities (12.922005ms)
+
+  ✔ clone 100 entities (22.638669ms)
+
+  ✔ add/remove cycle stress (19.152018ms)
+
+✔ Performance (79.000344ms)
+
+▶ Tag components
+
+  ✔ add tag via add() (0.469324ms)
+
+  ✔ remove tag via remove() (0.371309ms)
+
+  ✔ multiple tags (0.35156ms)
+
+  ✔ tag + data component (0.38602ms)
+
+✔ Tag components (1.921864ms)
+
+▶ API consistency
+
+  ✔ add delegates to addComponent (0.453972ms)
+
+  ✔ remove delegates to removeComponent (1.91556ms)
+
+  ✔ has delegates to hasComponent (0.409214ms)
+
+  ✔ get delegates to getComponent (0.450445ms)
+
+  ✔ set delegates to setComponent (0.479785ms)
+
+✔ API consistency (4.163658ms)
+
+▶ World Runtime Integration
+
+  ▶ subsystem construction
+
+    ✔ creates ComponentRegistry (2.99263ms)
+
+    ✔ creates EntityManager (0.382339ms)
+
+    ✔ creates ArchetypeSystem (0.330645ms)
+
+    ✔ creates QueryEngine (0.630705ms)
+
+    ✔ creates SystemScheduler (1.32331ms)
+
+    ✔ all five subsystems are distinct objects (0.492936ms)
+
+  ✔ subsystem construction (8.664036ms)
+
+  ▶ scheduler wiring
+
+    ✔ scheduler receives the world reference (0.505241ms)
+
+    ✔ scheduler receives queryEngine (0.303936ms)
+
+    ✔ scheduler receives componentRegistry (1.321422ms)
+
+  ✔ scheduler wiring (3.423288ms)
+
+  ▶ archetype creation notification
+
+    ✔ calls queryEngine.onArchetypeCreated when a new archetype is created (3.384225ms)
+
+    ✔ calls onArchetypeCreated exactly once per new archetype (1.028885ms)
+
+    ✔ does not call onArchetypeCreated for existing archetypes (0.718927ms)
+
+  ✔ archetype creation notification (5.483428ms)
+
+  ▶ addSystem
+
+    ✔ registers a system (1.003391ms)
+
+    ✔ rejects duplicate systems (1.01664ms)
+
+    ✔ rejects non-System instances (0.900584ms)
+
+    ✔ rejects adding during update (0.663714ms)
+
+    ✔ compiles static query from component classes (1.166284ms)
+
+    ✔ does not compile query if none defined (0.337503ms)
+
+    ✔ rejects query with unregistered component (0.411858ms)
+
+    ✔ reuses cached queries for same filter across systems (0.713097ms)
+
+  ✔ addSystem (7.20754ms)
+
+  ▶ removeSystem
+
+    ✔ removes a registered system (0.536905ms)
+
+    ✔ throws for unregistered system (0.403958ms)
+
+    ✔ calls onRemoved on removal (0.372201ms)
+
+  ✔ removeSystem (1.675031ms)
+
+  ▶ clearSystems
+
+    ✔ removes all systems (0.857359ms)
+
+    ✔ calls onRemoved for each system (1.451282ms)
+
+  ✔ clearSystems (2.565357ms)
+
+  ▶ update
+
+    ✔ calls update on all registered systems (0.841107ms)
+
+    ✔ forwards dt to systems (0.458363ms)
+
+    ✔ forwards world to systems (0.39305ms)
+
+    ✔ throws for recursive update (0.3929ms)
+
+    ✔ does not throw when no systems are registered (0.648551ms)
+
+    ✔ does not throw when update is called multiple times (0.434703ms)
+
+  ✔ update (3.685079ms)
+
+  ▶ priority ordering
+
+    ✔ executes systems in ascending priority order (3.602287ms)
+
+    ✔ supports negative priorities (0.591054ms)
+
+    ✔ maintains registration order for equal priorities (0.547256ms)
+
+    ✔ re-add at end of priority group after remove (1.141747ms)
+
+  ✔ priority ordering (6.225893ms)
+
+  ▶ disabled systems
+
+    ✔ skips a disabled system (0.7226ms)
+
+    ✔ skips only disabled systems, executes others (0.554331ms)
+
+  ✔ disabled systems (2.23038ms)
+
+  ▶ lifecycle callbacks
+
+    ✔ calls onAdded when system is added (0.54261ms)
+
+    ✔ calls onRemoved when system is removed (0.370185ms)
+
+    ✔ calls onRemoved for all systems on clear (0.513574ms)
+
+    ✔ onAdded receives world with all subsystems accessible (0.463143ms)
+
+  ✔ lifecycle callbacks (2.392829ms)
+
+  ▶ query compilation
+
+    ✔ compiles all query (0.668666ms)
+
+    ✔ compiles any and none query (0.690524ms)
+
+    ✔ compiles wildcard query (empty filters) (0.498872ms)
+
+    ✔ rejects impossible query (all ∩ none) (0.483838ms)
+
+    ✔ rejects impossible query (any ∩ none) (0.504825ms)
+
+  ✔ query compilation (3.319391ms)
+
+  ▶ query cache
+
+    ✔ reuses cached query for identical filter (2.209279ms)
+
+    ✔ different filters produce different query objects (0.929053ms)
+
+  ✔ query cache (3.373252ms)
+
+  ▶ archetype discovery
+
+    ✔ system queries discover archetypes created before registration (1.415237ms)
+
+    ✔ system queries discover archetypes created after registration (0.969824ms)
+
+    ✔ query matches correct number of archetypes across multiple adds (1.062514ms)
+
+    ✔ system with any-only query discovers matching archetypes (0.70391ms)
+
+    ✔ system with none-only query excludes archetypes with none components (0.571368ms)
+
+  ✔ archetype discovery (5.392291ms)
+
+  ▶ end-to-end integration
+
+    ✔ full lifecycle: register → create → add components → update systems (0.97833ms)
+
+    ✔ multiple entities with different components are correctly handled (0.741424ms)
+
+    ✔ systems can read and write entity data through World API (0.643341ms)
+
+    ✔ system can access getTables for its compiled query (0.578393ms)
+
+  ✔ end-to-end integration (3.269108ms)
+
+  ▶ error states
+
+    ✔ rejects duplicate system via addSystem (1.097399ms)
+
+    ✔ rejects removing unregistered system (0.536833ms)
+
+    ✔ rejects recursive update (0.487578ms)
+
+    ✔ rejects adding system during update (0.483278ms)
+
+    ✔ rejects removing system during update (0.443159ms)
+
+    ✔ rejects clearing systems during update (3.752169ms)
+
+    ✔ isAlive returns false for entity 0 (0.276576ms)
+
+    ✔ destroyEntity is no-op for dead entity (0.178159ms)
+
+    ✔ hasComponent returns false for dead entity (0.166044ms)
+
+    ✔ addComponent throws for dead entity (0.265377ms)
+
+    ✔ getComponent throws for dead entity (0.246165ms)
+
+    ✔ setComponent throws for dead entity (0.263846ms)
+
+  ✔ error states (9.073013ms)
+
+  ▶ runtime invariants
+
+    ✔ cannot mutate system list during update via addSystem (0.492023ms)
+
+    ✔ scheduler.world is always the same world instance (0.399383ms)
+
+    ✔ version increments when new archetypes are created (0.294136ms)
+
+    ✔ version does not increment for existing archetype (0.411954ms)
+
+  ✔ runtime invariants (2.852138ms)
+
+  ▶ no per-frame allocations
+
+    ✔ does not sort every update when no systems change (0.354917ms)
+
+    ✔ re-sorts after adding a new system (0.393022ms)
+
+  ✔ no per-frame allocations (0.922449ms)
+
+  ▶ archetype system wiring
+
+    ✔ onArchetypeCreated callback is set on archetypeSystem (0.23861ms)
+
+    ✔ onArchetypeCreated receives the archetype object (0.331769ms)
+
+    ✔ onArchetypeCreated is called for multiple new archetypes (0.38532ms)
+
+  ✔ archetype system wiring (1.181056ms)
+
+✔ World Runtime Integration (78.23854ms)
+
+ℹ tests 1961
+
+ℹ suites 398
+
+ℹ pass 1961
+
+ℹ fail 0
+
+ℹ cancelled 0
+
+ℹ skipped 0
+
+ℹ todo 0
+
+ℹ duration_ms 3549.20615

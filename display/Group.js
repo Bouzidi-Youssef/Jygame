@@ -246,16 +246,30 @@ export class Group {
     return this;
   }
 
+  _buildHash() {
+    const h = this._spatialHash;
+    h.clear();
+    const items = this._getRawItems();
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (!item.visible) continue;
+      h.insert(item.entity, item.transform.x, item.transform.y, item.collider.width, item.collider.height);
+    }
+  }
+
+  _resolveIds(ids, out) {
+    for (let i = 0; i < ids.length; i++) {
+      const s = this._getOrWrap(ids[i]);
+      if (s) out.push(s);
+    }
+  }
+
   collideRect(rect, out) {
     const hits = out || [];
     hits.length = 0;
     if (this._spatialHash) {
-      this._spatialHash.rebuild(this._getRawItems());
-      const ids = this._spatialHash.collideRect(rect, []);
-      for (let i = 0; i < ids.length; i++) {
-        const s = this._resolveItem(ids[i]);
-        if (s) hits.push(s);
-      }
+      this._buildHash();
+      this._resolveIds(this._spatialHash.queryRect(rect, []), hits);
       return hits;
     }
     this.forEach(s => {
@@ -273,12 +287,8 @@ export class Group {
     const hits = out || [];
     hits.length = 0;
     if (this._spatialHash) {
-      this._spatialHash.rebuild(this._getRawItems());
-      const ids = this._spatialHash.collidePoint(point, []);
-      for (let i = 0; i < ids.length; i++) {
-        const s = this._resolveItem(ids[i]);
-        if (s) hits.push(s);
-      }
+      this._buildHash();
+      this._resolveIds(this._spatialHash.queryPoint(point, []), hits);
       return hits;
     }
     this.forEach(s => {
@@ -296,12 +306,8 @@ export class Group {
     const hits = out || [];
     hits.length = 0;
     if (this._spatialHash) {
-      this._spatialHash.rebuild(this._getRawItems());
-      const ids = this._spatialHash.queryCircle(cx, cy, radius, []);
-      for (let i = 0; i < ids.length; i++) {
-        const s = this._resolveItem(ids[i]);
-        if (s) hits.push(s);
-      }
+      this._buildHash();
+      this._resolveIds(this._spatialHash.queryCircle(cx, cy, radius, []), hits);
       return hits;
     }
     const r2 = radius * radius;
@@ -353,12 +359,8 @@ export class Group {
     const cA = sprite.collider;
 
     if (this._spatialHash) {
-      this._spatialHash.rebuild(this._getRawItems());
-      const ids = this._spatialHash.collideSprite(sprite, []);
-      for (let i = 0; i < ids.length; i++) {
-        const s = this._resolveItem(ids[i]);
-        if (s) hits.push(s);
-      }
+      this._buildHash();
+      this._resolveIds(this._spatialHash.queryAABB(tA.x, tA.y, cA.width, cA.height, []), hits);
       return hits;
     }
 
@@ -377,18 +379,8 @@ export class Group {
     const hits = out || [];
     hits.length = 0;
     if (this._spatialHash) {
-      this._spatialHash.clear();
-      const items = this._getRawItems();
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        if (!item.visible) continue;
-        this._spatialHash.insert(item.entity, item.transform.x, item.transform.y, item.collider.width, item.collider.height);
-      }
-      const ids = this._spatialHash.raycast(ox, oy, dx, dy, maxDist, []);
-      for (let i = 0; i < ids.length; i++) {
-        const s = this._resolveItem(ids[i]);
-        if (s) hits.push(s);
-      }
+      this._buildHash();
+      this._resolveIds(this._spatialHash.raycast(ox, oy, dx, dy, maxDist, []), hits);
       return hits;
     }
     return hits;
@@ -428,12 +420,5 @@ export class Group {
       return items;
     }
     return this._sprites;
-  }
-
-  _resolveItem(item) {
-    if (item && item.entity != null) {
-      return this._getOrWrap(item.entity);
-    }
-    return item || null;
   }
 }
