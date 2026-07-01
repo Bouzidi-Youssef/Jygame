@@ -5,6 +5,7 @@ import { ArchetypeSystem } from "./ArchetypeSystem.js";
 import { QueryEngine } from "./QueryEngine.js";
 import { QueryView } from "./QueryView.js";
 import { SystemScheduler } from "./SystemScheduler.js";
+import { Events } from "../events/Events.js";
 
 export class World {
   constructor(options = {}) {
@@ -43,6 +44,7 @@ export class World {
     this._viewCache = new Map();
     this._queryViewCache = new WeakMap();
     this._resources = new Map();
+    this._events = new Events();
   }
 
   get registry() {
@@ -63,6 +65,14 @@ export class World {
 
   get scheduler() {
     return this._scheduler;
+  }
+
+  get events() {
+    return this._events;
+  }
+
+  registerEvent(eventClass, options = {}) {
+    this._events.register(eventClass, options);
   }
 
   setResource(key, value) {
@@ -522,6 +532,7 @@ export class World {
 
   update(dt) {
     this._scheduler.update(dt);
+    this._events.clear();
   }
 
   query(query) {

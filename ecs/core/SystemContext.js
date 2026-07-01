@@ -39,6 +39,10 @@ export class SystemContext {
     return this._resources;
   }
 
+  get events() {
+    return this._world.events;
+  }
+
   get entityCount() {
     return this._entityCount;
   }

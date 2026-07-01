@@ -41,11 +41,14 @@ for (let i = 2; i < process.argv.length; i++) {
   else if (arg === "--camera-cull") config.benchmarks = ["camera-cull"];
   else if (arg === "--stability") config.benchmarks = ["stability"];
   else if (arg === "--entity-churn") config.benchmarks = ["entity-churn"];
+  else if (arg === "--events") config.benchmarks = ["events"];
   else if (arg === "--phase26") config.benchmarks = ["full-frame", "mixed-archetype", "spatial-density", "camera-cull", "entity-churn"];
+  else if (arg === "--phase28") config.benchmarks = ["events"];
   else if (arg === "--new") config.benchmarks = ["full-frame", "mixed-archetype", "spatial-density", "camera-cull", "stability", "entity-churn"];
   else if (arg === "--all") config.benchmarks = [
     "movement", "collision", "render", "trail", "world", "query", "memory", "allocation", "deep",
     "full-frame", "mixed-archetype", "spatial-density", "camera-cull", "stability", "entity-churn",
+    "events",
   ];
 }
 
