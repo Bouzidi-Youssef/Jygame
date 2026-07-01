@@ -7,6 +7,7 @@ import { QueryView } from "./QueryView.js";
 import { SystemScheduler } from "./SystemScheduler.js";
 import { Events } from "../events/Events.js";
 import { Prefab } from "../prefab/Prefab.js";
+import { Serializer } from "../serialization/Serializer.js";
 
 export class World {
   constructor(options = {}) {
@@ -96,6 +97,14 @@ export class World {
       );
     }
     return prefab.instantiate(this, overrides);
+  }
+
+  serialize() {
+    return Serializer.serialize(this);
+  }
+
+  deserialize(json) {
+    return Serializer.deserialize(this, json);
   }
 
   setResource(key, value) {

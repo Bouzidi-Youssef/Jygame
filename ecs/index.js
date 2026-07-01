@@ -38,3 +38,5 @@ export { TrailBuffer, TrailManager } from "./trails/index.js";
 export { EventChannel, Events } from "./events/index.js";
 
 export { Prefab } from "./prefab/index.js";
+
+export { Serializer } from "./serialization/index.js";
