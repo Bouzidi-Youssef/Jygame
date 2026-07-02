@@ -220,6 +220,98 @@ SpatialHash (strategy)
   allocation), cleared each call.
 - `collideGroup` supports callback mode (zero pair allocation).
 
+## Scene Architecture
+
+### Scene Hierarchy
+
+There is a single canonical Scene hierarchy. The ECS Scene is the generic base,
+and the engine Scene extends it with game-specific functionality.
+
+```
+ecs/scene/Scene           (ECS layer — generic, reusable)
+        ↑
+core/Scene                (Engine layer — game-specific)
+```
+
+### ECS Scene (`ecs/scene/Scene`)
+
+Responsibilities:
+- Owns a `World` instance (lazy-created via `_createWorld()`)
+- Manages the `_created` flag for SceneManager integration
+- Provides lifecycle hooks: `onCreate`, `onEnter`, `onExit`, `onPause`, `onResume`, `onDestroy`
+- Provides `update(dt)` and `render(ctx)` — no-ops by default
+
+The `_createWorld()` method can be overridden by subclasses to customize World
+construction. By default it returns `new World()`.
+
+### Engine Scene (`core/Scene`)
+
+Extends ECS Scene with:
+
+- **DOM integration**: creates a `root` `<div>` element for UI rendering
+- **Input helpers**: `on(event, handler)`, `onSwipe(cb)`, `onTap(cb)`, `cleanup(fn)`
+- **Game navigation**: `pushScene`, `popScene`, `replaceScene`, `switchScene`, `transitionTo`
+- **Engine lifecycle**: `enter()`/`exit()` (called by `Game._mountScene`/`_unmountScene`)
+- **Sprite integration**: manages `Sprite._defaultWorld` on enter/exit
+- **Camera/CanvasContext**: installs game-specific resources on enter when a Game is available
+
+Overrides `_createWorld()` to use `DefaultWorldBuilder.createDefault()`.
+
+### WorldFactory / DefaultWorldBuilder
+
+All ECS initialization logic is extracted from Scene into a dedicated builder.
+
+**File**: `ecs/bootstrap/DefaultWorldBuilder.js`
+
+```js
+const world = DefaultWorldBuilder.createDefault();
+```
+
+The builder:
+
+1. Creates a new `World`
+2. Registers all engine components:
+   - Transform, Velocity, Collider, Renderable, RenderBounds
+   - Animation, Visible, Trail
+   - EnemyTag, PlayerTag, ProjectileTag, StaticTag
+3. Installs engine resources:
+   - SpatialHash, TrailManager, RenderQueue, AnimationClipRegistry
+4. Installs engine systems:
+   - MovementSystem, AnimationSystem, CollisionSystem
+   - RenderSystem, TrailSystem
+
+Game-specific resources (Camera, CanvasContext) are NOT installed by the builder
+— they are set up by `core/Scene.enter()` when a Game is available.
+
+### SceneManager
+
+Decomposed internally into three concerns:
+
+| Concern | Implementation | Responsibility |
+|---------|---------------|----------------|
+| **SceneRegistry** | Private `_registry` (Map) | `add`, `remove`, `get`, `has` — owns loaded scenes |
+| **SceneStack** | Public `_stack` (Array) | `push`, `pop`, `peek`, `length` — active scene ordering |
+| **SceneManager** | Coordinator | Lifecycle orchestration: `start`, `change`, `replace`, `push`, `pop`, `update`, `render` |
+
+Public API unchanged. The decomposition is purely internal.
+
+### Ownership Relationships
+
+```
+Game
+├── owns _sceneStack: Scene[]       (core/Scene instances)
+├── manages enter/exit lifecycle
+└── delegates to scene.world.*       (ECS World per scene)
+
+SceneManager
+├── owns _registry: Map<string, Scene>  (ecs/scene/Scene instances)
+├── owns _stack: Scene[]               (active scenes)
+└── manages onCreate/onEnter/onExit/onPause/onResume/onDestroy lifecycle
+```
+
+Each Scene owns exactly one World. Worlds are never shared between scenes.
+Systems, components, prefabs, and events are isolated per World.
+
 ## Scene Stack
 
 ### Overview
@@ -478,3 +570,123 @@ interface BroadPhaseStrategy {
 `SpatialHash` is the default strategy. Future strategies (`SweepAndPrune`,
 `Quadtree`, `BVH`) implement the same interface and are swapped in via
 `CollisionSystem.useSpatialHash()`.
+
+---
+
+## Hierarchy System
+
+### Ownership Model
+
+| Concern | Owner | Type |
+|---------|-------|------|
+| Parent pointer | `Parent` component | `{ entity: u32 }` — stored in ECS table |
+| Child list | `HierarchyGraph._children` | `Map<entityId, entityId[]>` — authoritative |
+| Child marker | `Children` component | Empty-schema tag for ECS queries |
+| Dirty set | `HierarchyGraph._dirty` | `Set<entityId>` — entities needing WT recomputation |
+
+**Children ownership (Option B):** The `Children` component is a lightweight marker
+that enables ECS queries (e.g., "find all entities with children"). The authoritative
+child list lives in `HierarchyGraph._children` as a `Map`. This avoids the ECS's
+fixed-schema limitation — child lists are variable-length and sparse, which fits a
+Map better than table columns.
+
+**Dirty ownership:** Dirty state lives in `HierarchyGraph._dirty` as a `Set<entityId>`.
+This was chosen over per-component dirty flags for several reasons:
+
+- Adding a dirty column to every entity's table would impose memory overhead on all
+  entities regardless of hierarchy membership.
+- The dirty set is naturally sparse (only entities whose Transform changed since the
+  last update are dirty).
+- `Set<entityId>` provides O(1) add/delete/has with no per-entity storage overhead
+  for non-dirty entities.
+- Moving dirty state into a dedicated `DirtyTransform` component was considered but
+  rejected: adding/removing a component on every Transform change would cause
+  archetype moves, which are significantly more expensive than a Set operation.
+
+### Hierarchy Traversal Algorithm
+
+The `HierarchySystem` replaces full-table iteration with a **BFS from dirty roots**:
+
+```
+1. Snapshot the dirty set into an array (one allocation per frame).
+2. For each entity in the snapshot:
+   a. If already processed (removed from dirty set), skip.
+   b. If it has a Parent that is still dirty, skip (parent will reach it via BFS).
+   c. Otherwise, BFS from this entity:
+      - Resolve entity → (Table, row) via archetype system + entity manager.
+      - If root (no Parent): copy local Transform → WorldTransform via typed arrays.
+      - If child: read parent's WorldTransform via parent's table columns, compute.
+      - Remove from dirty set.
+      - Push dirty children (from hierarchy._children) to the BFS queue.
+3. After all seeds processed: any remaining dirty entries are stale (safety clear).
+```
+
+Complexity analysis:
+
+| Scenario | Old (table scan) | New (BFS) |
+|----------|-----------------|-----------|
+| No dirty entities | O(world entities) | O(1) — early return |
+| Single root changed, N descendants dirty | O(N × D × world) | O(N) |
+| K roots changed, N total dirty | O(K × N × world) | O(N) |
+| Deep chain (depth D), single root changed | O(D × world) | O(D) |
+
+**Key insight:** The old algorithm scanned every table for every pass (number of
+passes = max depth). The new algorithm only visits dirty entities, processing each
+exactly once via BFS from its dirty root ancestor.
+
+### Determinism
+
+- BFS queue preserves parent-before-child ordering.
+- Children are enqueued in insertion order (from `_children` array), preserving
+  sibling order.
+- The snapshot of the dirty set (`[...dirty]`) is processed in insertion order,
+  but the BFS from each seed guarantees correct propagation regardless of seed order.
+
+### Dirty Propagation (Explicit Stack)
+
+The recursive `_markDirtyRecursive` was replaced with an explicit stack to avoid
+JavaScript recursion limits on deep hierarchies:
+
+```js
+_markDirtyRecursive(entity) {
+    const stack = [entity];
+    while (stack.length > 0) {
+        const current = stack.pop();
+        if (this._dirty.has(current)) continue;
+        this._dirty.add(current);
+        const children = this._children.get(current);
+        if (children) {
+            for (let i = 0; i < children.length; i++) {
+                stack.push(children[i]);
+            }
+        }
+    }
+}
+```
+
+This handles arbitrarily deep hierarchies (up to available memory) without stack
+overflow.
+
+### World API Lookup Reduction
+
+The optimized HierarchySystem reduces per-entity World API calls in the hot loop:
+
+| Operation | Old (per entity per pass) | New (per entity, one pass) |
+|-----------|--------------------------|---------------------------|
+| `world.has(entity, Parent)` | 1 | 0 — uses `sig.contains(pid)` |
+| `world.has(parent, WorldTransform)` | 1 | 0 — parent guaranteed to have WT |
+| `world.get(entity, Parent)` | 1 | 1 (only for children) |
+| `world.get(parent, WorldTransform)` | 1 | 0 — reads parent WT from typed arrays directly |
+| `world.isAlive(parent)` | 1 | 0 — parent is alive by invariant |
+| `hierarchy.isDirty(entity)` | 1 | 1 — O(1) Set lookup |
+| entity → (Table, row) | 0 (table iteration) | 2 (`entityTable` + `getRow`) |
+
+### Integration with ECS
+
+The HierarchySystem uses `priority = -10` to run before all gameplay systems
+(which default to priority 0). This ensures WorldTransform is up-to-date before
+MovementSystem, RenderSystem, CollisionSystem, etc. read it.
+
+`HierarchyGraph` is stored as a World resource, retrieved via
+`ctx.resources.get(HierarchyGraph)`.
+

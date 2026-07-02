@@ -6,7 +6,7 @@ const DEFAULTS = {
   iterations: 100,
   warmup: 20,
   maxEntities: 100000,
-  benchmarks: ["movement", "collision", "render", "trail", "world", "query", "memory", "allocation"],
+  benchmarks: ["movement", "collision", "render", "trail", "world", "query", "memory", "allocation"],  // add "scenes" manually or use --scenes
   csv: "",
   snapshot: "",
   compare: "",
@@ -44,15 +44,19 @@ for (let i = 2; i < process.argv.length; i++) {
   else if (arg === "--events") config.benchmarks = ["events"];
   else if (arg === "--prefab") config.benchmarks = ["prefab"];
   else if (arg === "--serialization") config.benchmarks = ["serialization"];
+  else if (arg === "--scenes") config.benchmarks = ["scenes"];
+  else if (arg === "--hierarchy") config.benchmarks = ["hierarchy"];
   else if (arg === "--phase26") config.benchmarks = ["full-frame", "mixed-archetype", "spatial-density", "camera-cull", "entity-churn"];
   else if (arg === "--phase28") config.benchmarks = ["events"];
   else if (arg === "--phase29") config.benchmarks = ["prefab"];
   else if (arg === "--phase30") config.benchmarks = ["serialization"];
+  else if (arg === "--phase31") config.benchmarks = ["scenes"];
+  else if (arg === "--phase33") config.benchmarks = ["hierarchy"];
   else if (arg === "--new") config.benchmarks = ["full-frame", "mixed-archetype", "spatial-density", "camera-cull", "stability", "entity-churn"];
   else if (arg === "--all") config.benchmarks = [
     "movement", "collision", "render", "trail", "world", "query", "memory", "allocation", "deep",
     "full-frame", "mixed-archetype", "spatial-density", "camera-cull", "stability", "entity-churn",
-    "events", "prefab", "serialization",
+    "events", "prefab", "serialization", "scenes", "hierarchy",
   ];
 }
 

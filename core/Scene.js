@@ -1,50 +1,13 @@
 import { Input } from "../input/Input.js";
-
-import { World } from "../ecs/core/World.js";
-import { Transform } from "../ecs/components/Transform.js";
-import { Velocity } from "../ecs/components/Velocity.js";
-import { Collider } from "../ecs/components/Collider.js";
-import { Renderable } from "../ecs/components/Renderable.js";
-import { RenderBounds } from "../ecs/components/RenderBounds.js";
-import { Animation } from "../ecs/components/Animation.js";
-import { Visible } from "../ecs/components/Visible.js";
-import { Trail } from "../ecs/components/Trail.js";
-import { EnemyTag } from "../ecs/components/tags/EnemyTag.js";
-import { PlayerTag } from "../ecs/components/tags/PlayerTag.js";
-import { ProjectileTag } from "../ecs/components/tags/ProjectileTag.js";
-import { StaticTag } from "../ecs/components/tags/StaticTag.js";
-
-import { MovementSystem } from "../ecs/systems/MovementSystem.js";
-import { AnimationSystem } from "../ecs/systems/AnimationSystem.js";
-import { CollisionSystem } from "../ecs/systems/CollisionSystem.js";
-import { RenderSystem } from "../ecs/systems/RenderSystem.js";
-import { TrailSystem } from "../ecs/systems/TrailSystem.js";
-
-import { RenderQueue } from "../ecs/render/RenderQueue.js";
+import { Scene as EcsScene } from "../ecs/scene/Scene.js";
+import { DefaultWorldBuilder } from "../ecs/bootstrap/DefaultWorldBuilder.js";
 import { CanvasContext } from "../ecs/render/CanvasContext.js";
-import { AnimationClipRegistry } from "../ecs/animation/AnimationClipRegistry.js";
-import { TrailManager } from "../ecs/trails/TrailManager.js";
-import { SpatialHash } from "../collision/SpatialHash.js";
 import { Camera } from "../camera/Camera.js";
 import { Sprite } from "../display/Sprite.js";
 
-const _ECS_COMPONENTS = [
-  Transform, Velocity, Collider,
-  Renderable, RenderBounds,
-  Animation, Visible, Trail,
-  EnemyTag, PlayerTag, ProjectileTag, StaticTag,
-];
-
-const _ECS_SYSTEMS = [
-  MovementSystem,
-  AnimationSystem,
-  CollisionSystem,
-  RenderSystem,
-  TrailSystem,
-];
-
-export class Scene {
+export class Scene extends EcsScene {
   constructor() {
+    super();
     this.dom = null;
     this.root = document.createElement("div");
     this.root.style.position = "absolute";
@@ -55,48 +18,11 @@ export class Scene {
     this._game = null;
     this.blocksUpdateBelow = true;
     this.blocksRenderBelow = false;
-
-    this._world = null;
     this._prevDefaultWorld = null;
-    this._ecsResources = {};
   }
 
-  get world() {
-    if (!this._world) {
-      this._initECS();
-    }
-    return this._world;
-  }
-
-  _initECS() {
-    const world = new World();
-
-    for (let i = 0; i < _ECS_COMPONENTS.length; i++) {
-      world.register(_ECS_COMPONENTS[i]);
-    }
-
-    world.setResource(SpatialHash, new SpatialHash());
-    world.setResource(TrailManager, new TrailManager());
-    world.setResource(RenderQueue, new RenderQueue());
-    world.setResource(AnimationClipRegistry, new AnimationClipRegistry());
-
-    this._world = world;
-  }
-
-  _installSystems() {
-    const world = this._world;
-    if (!world) return;
-
-    for (let i = 0; i < _ECS_SYSTEMS.length; i++) {
-      world.addSystem(new _ECS_SYSTEMS[i]());
-    }
-
-    if (this._game) {
-      world.setResource(CanvasContext, this._game.ctx);
-
-      const cam = new Camera(0, 0, this._game.width, this._game.height);
-      world.setResource(Camera, cam);
-    }
+  _createWorld() {
+    return DefaultWorldBuilder.createDefault();
   }
 
   on(target, event, handler) {
@@ -123,7 +49,13 @@ export class Scene {
     this._entered = true;
 
     this.world;
-    this._installSystems();
+
+    if (this._game) {
+      this._world.setResource(CanvasContext, this._game.ctx);
+
+      const cam = new Camera(0, 0, this._game.width, this._game.height);
+      this._world.setResource(Camera, cam);
+    }
 
     this._prevDefaultWorld = Sprite._defaultWorld;
     Sprite._defaultWorld = this._world;
@@ -159,19 +91,19 @@ export class Scene {
   renderUI() {}
 
   pushScene(scene) {
-    if (this.game) this.game.pushScene(scene);
+    if (this._game) this._game.pushScene(scene);
   }
 
   popScene() {
-    if (this.game) this.game.popScene();
+    if (this._game) this._game.popScene();
   }
 
   replaceScene(scene) {
-    if (this.game) this.game.replaceScene(scene);
+    if (this._game) this._game.replaceScene(scene);
   }
 
   switchScene(scene) {
-    if (this.game) this.game.switchScene(scene);
+    if (this._game) this._game.switchScene(scene);
   }
 
   transitionTo(scene) {

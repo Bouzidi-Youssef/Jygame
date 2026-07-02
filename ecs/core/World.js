@@ -8,6 +8,8 @@ import { SystemScheduler } from "./SystemScheduler.js";
 import { Events } from "../events/Events.js";
 import { Prefab } from "../prefab/Prefab.js";
 import { Serializer } from "../serialization/Serializer.js";
+import { Transform } from "../components/Transform.js";
+import { HierarchyGraph } from "../hierarchy/HierarchyGraph.js";
 
 export class World {
   constructor(options = {}) {
@@ -48,6 +50,9 @@ export class World {
     this._resources = new Map();
     this._events = new Events();
     this._prefabs = new Map();
+    this._hierarchy = null;
+    this._onComponentSet = null;
+    this._transformId = null;
   }
 
   get registry() {
@@ -72,6 +77,23 @@ export class World {
 
   get events() {
     return this._events;
+  }
+
+  get hierarchy() {
+    return this._hierarchy;
+  }
+
+  initHierarchy() {
+    if (this._hierarchy) return this._hierarchy;
+    this._hierarchy = new HierarchyGraph(this);
+    this.setResource(HierarchyGraph, this._hierarchy);
+    this._transformId = this._registry.getId(Transform);
+    this._onComponentSet = (entity, componentId) => {
+      if (componentId === this._transformId && this._hierarchy) {
+        this._hierarchy.markDirtyRecursive(entity);
+      }
+    };
+    return this._hierarchy;
   }
 
   registerEvent(eventClass, options = {}) {
@@ -152,6 +174,10 @@ export class World {
   destroyEntity(entity) {
     if (!this._entityManager.isAlive(entity)) {
       return;
+    }
+
+    if (this._hierarchy) {
+      this._hierarchy.onEntityDestroyed(entity);
     }
 
     const archetypeId = this._entityManager.getArchetype(entity);
@@ -315,6 +341,10 @@ export class World {
       if (col) {
         col[row] = values[fieldName];
       }
+    }
+
+    if (this._onComponentSet) {
+      this._onComponentSet(entity, componentId);
     }
   }
 
@@ -576,6 +606,40 @@ export class World {
     return view;
   }
 
+  attach(child, parent) {
+    if (!this._hierarchy) {
+      throw new Error(
+        "World.attach failed: hierarchy not initialized. Call world.initHierarchy() first."
+      );
+    }
+    this._hierarchy.attach(child, parent);
+  }
+
+  detach(child) {
+    if (!this._hierarchy) return;
+    this._hierarchy.detach(child);
+  }
+
+  parentOf(entity) {
+    if (!this._hierarchy) return null;
+    return this._hierarchy.parentOf(entity);
+  }
+
+  childrenOf(entity) {
+    if (!this._hierarchy) return null;
+    return this._hierarchy.childrenOf(entity);
+  }
+
+  isDescendant(descendant, ancestor) {
+    if (!this._hierarchy) return null;
+    return this._hierarchy.isDescendant(descendant, ancestor);
+  }
+
+  rootOf(entity) {
+    if (!this._hierarchy) return null;
+    return this._hierarchy.rootOf(entity);
+  }
+
   _resolveComponentId(component, operation) {
     if (typeof component !== 'function' && typeof component !== 'string') {
       throw new TypeError(
@@ -594,14 +658,21 @@ export class World {
   }
 
   _createComponentView(componentId, schema, table, row) {
+    const self = this;
     const view = {};
     const fieldNames = Object.keys(schema);
+    const entityId = table.entityIds ? table.entityIds[row] : null;
     for (let fi = 0; fi < fieldNames.length; fi++) {
       const fieldName = fieldNames[fi];
       const col = table.getColumn(componentId, fieldName);
       Object.defineProperty(view, fieldName, {
         get() { return col[row]; },
-        set(v) { col[row] = v; },
+        set(v) {
+          col[row] = v;
+          if (self._onComponentSet) {
+            self._onComponentSet(entityId, componentId);
+          }
+        },
         enumerable: true,
         configurable: true,
       });

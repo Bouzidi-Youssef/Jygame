@@ -1,4 +1,5 @@
 export { Transform } from "./Transform.js";
+export { WorldTransform } from "./WorldTransform.js";
 export { Velocity } from "./Velocity.js";
 export { Collider } from "./Collider.js";
 export { Renderable } from "./Renderable.js";
@@ -6,6 +7,8 @@ export { Animation } from "./Animation.js";
 export { Visible } from "./Visible.js";
 export { RenderBounds } from "./RenderBounds.js";
 export { Trail } from "./Trail.js";
+export { Parent } from "./Parent.js";
+export { Children } from "./Children.js";
 export { EnemyTag } from "./tags/EnemyTag.js";
 export { PlayerTag } from "./tags/PlayerTag.js";
 export { ProjectileTag } from "./tags/ProjectileTag.js";

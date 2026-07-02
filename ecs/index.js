@@ -12,6 +12,7 @@ export { World } from "./core/World.js";
 
 export {
   Transform,
+  WorldTransform,
   Velocity,
   Collider,
   Renderable,
@@ -19,6 +20,8 @@ export {
   Visible,
   RenderBounds,
   Trail,
+  Parent,
+  Children,
   EnemyTag,
   PlayerTag,
   ProjectileTag,
@@ -26,6 +29,8 @@ export {
 } from "./components/index.js";
 
 export { MovementSystem, AnimationSystem, CollisionSystem, RenderSystem, TrailSystem } from "./systems/index.js";
+
+export { HierarchyGraph, HierarchySystem } from "./hierarchy/index.js";
 
 export { AnimationClip, AnimationClipRegistry } from "./animation/index.js";
 
@@ -40,3 +45,6 @@ export { EventChannel, Events } from "./events/index.js";
 export { Prefab } from "./prefab/index.js";
 
 export { Serializer } from "./serialization/index.js";
+
+export { Scene, SceneManager } from "./scene/index.js";
+export { DefaultWorldBuilder } from "./bootstrap/DefaultWorldBuilder.js";

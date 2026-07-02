@@ -85,6 +85,7 @@ export class Serializer {
 
     const registry = world._registry;
     const idMap = new Map();
+    const parentEntities = [];
 
     for (let ei = 0; ei < data.entities.length; ei++) {
       const entry = data.entities[ei];
@@ -139,8 +140,21 @@ export class Serializer {
       for (let ci = 0; ci < comps.length; ci++) {
         const name = comps[ci].name;
         const data = comps[ci].data;
-        const cls = components[allNames.indexOf(name)];
+        const clsIndex = allNames.indexOf(name);
+        if (clsIndex === -1) continue;
+        const cls = components[clsIndex];
         world.set(entity, cls, data);
+        if (name === "Parent") {
+          parentEntities.push(entity);
+        }
+      }
+    }
+
+    for (let pi = 0; pi < parentEntities.length; pi++) {
+      const entity = parentEntities[pi];
+      const pv = world.get(entity, "Parent");
+      if (pv && idMap.has(pv.entity)) {
+        pv.entity = idMap.get(pv.entity);
       }
     }
 
