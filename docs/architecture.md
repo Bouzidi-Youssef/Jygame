@@ -690,3 +690,139 @@ MovementSystem, RenderSystem, CollisionSystem, etc. read it.
 `HierarchyGraph` is stored as a World resource, retrieved via
 `ctx.resources.get(HierarchyGraph)`.
 
+---
+
+## Scene Streaming System
+
+### Current Phase
+
+The streaming system (Phase 33) provides the **infrastructure only**. It enables
+entities to be grouped into named cells and cells to be loaded and unloaded
+deterministically. No serialization, asynchronous loading, disk I/O, world
+partitioning, or LOD is implemented in this phase.
+
+### StreamingCell
+
+A `StreamingCell` represents a logical collection of entities within a World.
+
+**Responsibilities:**
+- Unique name identification
+- `loaded` / `unloaded` state tracking
+- Ownership of entity membership via a `Set<entityId>`
+- Deterministic cleanup
+
+**Entity ownership rules:**
+- Each entity belongs to at most one `StreamingCell`.
+- Adding an entity already owned by another cell throws.
+- Adding a dead or invalid entity ID throws.
+- Destroyed entities are automatically removed from their owning cell.
+
+**API:**
+
+| Member | Type | Description |
+|--------|------|-------------|
+| `cell.name` | `string` | Unique cell name |
+| `cell.loaded` | `boolean` | Whether the cell is loaded |
+| `cell.entityCount` | `number` | Number of owned entities |
+| `cell.entities` | `Set<number>` | Set of owned entity IDs |
+| `cell.addEntity(entity)` | `void` | Add entity to cell |
+| `cell.removeEntity(entity)` | `void` | Remove entity from cell |
+| `cell.clear()` | `void` | Remove all entities (no destruction) |
+| `cell.contains(entity)` | `boolean` | Check entity membership |
+
+### StreamingManager
+
+The `StreamingManager` owns every `StreamingCell` within a World. It is stored
+as a World resource.
+
+**Responsibilities:**
+- Cell lifecycle: create, retrieve, destroy
+- Load/unload orchestration (entity destruction on unload)
+- Entity-to-cell mapping for O(1) cleanup on entity destruction
+
+**API:**
+
+| Method | Description |
+|--------|-------------|
+| `createCell(name)` | Create a new cell (throws on duplicate) |
+| `getCell(name)` | Retrieve cell or null |
+| `hasCell(name)` | Check if cell exists |
+| `destroyCell(name)` | Remove cell (unloads first if loaded) |
+| `load(name)` | Activate cell (no-op if already loaded) |
+| `unload(name)` | Destroy all owned entities, clear cell, mark unloaded |
+| `loadAll()` | Activate all cells |
+| `unloadAll()` | Unload all cells |
+| `loadedCells()` | Return array of loaded cells |
+| `cellCount` | Total number of cells |
+
+### Loading Lifecycle
+
+```
+load(name)
+  → cell found?  (throw if not)
+  → already loaded?  (no-op)
+  → mark cell._loaded = true
+  → entities are preserved
+```
+
+### Unloading Lifecycle
+
+```
+unload(name)
+  → cell found?  (throw if not)
+  → already unloaded?  (no-op)
+  → snapshot entity IDs
+  → clear cell._entityIds
+  → remove entity→cell mappings
+  → destroyEntity() for each entity
+  → mark cell._loaded = false
+```
+
+### Entity Destruction Integration
+
+When `World.destroyEntity(entity)` is called, the streaming system is notified
+via a registered callback. The callback:
+1. Looks up the entity in `StreamingManager._entityToCell` (a `Map<entityId, StreamingCell>`).
+2. Removes the entity from the cell's `_entityIds` Set.
+3. Removes the entity→cell mapping.
+
+This ensures no stale entity IDs remain in any cell after entity destruction,
+and that unload remains safe even if entities were destroyed externally.
+
+### Relationship with SceneManager
+
+The streaming system is **orthogonal** to SceneManager:
+- `Scene` owns an entire World with full lifecycle (create, enter, pause, resume,
+  exit, destroy).
+- `StreamingCell` organizes entities within a single World.
+- A Scene may have zero or more StreamingCells.
+- Future phases may integrate cell loading with scene transitions.
+
+### Relationship with Serialization (Future)
+
+- `StreamingCell._name` serves as a serialization identifier.
+- Future phases will introduce serialized cells: cells that can be written to
+  disk as prefab-like assets and instantiated on demand.
+- No serialization logic exists in this phase.
+
+### Performance Characteristics
+
+| Operation | Cost |
+|-----------|------|
+| `createCell` | O(1) Map insert |
+| `destroyCell` | O(N) if loaded (N = entities to destroy) |
+| `addEntity` | O(1) Set add + Map set |
+| `removeEntity` | O(1) Set delete + Map delete |
+| `contains` | O(1) Set has |
+| `load` | O(1) flag set |
+| `unload` | O(N) (N = entities to destroy) |
+| `onEntityDestroyed` | O(1) Map get + Set delete + Map delete |
+
+### Future Phases
+
+- **Phase 34:** Serialized cells — cells become assets streamed from disk.
+- **Phase 35:** Asynchronous loading — cells load in the background.
+- **Phase 36:** Streaming radii — cells activate based on proximity.
+- **Phase 37:** World partitioning — spatial subdivision for large worlds.
+- **Phase 38:** LOD — level-of-detail cell variants.
+

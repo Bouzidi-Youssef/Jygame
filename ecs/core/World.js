@@ -10,6 +10,7 @@ import { Prefab } from "../prefab/Prefab.js";
 import { Serializer } from "../serialization/Serializer.js";
 import { Transform } from "../components/Transform.js";
 import { HierarchyGraph } from "../hierarchy/HierarchyGraph.js";
+import { StreamingManager } from "../streaming/StreamingManager.js";
 
 export class World {
   constructor(options = {}) {
@@ -53,6 +54,7 @@ export class World {
     this._hierarchy = null;
     this._onComponentSet = null;
     this._transformId = null;
+    this._entityDestroyedCallbacks = [];
   }
 
   get registry() {
@@ -94,6 +96,17 @@ export class World {
       }
     };
     return this._hierarchy;
+  }
+
+  onEntityDestroyed(callback) {
+    this._entityDestroyedCallbacks.push(callback);
+  }
+
+  offEntityDestroyed(callback) {
+    const idx = this._entityDestroyedCallbacks.indexOf(callback);
+    if (idx !== -1) {
+      this._entityDestroyedCallbacks.splice(idx, 1);
+    }
   }
 
   registerEvent(eventClass, options = {}) {
@@ -178,6 +191,11 @@ export class World {
 
     if (this._hierarchy) {
       this._hierarchy.onEntityDestroyed(entity);
+    }
+
+    const cbs = this._entityDestroyedCallbacks;
+    for (let i = 0; i < cbs.length; i++) {
+      cbs[i](entity);
     }
 
     const archetypeId = this._entityManager.getArchetype(entity);
@@ -638,6 +656,40 @@ export class World {
   rootOf(entity) {
     if (!this._hierarchy) return null;
     return this._hierarchy.rootOf(entity);
+  }
+
+  get streaming() {
+    return this.getResource(StreamingManager);
+  }
+
+  createStreamingCell(name) {
+    const sm = this.streaming;
+    if (!sm) {
+      throw new Error(
+        "World.createStreamingCell failed: StreamingManager is not registered as a resource."
+      );
+    }
+    return sm.createCell(name);
+  }
+
+  loadCell(name) {
+    const sm = this.streaming;
+    if (!sm) {
+      throw new Error(
+        "World.loadCell failed: StreamingManager is not registered as a resource."
+      );
+    }
+    sm.load(name);
+  }
+
+  unloadCell(name) {
+    const sm = this.streaming;
+    if (!sm) {
+      throw new Error(
+        "World.unloadCell failed: StreamingManager is not registered as a resource."
+      );
+    }
+    sm.unload(name);
   }
 
   _resolveComponentId(component, operation) {
