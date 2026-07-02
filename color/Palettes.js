@@ -333,4 +333,294 @@ export const Palettes = {
     { name: "PewterBlue", hex: "#80B9B1", family: "blue" },
     { name: "CambridgeBlue", hex: "#94C7B4", family: "blue" },
   ],
+
+  SummerSlice: [
+    { name: "Watermelon", hex: "#F0485F", family: "rose" },
+    { name: "LemonChiffon3", hex: "#FDF7C3", family: "yellow" },
+  ],
+
+  ForestEarth: [
+    { name: "BeigeSang", hex: "#E1DBC9", family: "beige" },
+    { name: "SlateBlueGrey", hex: "#6B7884", family: "blue" },
+    { name: "EarthBrown", hex: "#5E4B3B", family: "brown" },
+    { name: "DarkPine", hex: "#2D4530", family: "green" },
+    { name: "CharcoalGrey", hex: "#3C3C3C", family: "grey" },
+  ],
+
+  BerryWash: [
+    { name: "BlueBrerrySkin", hex: "#2F3A55", family: "blue" },
+    { name: "BerryBloom", hex: "#5C6BBA", family: "blue" },
+    { name: "StemGrey", hex: "#6E6F73", family: "grey" },
+    { name: "YogurtTint", hex: "#E7E2DE", family: "green" },
+    { name: "PLateWhite", hex: "#F5F6F3", family: "white" },
+  ],
+
+  MintMood: [
+    { name: "Extravagance", hex: "#4E4850", family: "grey" },
+    { name: "FoamGreen", hex: "#90FDA9", family: "green" },
+  ],
+
+  RoyalCream: [
+    { name: "RoyalBlue", hex: "#014BAA", family: "blue" },
+    { name: "LightCream", hex: "#F8F3F0", family: "white" },
+  ],
+
+  AuraViolet: [
+    { name: "AuraInigo", hex: "#B0A6DF", family: "violet" },
+  ],
+
+  SeaFlamingo: [
+    { name: "SeaFoam", hex: "#D1DDCD", family: "green" },
+    { name: "Flamingo", hex: "#E9A8A5", family: "pink" },
+  ],
+
+  CactusDesert: [
+    { name: "DesertPink", hex: "#F4E0E3", family: "green" },
+    { name: "CactusBlossom", hex: "#697F79", family: "pink" },
+  ],
+
+  DenimWash: [
+    { name: "LightWash", hex: "#C7DAE2", family: "blue" },
+    { name: "BlueJeans", hex: "#2C3B53", family: "blue" },
+  ],
+
+  GoldenBlue: [
+    { name: "GoldenGlow", hex: "#FCE39D", family: "yellow" },
+    { name: "PictonBlue", hex: "#40B8F6", family: "blue" },
+  ],
+
+  GambogeNavy: [
+    { name: "GamBoge", hex: "#E59500", family: "yellow" },
+    { name: "PennBlue", hex: "#0A1045", family: "blue" },
+  ],
+
+  VanillaMoon: [
+    { name: "Vanilla", hex: "#FFEBAF", family: "yellow" },
+    { name: "MoonStone", hex: "#4C9DB0", family: "blue" },
+  ],
+
+  CustardGreen: [
+    { name: "Custard", hex: "#DC9F2A", family: "yellow" },
+    { name: "Cyclade", hex: "#839989", family: "blue" },
+    { name: "TennisClub", hex: "#475418", family: "green" },
+  ],
+
+  SilkRose: [
+    { name: "SilkMilk", hex: "#F4ECEB", family: "white" },
+    { name: "KissRose", hex: "#B76E79", family: "rose" },
+  ],
+
+  VioletTea: [
+    { name: "Violet", hex: "#58355E", family: "violet" },
+    { name: "TeaGreen3", hex: "#C4D6B0", family: "green" },
+  ],
+
+  BurgundyNight: [
+    { name: "Burgundy", hex: "#93032E", family: "rose" },
+    { name: "Night", hex: "#151515", family: "black" },
+  ],
+
+  PurpleHaze: [
+    { name: "GrapePurple2", hex: "#5D1451", family: "purple" },
+    { name: "LightBlue2", hex: "#ADD8E6", family: "blue" },
+  ],
+
+  AubergineSky: [
+    { name: "Aubergine", hex: "#3E000C", family: "red" },
+    { name: "Sky", hex: "#C9FBFF", family: "blue" },
+  ],
+
+  GreenButter: [
+    { name: "DarkGreen1", hex: "#003631", family: "green" },
+    { name: "ButterYellow", hex: "#FFEDA8", family: "yellow" },
+  ],
+
+  MidnightRose: [
+    { name: "Midnight1", hex: "#394963", family: "blue" },
+    { name: "RosyPosy", hex: "#E69EA0", family: "rose" },
+  ],
+
+  RubyFoam: [
+    { name: "DeepRuby", hex: "#9f0936", family: "red" },
+    { name: "SeaFoamGreen", hex: "#DFFFDB", family: "green" },
+  ],
+
+  OatOrange: [
+    { name: "OatMilkLatte", hex: "#EBEBDF", family: "white" },
+    { name: "AtomicOrange", hex: "#E9631A", family: "orange" },
+  ],
+
+  MilkyMantis: [
+    { name: "Milky", hex: "#FFFDF1", family: "white" },
+    { name: "Mantis", hex: "#59C749", family: "green" },
+  ],
+
+  ForestCork: [
+    { name: "CorkWedge", hex: "#C0A889", family: "beige" },
+    { name: "CheekyChestnust", hex: "#7A4E39", family: "brown" },
+    { name: "GreenBeret", hex: "#536D5F", family: "green" },
+    { name: "RoycroftBottleGreen", hex: "#363F37", family: "green" },
+    { name: "Quartzite", hex: "#1F2B27", family: "green" },
+  ],
+
+  BeigeCookie: [
+    { name: "Beige1", hex: "#AC9B78", family: "beige" },
+    { name: "GreyBlue", hex: "#424846", family: "blue" },
+    { name: "BrownCookie", hex: "#68533A", family: "brown" },
+  ],
+
+  LavenderGraphite: [
+    { name: "LavenderHaze", hex: "#92A9E1", family: "blue" },
+    { name: "SoftGraphite", hex: "#303030", family: "grey" },
+  ],
+
+  PertorlSand: [
+    { name: "PertorlBlue", hex: "#317873", family: "blue" },
+    { name: "WarmSand", hex: "#E4C9B0", family: "beige" },
+  ],
+
+  PeriwinkleHunt: [
+    { name: "Periwinkle", hex: "#CBD9FF", family: "blue" },
+    { name: "HunterGreen", hex: "#3F6048", family: "green" },
+  ],
+
+  DragonSea: [
+    { name: "DragonBall", hex: "#FF9F1C", family: "orange" },
+    { name: "SeaBuckthorn", hex: "#FFBF69", family: "orange" },
+    { name: "Fatback", hex: "#FFF7EE", family: "white" },
+    { name: "Windswept", hex: "#CBF3F0", family: "blue" },
+  ],
+
+  SandSea: [
+    { name: "Sand2", hex: "#E4CBA9", family: "beige" },
+    { name: "SkyBlue", hex: "#7FC7CC", family: "blue" },
+    { name: "DeepSea", hex: "#092F33", family: "green" },
+    { name: "MossGreen2", hex: "#4B5B34", family: "green" },
+    { name: "Terracotta1", hex: "#AF5031", family: "rose" },
+    { name: "CherryBollosm", hex: "#FDABA5", family: "pink" },
+    { name: "RedWine", hex: "#980204", family: "red" },
+    { name: "Sunshine", hex: "#ed9517", family: "yellow" },
+  ],
+
+  MidnightHerb: [
+    { name: "Midnight2", hex: "#013D5A", family: "blue" },
+    { name: "Lionsmane", hex: "#FCF3E3", family: "white" },
+    { name: "Celeste", hex: "#BDD3CE", family: "blue" },
+    { name: "Herb", hex: "#708c69", family: "green" },
+    { name: "MariGold", hex: "#F4A258", family: "yellow" },
+  ],
+
+  PeachBlues: [
+    { name: "PeachBloom", hex: "#FFE1D7", family: "orange" },
+    { name: "SoftAzure", hex: "#84AFFB", family: "blue" },
+    { name: "SapphireBlue", hex: "#0259DD", family: "blue" },
+    { name: "CoralBlaze", hex: "#FF6648", family: "orange" },
+  ],
+
+  JellySide: [
+    { name: "JellyBean", hex: "#25799B", family: "blue" },
+    { name: "Sinbad", hex: "#A2C5D8", family: "blue" },
+    { name: "Sidecar", hex: "#F7E6CB", family: "yellow" },
+    { name: "MilanRed", hex: "#CB1B03", family: "red" },
+  ],
+
+  GreenRufous: [
+    { name: "DarkGreen2", hex: "#15372C", family: "green" },
+    { name: "Celadon", hex: "#AED1A4", family: "green" },
+    { name: "Rufous", hex: "#AC0E0E", family: "red" },
+  ],
+
+  PearTomato: [
+    { name: "Pear", hex: "#EEBF43", family: "yellow" },
+    { name: "Tomato2", hex: "#C54F2D", family: "red" },
+    { name: "Crema", hex: "#F2E7CB", family: "white" },
+    { name: "Mint2", hex: "#94B38A", family: "green" },
+  ],
+
+  PastequeMelon: [
+    { name: "Pasteque", hex: "#FF544C", family: "red" },
+    { name: "Zeste", hex: "#FFE458", family: "yellow" },
+    { name: "Lagoon", hex: "#2AB0A3", family: "blue" },
+    { name: "Melon", hex: "#FE9A34", family: "orange" },
+  ],
+
+  SaffronPeacock: [
+    { name: "Saffron", hex: "#FFC64F", family: "yellow" },
+    { name: "DarkPeakock", hex: "#084463", family: "blue" },
+    { name: "IcySky", hex: "#6BB9D4", family: "blue" },
+  ],
+
+  LavenderGold: [
+    { name: "LavenderViolet", hex: "#7758A3", family: "violet" },
+    { name: "RuddyBlue", hex: "#66A5ED", family: "blue" },
+    { name: "HoneyGold", hex: "#F6C45C", family: "yellow" },
+    { name: "LavenderRose", hex: "#FFAFEB", family: "rose" },
+    { name: "DeepCerise", hex: "#DB3E8C", family: "pink" },
+  ],
+
+  FloralPearl: [
+    { name: "FloralWhite", hex: "#F7F4EA", family: "white" },
+    { name: "LightLavender", hex: "#DED9E2", family: "violet" },
+    { name: "Periwinkle1", hex: "#C0B9DD", family: "violet" },
+    { name: "WisteriaBlue", hex: "#80A1D4", family: "blue" },
+    { name: "PearlAqua", hex: "#75C9C8", family: "blue" },
+  ],
+
+  CosmicSangria: [
+    { name: "CosmicLatte", hex: "#FFF8E7", family: "white" },
+    { name: "Sangria", hex: "#930500", family: "red" },
+    { name: "Cornflower", hex: "#95BBEA", family: "blue" },
+  ],
+
+  TanMidnight: [
+    { name: "Tan", hex: "#D8BA98", family: "beige" },
+    { name: "Maroon", hex: "#7F0303", family: "red" },
+    { name: "Alabaster", hex: "#EFE8DF", family: "white" },
+    { name: "LightBlue3", hex: "#96C0CE", family: "blue" },
+    { name: "MidnightBlue", hex: "#0F414A", family: "blue" },
+  ],
+
+  IceCoral: [
+    { name: "IceMist", hex: "#D6EBF2", family: "blue" },
+    { name: "CoralPink", hex: "#FE8684", family: "pink" },
+    { name: "AquaMist", hex: "#83CAE2", family: "blue" },
+  ],
+
+  FogBerry: [
+    { name: "WarmFog", hex: "#DDD3C9", family: "beige" },
+    { name: "BerryGood", hex: "#ECC4C3", family: "pink" },
+    { name: "UsuKoubaiBlossom", hex: "#B97D7B", family: "rose" },
+    { name: "MeadowMauve", hex: "#928E5E", family: "green" },
+    { name: "SoldierGreen", hex: "#575527", family: "green" },
+  ],
+
+  DelftOlivine: [
+    { name: "DelftBlue", hex: "#41386B", family: "blue" },
+    { name: "Amethyst", hex: "#7A70BA", family: "violet" },
+    { name: "FrenchGray", hex: "#B1B4C8", family: "violet" },
+    { name: "Beige2", hex: "#EBEED5", family: "beige" },
+    { name: "Olivine", hex: "#B0C49C", family: "green" },
+  ],
+
+  TropicalNero: [
+    { name: "TropicalTan", hex: "#CBB291", family: "beige" },
+    { name: "FunchalYellow", hex: "#B78A4E", family: "yellow" },
+    { name: "Saffronaut", hex: "#942B2B", family: "red" },
+    { name: "HullRed", hex: "#4D1211", family: "red" },
+    { name: "Nero", hex: "#262626", family: "grey" },
+  ],
+
+  CaramelBaby: [
+    { name: "Caramel", hex: "#BF7E46", family: "orange" },
+    { name: "PapayaWhip", hex: "#FBEDD6", family: "orange" },
+    { name: "BabyBlue", hex: "#97C6E0", family: "blue" },
+  ],
+
+  ChocolateSakura: [
+    { name: "DarkChoclate", hex: "#443025", family: "brown" },
+    { name: "Aloewood", hex: "#7F5836", family: "brown" },
+    { name: "MilkTea", hex: "#AA7F66", family: "brown" },
+    { name: "Sakura", hex: "#EC9C9D", family: "pink" },
+    { name: "MistyRose", hex: "#F2CF2A", family: "rose" },
+  ],
 };
